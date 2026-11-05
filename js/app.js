@@ -6,6 +6,7 @@ import {
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
+import { dieTarget, coinTarget } from './dice-anim.js';
 import { initRoom } from './room-ui.js';
 import { codeFromHash } from './room-proto.js';
 
@@ -46,7 +47,7 @@ const ICONS = {
 // online play: the room sheet, the opponent drawer (js/room-ui.js); declared here, used by commit / render
 const roomUi = initRoom({
   $, $$, stage, icons: ICONS, getState: () => state, commit: (n, r) => commit(n, r), render: () => render(state),
-  openOverlay: (id) => openOverlay(id), closeOverlay: () => closeOverlay(),
+  openOverlay: (id) => openOverlay(id), closeOverlay: (q) => closeOverlay(q),
 });
 
 function tile(key) {
@@ -105,7 +106,7 @@ function bump(seat, key, d, tileEl) {
   out.textContent = info.sum > 0 ? `+${info.sum}` : info.sum < 0 ? `−${-info.sum}` : '';
   out.classList.toggle('neg', info.sum < 0);
   out.classList.add('show');
-  info.timer = setTimeout(() => { info.sum = 0; out.classList.remove('show'); }, 1400);
+  info.timer = setTimeout(() => { info.sum = 0; out.classList.remove('show'); }, 5000);
   deltas.set(tileEl, info);
 }
 
@@ -268,6 +269,7 @@ function openOverlay(id) {
 }
 function closeOverlay(quiet) {
   if (!openId) return;
+  if (openId === 'ov-sync' && quiet !== 'force' && quiet !== true) return; // the counters must be agreed on (or the room left)
   $(`#${openId}`).hidden = true;
   if (openId === 'ov-room') roomUi.closed();
   openId = null;
@@ -322,22 +324,44 @@ function calcKey(e) {
 
 // ---------- dice & coin ----------
 $('#btn-dice').addEventListener('click', () => openOverlay('ov-dice'));
-function spin(el, final, words) {
-  el.classList.remove('spin');
-  void el.offsetWidth;
-  el.classList.add('spin');
-  setTimeout(() => {
-    el.textContent = final;
-    $('#dice-out').textContent = words;
-  }, 380);
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+const die = $('#die');
+for (let n = 1; n <= 6; n++) {
+  const f = document.createElement('div');
+  f.className = `die-f f${n}`;
+  f.innerHTML = PIPS[n].map((p) => `<i style="grid-area:p${p}"></i>`).join('');
+  die.append(f);
+}
+const coin = $('#coin');
+coin.innerHTML = `
+  <div class="coin-f heads"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><circle class="c-sun" cx="32" cy="22" r="6"/><path class="c-rays" d="M32 8v4M32 32v4M16 22h4M44 22h4M21 11l3 3M43 11l-3 3M21 33l3-3M43 33l-3-3"/><text x="32" y="55" text-anchor="middle" class="c-letter">H</text></svg></div>
+  <div class="coin-f tails"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><path class="c-moon" d="M38 9a14 14 0 1 0 0 26 11 11 0 1 1 0-26Z"/><circle class="c-star" cx="46" cy="30" r="1.6"/><text x="32" y="55" text-anchor="middle" class="c-letter">T</text></svg></div>`;
+let dieAt = [-20, 25], coinAt = 0, busy = false;
+const setDie = (a, ms) => { die.style.transition = ms ? `transform ${ms}ms cubic-bezier(.15,.7,.2,1)` : 'none'; die.style.transform = `rotateX(${a[0]}deg) rotateY(${a[1]}deg)`; };
+const setCoin = (a, ms) => { coin.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3,.6,.3,1)` : 'none'; coin.style.transform = `rotateX(${a}deg)`; };
+setDie(dieAt, 0);
+function play(scene, ms, start, land, words) {
+  if (busy) return; // taps during a roll are ignored
+  busy = true;
+  const out = $('#dice-out');
+  out.classList.remove('show');
+  out.textContent = '\u00a0';
+  const done = () => { land(); out.textContent = words; out.classList.add('show'); busy = false; scene.classList.remove('going'); };
+  if (reduceMotion()) { start(0); done(); return; }
+  scene.classList.add('going');
+  start(ms);
+  setTimeout(done, ms + 40);
 }
 $('#btn-roll').addEventListener('click', () => {
-  const n = rollDie(6);
-  spin($('#die-face'), String(n), `Rolled a ${n}`);
+  const n = rollDie(6); // the result is decided here; the die only shows it
+  dieAt = dieTarget(dieAt, n);
+  play($('#die-scene'), 1000, (ms) => setDie(dieAt, ms), () => {}, `Rolled a ${n}`);
 });
 $('#btn-coin').addEventListener('click', () => {
   const c = flipCoin();
-  spin($('#coin-face'), c === 'heads' ? 'H' : 'T', c === 'heads' ? 'Heads' : 'Tails');
+  coinAt = coinTarget(coinAt, c);
+  play($('#coin-scene'), 1200, (ms) => setCoin(coinAt, ms), () => {}, c === 'heads' ? 'Heads' : 'Tails');
 });
 
 // ---------- settings ----------
@@ -372,7 +396,7 @@ for (const seg of $$('.seg')) {
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
-$('#set-rooms').addEventListener('change', (e) => commit(setSetting(state, 'rooms', e.target.checked)));
+$('#set-rooms').addEventListener('change', (e) => { commit(setSetting(state, 'rooms', e.target.checked)); if (!e.target.checked) roomUi.forget(); });
 $('#set-name').addEventListener('input', (e) => commit(setSetting(state, 'name', e.target.value)));
 $('#set-name').addEventListener('change', (e) => { e.target.value = cleanName(e.target.value); });
 $('#btn-room').addEventListener('click', () => roomUi.openSheet());
@@ -383,6 +407,7 @@ $('#set-souls').addEventListener('change', (e) => {
 });
 $('#btn-reset').addEventListener('click', () => openOverlay('ov-confirm'));
 $('#btn-reset-yes').addEventListener('click', () => {
+  roomUi.forget();
   commit(roomUi.afterReset(resetGame(state)));
   askFirst = needsFirst(state);
   closeOverlay();
@@ -439,19 +464,31 @@ addEventListener('hashchange', () => {
   if (openId !== 'ov-resume') runPendingJoin();
 });
 
+// ---------- rejoin a remembered room (< 48 hours old) ----------
+function openRejoin() {
+  const rec = roomUi.remembered();
+  if (!rec) return false;
+  if (performance.getEntriesByType?.('navigation')?.[0]?.type === 'reload') { roomUi.rejoin(rec); return false; } // a plain reload goes straight back
+  $('#rejoin-line').textContent = roomUi.rejoinLine(rec);
+  $('#btn-rejoin').onclick = () => { closeOverlay(true); roomUi.rejoin(rec); maybeAskFirst(); };
+  $('#btn-rejoin-no').onclick = () => { roomUi.forget(); closeOverlay(); };
+  openOverlay('ov-rejoin');
+  return true;
+}
+
 render(null);
-if (state.rooms) roomUi.resume();
 if (needsResume(state, Date.now())) {
   const days = Math.floor((Date.now() - state.savedAt) / 86400000);
   $('#resume-when').textContent = `Last played ${days >= 2 ? `${days} days` : '2 days'} ago.`;
   openOverlay('ov-resume');
 } else if (pendingJoin) {
   runPendingJoin();
-} else {
+} else if (!openRejoin()) {
   maybeAskFirst();
 }
 $('#btn-resume').addEventListener('click', () => { commit({ ...state }); save(state); closeOverlay(true); if (pendingJoin) runPendingJoin(); else maybeAskFirst(); });
 $('#btn-new').addEventListener('click', () => {
+  roomUi.forget();
   commit(resetGame(state));
   askFirst = needsFirst(state);
   closeOverlay(true);

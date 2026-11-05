@@ -2,8 +2,10 @@
 import { ROOM_URL } from './room-config.js';
 import { fakeAllowed, fakeTransport } from './room-fake.js';
 import { createRoom, webSocketTransport, readSession } from './room.js';
+import { rememberedRoom, rejoinLine, ROOM_KEY } from './room-memory.js';
+import { applyPick, syncCards } from './room-sync.js';
 import { makeCode, validCode, cleanCode, joinLink, codeFromScan, passTurn } from './room-proto.js';
-import { startRoomGame, afterRoomReset, leaveRoomState, settleRoom, applyShared, sharedOf, sharedDiffers, selfDiffers, statusText, handleView, turnText } from './room-game.js';
+import { startRoomGame, afterRoomReset, leaveRoomState, settleRoom, applyShared, sharedOf, sharedDiffers, selfDiffers, statusText, handleView, turnText, turnWords } from './room-game.js';
 import { toggleDrawer, setDrawer, initialDrawer, toStageDy, dragResult, dragProgress, DRAG_MIN } from './drawer.js';
 import { qrSvg } from './qr.js';
 
@@ -16,11 +18,12 @@ export function initRoom(ctx) {
   const available = !!ROOM_URL || fake;
   const room = createRoom({
     makeTransport: fake ? fakeTransport : webSocketTransport(ROOM_URL || 'https://invalid.invalid'),
-    storage: sessionStorage,
+    storage: localStorage,
     newCode: () => makeCode(),
     getSelf: () => { const s = ctx.getState(); return { name: s.name, seat: s.seats[0], souls: s.souls }; },
     getShared: () => sharedOf(ctx.getState()),
     onShared: (sh) => ctx.commit(applyShared(ctx.getState(), sh), true),
+    onApply: (use, theirs) => { ctx.commit(applyPick(ctx.getState(), use, theirs)); toast(use === 'me' ? 'Using your counters' : `Using ${R.peerName || 'your friend'}'s counters`); },
     onChange: () => onRoomChange(),
   });
   const R = room.state;
@@ -53,6 +56,7 @@ export function initRoom(ctx) {
   function onRoomChange() {
     if (R.status === 'full' || R.status === 'busy') { notice = statusText(R); room.leave(); view = R.status === 'busy' ? 'pick' : 'join'; ctx.commit(leaveRoomState(ctx.getState()), true); }
     if (!R.peer && drawer.open) drawer = setDrawer(drawer, false);
+    if (R.codeChanged) { R.codeChanged = false; view = 'pick'; notice = `Your old code was taken. Share this new code with ${R.peerName || 'your friend'}.`; ctx.openOverlay('ov-room'); }
     refresh();
   }
 
@@ -69,14 +73,49 @@ export function initRoom(ctx) {
       if (!remote && sharedDiffers(sharedOf(prev), sharedOf(next))) room.sharedChanged();
       if (selfDiffers(prev, next)) room.selfChanged();
     },
-    resume() { // a reload in the middle of a room
-      const ses = readSession(sessionStorage);
-      if (ses && available && ctx.getState().rooms) { ses.role === 'host' ? room.host(ses.code) : room.join(ses.code); }
-    },
+    remembered: () => (available && ctx.getState().rooms ? readSession(localStorage, Date.now()) : null),
+    rejoin(rec) { notice = ''; room.rejoin(rec); refresh(); },
+    forget() { if (!active()) { try { localStorage.removeItem(ROOM_KEY); } catch { /* private mode */ } } },
+    rejoinLine,
     openSheet() { view = 'pick'; notice = ''; refresh(); ctx.openOverlay('ov-room'); },
     paint: paintAll,
     escape() { if (drawer.open) { drawer = setDrawer(drawer, false); paintDrawer(); return true; } return false; },
   };
+
+  // ---------- a one-line banner ----------
+  let toastTimer = 0;
+  function toast(text) {
+    const t = $('#room-toast');
+    t.textContent = text; t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+  }
+
+  // ---------- "Your counters don't match" ----------
+  let syncOpen = false;
+  const cardHtml = (card, diff, nameYou, nameThem, souls) => {
+    const row = (label, v, key) => `<li${diff.has(key) ? ' class="d"' : ''}><span>${label}</span><b>${v}${diff.has(key) ? ' <i aria-label="differs">●</i>' : ''}</b></li>`;
+    const seat = (who, name, s) => `<h4>${name}</h4><ul>${row('Life', s.life, `${who}.life`)}${row('Material', s.mat, `${who}.mat`)}${row('Ingredient', s.ing, `${who}.ing`)}${souls ? row('Souls', `${s.up} of ${s.soul}`, `${who}.soul`) : ''}</ul>`;
+    return `<h3>${card.title}</h3>${seat('me', nameYou, card.you)}${seat('them', nameThem, card.them)}<ul class="sh">${row('Time', card.shared.night ? 'Night' : 'Day', 'night')}${row('Turn', `${card.shared.turn}, ${card.shared.active === 0 ? nameYou : nameThem}`, 'turn')}</ul>`;
+  };
+  function paintSync() {
+    const sy = R.sync;
+    if (sy && !syncOpen) { syncOpen = true; ctx.openOverlay('ov-sync'); }
+    if (!sy && syncOpen) { syncOpen = false; ctx.closeOverlay('force'); if (R.lastPick) R.lastPick = null; }
+    if (!sy) return;
+    const name = R.peerName || 'your friend';
+    const souls = ctx.getState().souls || !!R.peer?.souls;
+    const c = syncCards(sy.snap, sy.theirs, name);
+    $('#sync-mine').innerHTML = cardHtml(c.mine, c.diff, 'You', name, souls);
+    $('#sync-theirs').innerHTML = cardHtml(c.theirs, c.diff, 'You', name, souls);
+    $('#sync-use-mine').disabled = sy.waiting;
+    $('#sync-use-theirs').disabled = sy.waiting;
+    $('#sync-use-theirs').textContent = `Use ${name}'s counters`;
+    $('#sync-wait').hidden = !sy.waiting;
+  }
+  $('#sync-use-mine').addEventListener('click', () => room.choose('me'));
+  $('#sync-use-theirs').addEventListener('click', () => room.choose('you'));
+  $('#sync-leave').addEventListener('click', () => { syncOpen = false; leave(); ctx.closeOverlay('force'); });
 
   // ---------- the sheet ----------
   const show = (id, on) => { $(`#${id}`).hidden = !on; };
@@ -217,11 +256,11 @@ export function initRoom(ctx) {
       $('.et-word').textContent = 'End Turn';
       $('#turn-label').textContent = turnText(s);
       end.disabled = s.active !== 0;
-      end.setAttribute('aria-label', s.active === 0 ? `End turn. ${turnText(s)}.` : `Waiting for your friend. ${turnText(s)}.`);
+      end.setAttribute('aria-label', s.active === 0 ? `End turn. ${turnWords(s)}.` : `Waiting for your friend. ${turnWords(s)}.`);
     } else end.disabled = false;
     stage.dataset.mine = on && s.active === 0 ? 'on' : 'off';
   }
-  function paintAll() { paintSheet(); paintDrawer(); paintBar(); }
+  function paintAll() { paintSheet(); paintDrawer(); paintBar(); paintSync(); }
   hooks.closed = stopScan;
   return hooks;
 }

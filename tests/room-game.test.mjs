@@ -45,7 +45,7 @@ test('words', () => {
   assert.equal(statusText({ status: 'waiting' }), 'Waiting for your friend…');
   assert.equal(handleView({ status: 'waiting', code: '0427' }).text, 'Waiting for your friend… 0427');
   assert.equal(handleView({ status: 'connected', peer: { name: '', seat: { life: 7 } } }).name, 'Opponent');
-  assert.equal(turnText({ turn: 2, active: 1 }), 'Turn 2 · Their turn');
+  assert.equal(turnText({ turn: 2, active: 1 }), 'Turn 2 · Them');
 });
 
 test('qr svg: quiet zone and a path', () => {

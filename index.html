@@ -74,6 +74,8 @@
     <section class="seat" data-seat="0" aria-label="You"></section>
 
     <!-- Overlays live INSIDE the stage so they turn with it in landscape (a native dialog element would not). -->
+    <div class="room-toast" id="room-toast" role="status" hidden></div>
+
     <div class="overlay" id="ov-calc" hidden>
       <div class="sheet calc" role="dialog" aria-modal="true" aria-labelledby="calc-title">
         <header class="sheet-head">
@@ -114,11 +116,11 @@
         </header>
         <div class="dice-row">
           <button type="button" class="roll" id="btn-roll">
-            <span class="roll-face" id="die-face" aria-hidden="true">?</span>
+            <span class="die-scene" id="die-scene" aria-hidden="true"><span class="die" id="die"></span></span>
             <span class="roll-label">Roll a die</span>
           </button>
           <button type="button" class="roll" id="btn-coin">
-            <span class="roll-face coin" id="coin-face" aria-hidden="true">?</span>
+            <span class="coin-scene" id="coin-scene" aria-hidden="true"><span class="coin" id="coin"></span></span>
             <span class="roll-label">Flip a coin</span>
           </button>
         </div>
@@ -249,6 +251,34 @@
           <p class="room-status" id="rv-status" aria-live="polite">&nbsp;</p>
           <button type="button" class="btn danger" id="btn-room-leave">Leave room</button>
         </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-rejoin" hidden>
+      <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="rejoin-title" aria-describedby="rejoin-line">
+        <h2 id="rejoin-title">Rejoin your game?</h2>
+        <p id="rejoin-line">&nbsp;</p>
+        <div class="cf-btns">
+          <button type="button" class="btn" id="btn-rejoin-no">Not now</button>
+          <button type="button" class="btn primary" id="btn-rejoin">Rejoin</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-sync" hidden>
+      <div class="sheet sync" role="alertdialog" aria-modal="true" aria-labelledby="sync-title">
+        <h2 id="sync-title">Your counters don't match</h2>
+        <p class="sub">Pick the counters you both trust. A dot marks what differs.</p>
+        <div class="sync-cards">
+          <section class="sync-card" id="sync-mine" aria-label="Your phone"></section>
+          <section class="sync-card" id="sync-theirs" aria-label="Your friend's phone"></section>
+        </div>
+        <p class="room-hint" id="sync-wait" hidden>Waiting for the room's host to confirm…</p>
+        <div class="cf-btns">
+          <button type="button" class="btn" id="sync-use-mine">Use my phone's counters</button>
+          <button type="button" class="btn primary" id="sync-use-theirs">Use your friend's counters</button>
+        </div>
+        <button type="button" class="btn link" id="sync-leave">Leave room</button>
       </div>
     </div>
 

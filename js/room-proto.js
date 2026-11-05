@@ -52,6 +52,16 @@ export function sharedMsg({ night, active, turn, rev }) {
   return JSON.stringify({ t: 'shared', night: night === true, active: active === 1 ? 'you' : 'me', turn, rev });
 }
 
+const cleanShared = (sh) => (sh && typeof sh === 'object' && typeof sh.night === 'boolean' && (sh.active === 'me' || sh.active === 'you') && int(sh.turn, 0, 9999)
+  ? { night: sh.night, active: sh.active, turn: sh.turn } : null);
+export { cleanShared };
+/** After a rejoin: what I have of both seats and of the shared game. `mine`/`yours` are seats (`yours` = what I last saw of the other phone, or null); shared.active is 0 (me) | 1. */
+export function checkMsg({ mine, yours, shared }) {
+  return JSON.stringify({ t: 'check', v: 1, mine: { life: mine.life, mat: mine.mat, ing: mine.ing, soul: mine.soul, up: mine.up }, yours: yours ? { life: yours.life, mat: yours.mat, ing: yours.ing, soul: yours.soul, up: yours.up } : null, shared: { night: shared.night === true, active: shared.active === 1 ? 'you' : 'me', turn: shared.turn } });
+}
+/** `use` is 'me' | 'you' from the SENDER's side. */
+export const pickMsg = ({ use, rev }) => JSON.stringify({ t: 'pick', v: 1, use: use === 'you' ? 'you' : 'me', rev });
+
 /** Validate anything received. Unknown or invalid = null. Shared messages are translated to OUR point of view. */
 export function parseMessage(text) {
   if (typeof text !== 'string' || text.length > 4096) return null;
@@ -70,6 +80,17 @@ export function parseMessage(text) {
     if (!int(m.turn, 0, 9999) || !int(m.rev, 0, 1e9)) return null;
     // the sender's "me" is the other phone, i.e. 1 here
     return { t: 'shared', night: m.night, active: m.active === 'me' ? 1 : 0, turn: m.turn, rev: m.rev };
+  }
+  if (m.t === 'check') {
+    const mine = cleanPeerSeat(m.mine);
+    const yours = m.yours === null ? null : cleanPeerSeat(m.yours);
+    const sh = cleanShared(m.shared);
+    if (!mine || !sh || (m.yours !== null && !yours)) return null;
+    return { t: 'check', mine, yours, shared: { night: sh.night, active: sh.active === 'me' ? 1 : 0, turn: sh.turn } };
+  }
+  if (m.t === 'pick') {
+    if ((m.use !== 'me' && m.use !== 'you') || !int(m.rev, 0, 1e9)) return null;
+    return { t: 'pick', use: m.use === 'me' ? 'you' : 'me', rev: m.rev };
   }
   return null;
 }

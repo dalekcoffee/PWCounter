@@ -51,9 +51,10 @@ export function statusText(room) {
 export function handleView(room) {
   const here = room.status === 'connected' && !!room.peer;
   if (here) return { here: true, name: room.peer.name || 'Opponent', life: room.peer.seat.life, text: '' };
-  const w = room.status === 'reconnecting' ? 'Reconnecting…' : 'Waiting for your friend…';
+  const w = room.status === 'reconnecting' ? 'Reconnecting…' : `Waiting for ${room.peerName || 'your friend'}…`;
   return { here: false, name: '', life: null, text: `${w} ${room.code}` };
 }
 
 /** Turn words for the bar. */
-export const turnText = (state) => `Turn ${state.turn} · ${state.active === 0 ? 'Your turn' : 'Their turn'}`;
+export const turnText = (state) => `Turn ${state.turn} · ${state.active === 0 ? 'You' : 'Them'}`;
+export const turnWords = (state) => `Turn ${state.turn}, ${state.active === 0 ? 'your turn' : "your friend's turn"}`;

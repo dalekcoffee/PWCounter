@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.6
+- Fixed: on some devices the who-goes-first screen showed every button at once (Go first / Go second on both sides, I go second, the one-player heading). The page had arrived with an old stylesheet from the previous version's offline copy. The page now asks for its own version of the stylesheet and checks that the page, stylesheet and scripts match; if they do not, it forgets the old offline copy and reloads once. The offline copy also refuses a new version whose stylesheet is not that version.
+
 ## 0.3.5
 - Two players without Track souls: a new game or a reset asks who goes first again (tap, roll or flip), so End Turn, the turn panel, the face-to-face turning and the turn clock start from the right player. Before, only games with souls asked, and the turn just started with Player 1. One player without souls still has no turns to track.
 

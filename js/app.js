@@ -13,6 +13,7 @@ import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 
+document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
 const KEY = 'pwc.state';
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];

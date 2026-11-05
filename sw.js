@@ -3,7 +3,7 @@
 // The cache always holds ONE version of every file: a new version is fetched whole (past the CDN, with ?v=) and
 // checked before it is used, and files are never refreshed one by one. A page from one version with scripts from
 // another breaks every button wired after the first missing element (0.3.3: dice, coin and settings stopped working).
-const VERSION = '0.3.5';
+const VERSION = '0.3.6';
 const CACHE = `pwc-${VERSION}`;
 const FONTS = 'pwc-fonts';
 const SHELL = [
@@ -40,9 +40,9 @@ const SHELL = [
   'assets/apple-touch-icon.png',
 ];
 
-// files that name the version: if either is from another version, the set is mixed and this install fails
+// files that name the version: if any is from another version, the set is mixed and this install fails
 // (the old version keeps running and the browser tries again on its next update check)
-const STAMPED = ['index.html', 'js/version.js'];
+const STAMPED = ['index.html', 'js/version.js', 'css/app.css'];
 
 async function fetchShell() {
   const got = await Promise.all(SHELL.map(async (p) => {

@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.3.5"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.3.6"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/app.css?v=0.3.6">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/calc.js">
@@ -447,5 +447,23 @@
     </div>
   </div>
   <noscript><p class="noscript">PW Counter needs JavaScript.</p></noscript>
+  <script>
+    // Page, stylesheet and scripts must be one version. An offline copy from an older version (or a browser cache)
+    // can hand back an old stylesheet or old scripts with this page. If so: forget the offline copy and reload once.
+    addEventListener('load', function () {
+      setTimeout(function () {
+        var want = document.querySelector('meta[name="pwc-version"]').content;
+        var css = getComputedStyle(document.documentElement).getPropertyValue('--pwc-v').replace(/["'\s]/g, '');
+        var js = document.documentElement.getAttribute('data-js') || '';
+        if (css === want && js === want) return;
+        var k = 'pwc.heal.' + want;
+        try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); } catch (e) { return; }
+        var jobs = [];
+        if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+        if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (n) { return n.indexOf('pwc-') === 0 && n !== 'pwc-fonts'; }).map(function (n) { return caches.delete(n); })); }));
+        Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
+      }, 1500);
+    });
+  </script>
 </body>
 </html>

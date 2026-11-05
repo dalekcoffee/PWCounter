@@ -9,6 +9,9 @@ test('version is the same everywhere', () => {
   assert.equal(JSON.parse(read('package.json')).version, v);
   assert.match(read('sw.js'), new RegExp(`const VERSION = '${v.replace(/\./g, '\\.')}'`));
   assert.ok(read('index.html').includes(`<meta name="pwc-version" content="${v}">`), 'index.html carries the version (sw.js checks it)');
+  assert.ok(read('index.html').includes(`href="css/app.css?v=${v}"`), 'the page asks for this version of the stylesheet');
+  assert.ok(read('css/app.css').includes(`--pwc-v: "${v}"`), 'the stylesheet carries the version (index.html checks it)');
+  assert.match(read('sw.js'), /const STAMPED = \[[^\]]*'index.html'[^\]]*'js\/version.js'[^\]]*'css\/app.css'/, 'the service worker checks the page, the scripts and the stylesheet');
   assert.match(read('CHANGELOG.md'), new RegExp(`## ${v.replace(/\./g, '\\.')}`));
 });
 

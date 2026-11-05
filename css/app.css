@@ -215,7 +215,7 @@ svg { display: block; }
 }
 .delta.neg { color: #34121a; background: var(--rose); }
 .delta.show { opacity: 1; transform: none; }
-.t-life .delta { bottom: 14px; font-size: 26px; padding: 6px 18px; }
+.t-life .delta { bottom: 38px; font-size: 26px; padding: 6px 18px; }
 @container (max-height: 130px) { .delta { font-size: 17px; padding: 3px 11px; bottom: 5px; } }
 
 /* icon colours (drawn for this app) */
@@ -392,19 +392,18 @@ svg { display: block; }
 .room-toast { position: absolute; z-index: 60; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 60px); translate: -50% 0; max-width: calc(100% - 32px); padding: 8px 16px; border-radius: 999px; background: rgba(13, 19, 38, .94); border: 1px solid var(--border); font-weight: 600; font-size: 14px; text-align: center; pointer-events: none; }
 .sheet.sync { width: min(640px, 100%); }
 .sync .sub { margin-bottom: 12px; }
-.sync-cards { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
-@container (min-width: 520px) { .sync-cards { grid-template-columns: 1fr 1fr; } }
-.sync-card { padding: 10px 12px; border-radius: 16px; border: 1px solid var(--border); background: rgba(7, 11, 23, .5); }
-.sync-card h3 { margin: 0 0 6px; font: 600 17px/1.2 var(--font-head); color: var(--gold); }
+.sync-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.sync-card { min-width: 0; padding: 8px 10px; border-radius: 16px; border: 1px solid var(--border); background: rgba(7, 11, 23, .5); }
+.sync-card h3 { margin: 0 0 4px; font: 600 15px/1.2 var(--font-head); color: var(--gold); }
 .sync-card h4 { margin: 8px 0 2px; font: 700 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
 .sync-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-.sync-card li { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--text-2); }
+.sync-card li { display: flex; justify-content: space-between; gap: 6px; font-size: 12.5px; color: var(--text-2); }
 .sync-card li b { color: var(--text); font-family: var(--font-mono); }
 .sync-card li.d b, .sync-card li.d span { color: var(--gold); }
 .sync-card li i { font-style: normal; font-size: 10px; vertical-align: 2px; }
 .sync-card ul.sh { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); }
 .sheet.sync .btn.link { width: 100%; }
-@container stage (max-height: 520px) { .sync-cards { grid-template-columns: 1fr 1fr; } .sync-card ul { grid-template-columns: 1fr 1fr; column-gap: 12px; } .sync-card h4 { margin-top: 4px; } }
+@container stage (max-height: 520px) { .sync-card ul { grid-template-columns: 1fr 1fr; column-gap: 12px; } .sync-card h4 { margin-top: 4px; } }
 
 /* ---------- overlays ---------- */
 .overlay {
@@ -464,11 +463,11 @@ svg { display: block; }
 
 /* dice & coin */
 .dice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.roll { display: grid; justify-items: center; gap: 10px; padding: 18px 10px; border-radius: 20px; border: 1px solid var(--border); background: rgba(7, 11, 23, .5); }
+.roll { display: grid; justify-items: center; gap: 10px; padding: 34px 10px 18px; border-radius: 20px; border: 1px solid var(--border); background: rgba(7, 11, 23, .5); }
 .die-scene, .coin-scene { display: block; width: 96px; height: 96px; perspective: 520px; }
 .die-scene.going, .coin-scene.going { animation: hop 1s ease-in-out; }
 .coin-scene.going { animation-duration: 1.2s; }
-@keyframes hop { 0%, 100% { translate: 0 0; } 40% { translate: 0 -34px; } }
+@keyframes hop { 0%, 100% { translate: 0 0; } 40% { translate: 0 -22px; } }
 .die, .coin { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; }
 .die { --s: 76px; width: var(--s); height: var(--s); margin: 10px; }
 .die-f {

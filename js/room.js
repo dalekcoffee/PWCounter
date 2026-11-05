@@ -41,12 +41,11 @@ export const REMEMBER_GAP = 30000;
  */
 export function createRoom(deps) {
   const { makeTransport, storage, getSelf, getShared, onShared, onChange = () => {} } = deps;
-  let sid = deps.sid || readSession(storage, now0())?.sid || makeSid();
+  const now = deps.now || (() => Date.now());
+  let sid = deps.sid || readSession(storage, now())?.sid || makeSid();
   const newCode = deps.newCode || (() => '');
   const setTimer = deps.setTimer || ((f, ms) => setTimeout(f, ms));
   const clearTimer = deps.clearTimer || ((t) => clearTimeout(t));
-  const now = deps.now || (() => Date.now());
-  function now0() { return now(); }
 
   const room = { status: 'idle', code: '', role: null, peer: null, peerHere: false, rev: 0, peerName: '', rejoined: false, codeChanged: false, hold: false, snapPeer: null, theirs: null, sync: null, lastPick: null };
   let lastRemember = 0, checkSent = false;
@@ -54,7 +53,7 @@ export function createRoom(deps) {
     if (room.status === 'idle') return;
     lastRemember = now();
     const sh = getShared();
-    writeSession(storage, { code: room.code, role: room.role, sid, peerName: room.peerName, at: now(), peerSeat: room.peer?.seat ?? room.snapPeer, shared: { night: sh.night, active: sh.active === 1 ? 'you' : 'me', turn: sh.turn } });
+    writeSession(storage, { code: room.code, role: room.role, sid, peerName: room.peerName, at: now(), peerSeat: room.hold ? room.snapPeer : (room.peer?.seat ?? room.snapPeer), shared: { night: sh.night, active: sh.active === 1 ? 'you' : 'me', turn: sh.turn } });
   };
   let codeTries = 0, transport = null, open = false, attempt = 0, retryTimer = null, lastHello = -Infinity, helloTimer = null, gen = 0;
 
@@ -67,9 +66,9 @@ export function createRoom(deps) {
     send(helloMsg(getSelf()));
   }
   function sendShared() { if (!room.hold) send(sharedMsg({ ...getShared(), rev: room.rev })); }
-  const snapshot = () => ({ mine: getSelf().seat, peerSeat: room.peer?.seat ?? room.snapPeer, shared: getShared() });
+  const snapshot = () => ({ mine: getSelf().seat, peerSeat: room.hold ? room.snapPeer : (room.peer?.seat ?? room.snapPeer), shared: getShared() });
   function sendCheck() {
-    if (checkSent) return;
+    if (checkSent || !open || !transport) return;
     checkSent = true;
     const s = snapshot();
     send(checkMsg({ mine: s.mine, yours: s.peerSeat, shared: s.shared }));
@@ -149,6 +148,7 @@ export function createRoom(deps) {
       emit();
     } else if (m.t === 'check') {
       // the other phone came back and compared: I hold my shared game until we have agreed
+      if (!room.hold && room.peer) room.snapPeer = room.peer.seat;
       room.theirs = m;
       room.hold = true;
       sendCheck();

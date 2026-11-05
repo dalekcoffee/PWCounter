@@ -2,6 +2,8 @@
 
 ## 0.1.0
 - Experimental, off by default: play with a friend online. One phone shows a 4-digit code (and a QR code), the other types or scans it. Each phone keeps its own counters; your friend's Life, Material, Ingredient and Souls show read only in a drawer you pull down from the top. Day/night and End Turn are shared.
+- Come back later: the last room is remembered for 48 hours ("Rejoin your game?"). If the counters differ after both phones return, a sheet lets you pick whose to use.
+- The +/− change badge is bigger and stays 5 seconds. Dice and coin roll in 3D and land on the result.
 - Needs the small room relay (worker/room) to be deployed and its address put in js/room-config.js; until then the sheet says it isn't set up.
 
 ## 0.0.3

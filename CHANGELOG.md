@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.16
+- Tablet mode: the board only turns itself while the screen is portrait (orientation lock on). If the browser has already turned to landscape, the board is no longer turned a second time (that put everything sideways); the two players just sit side by side. Left / Right still put Player 1 on that side.
+
 ## 0.3.15
 - Tablet mode is now Off / Left / Right. Left: the board turns left and Player 1 is on the left. Right: it turns right and Player 1 is on the right (the 0.3.14 tablet mode). Either way Player 1 is at the tablet's bottom edge. Off (the default) is the usual layout, unchanged.
 

@@ -130,7 +130,10 @@ svg { display: block; }
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) clamp(64px, 12cqh, 112px);
 }
-.stage[data-players='1'] .seat-in { grid-template-rows: minmax(0, 1fr) clamp(80px, 16cqh, 150px); }
+/* one player: life and the resources in proportion (about 4 : 3), not one giant tile */
+.stage[data-players='1'] .seat-in { grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr); }
+.stage[data-players='1'] .t-life .num { font-size: min(34cqh, 30cqw); }
+.stage[data-players='1'] .t-life .ico { width: min(13cqh, 46px); height: min(13cqh, 46px); }
 .res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
 
 /* landscape: life on the left, the two resources stacked on the right */
@@ -172,6 +175,15 @@ svg { display: block; }
 .ico svg { width: 100%; height: 100%; }
 .t-mat .lbl, .t-ing .lbl { display: none; }
 @container (min-height: 96px) { .t-mat .lbl, .t-ing .lbl { display: block; } .t-mat .core, .t-ing .core { flex-wrap: wrap; } }
+/* tall resource tiles (one player): stacked like the life tile, with a bigger number, icon and buttons */
+@container (min-height: 150px) {
+  .t-mat .core, .t-ing .core { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+  .t-mat .num, .t-ing .num { font-size: min(36cqh, 40cqw); }
+  .t-mat .ico, .t-ing .ico { width: min(18cqh, 46px); height: min(18cqh, 46px); }
+  .t-mat .pm, .t-ing .pm { width: 40px; height: 40px; font-size: 24px; }
+}
+/* too narrow for the word between the buttons: the icon says which counter it is */
+@container (max-width: 250px) { .t-mat .lbl, .t-ing .lbl { display: none; } }
 .t-life .core { flex-direction: column; gap: 4px; }
 .t-life .ico { width: min(16cqh, 54px); height: min(16cqh, 54px); }
 .t-life .num { font-size: min(46cqh, 42cqw); }

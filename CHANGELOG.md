@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.4
+- One player: life and the resources are in proportion: a smaller life tile, taller Material and Ingredient tiles with bigger numbers, icons and buttons (on a narrow tile the icon alone names the counter).
+
 ## 1.0.3
 - Removed the Day / Night badge from the life tiles: the board itself and the Day / Night button in the middle show it.
 

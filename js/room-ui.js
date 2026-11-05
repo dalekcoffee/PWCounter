@@ -1,10 +1,11 @@
 // "Play with a friend": the room sheet, the scanner, the opponent drawer. The rules are pure (room-game.js, room-proto.js, drawer.js).
 import { ROOM_URL } from './room-config.js';
 import { fakeAllowed, fakeTransport } from './room-fake.js';
-import { createRoom, webSocketTransport, readSession } from './room.js';
+import { createRoom, webSocketTransport, readSession, readWatch } from './room.js';
 import { rememberedRoom, rejoinLine, ROOM_KEY } from './room-memory.js';
 import { applyPick, syncCards } from './room-sync.js';
-import { makeCode, validCode, cleanCode, joinLink, codeFromScan, passTurn } from './room-proto.js';
+import { makeCode, validCode, cleanCode, joinLink, watchLink, watchText, codeFromScan, passTurn } from './room-proto.js';
+import { displayView, createDeltas, deltaText, AUTO_WATCH_NOTICE } from './room-display.js';
 import { startRoomGame, afterRoomReset, leaveRoomState, settleRoom, applyShared, sharedOf, sharedDiffers, selfDiffers, statusText, handleView, turnText, turnWords } from './room-game.js';
 import { toggleDrawer, setDrawer, initialDrawer, toStageDy, dragResult, dragProgress, DRAG_MIN } from './drawer.js';
 import { qrSvg } from './qr.js';
@@ -19,6 +20,7 @@ export function initRoom(ctx) {
   const room = createRoom({
     makeTransport: fake ? fakeTransport : webSocketTransport(ROOM_URL || 'https://invalid.invalid'),
     storage: localStorage,
+    watchStorage: (() => { try { return sessionStorage; } catch { return null; } })(), // a watched room is remembered for this tab only
     newCode: () => makeCode(),
     getSelf: () => { const s = ctx.getState(); return { name: s.name, seat: s.seats[0], souls: s.souls }; },
     getShared: () => sharedOf(ctx.getState()),
@@ -27,17 +29,22 @@ export function initRoom(ctx) {
     onChange: () => onRoomChange(),
   });
   const R = room.state;
-  let view = 'pick'; // pick | join (the sheet, while not in a room)
+  let view = 'pick'; // pick | join | watch (the sheet, while not in a room)
+  let joinBefore = null; // my game as it was before I joined as a guest (a refused guest gets it back untouched)
+  let viewNotice = ''; // one line on the display ("You're watching")
   let notice = '';
   let drawer = initialDrawer();
 
-  const active = () => R.status !== 'idle';
+  const active = () => R.status !== 'idle'; // in a room as a player OR as a viewer
+  const playing = () => active() && R.role !== 'watch';
+  const watching = () => active() && R.role === 'watch';
   const refresh = () => ctx.render();
 
   // ---------- starting and leaving ----------
   function begin(role, code) {
     notice = '';
     stopScan();
+    joinBefore = role === 'guest' ? ctx.getState() : null;
     ctx.commit(startRoomGame(ctx.getState(), role));
     if (role === 'host') room.host(code); else room.join(code);
     drawer = initialDrawer();
@@ -45,6 +52,26 @@ export function initRoom(ctx) {
   }
   function host() { begin('host', makeCode()); }
   function join(raw) { const c = cleanCode(raw); if (validCode(c)) begin('guest', c); }
+  /** Watch a room read only (a TV link, the sheet, or a refused guest). Needs the relay but not the `rooms` switch. */
+  function watch(raw, opts = {}) {
+    const c = cleanCode(raw);
+    if (!validCode(c)) return;
+    if (!available) { hooks.openSheet(); return; } // "isn't set up on this server yet"
+    if (playing()) leave();
+    stopScan();
+    ctx.closeOverlay('force');
+    viewNotice = opts.note || '';
+    deltas.clear();
+    room.watch(c, { sid: opts.sid });
+    refresh();
+  }
+  function leaveWatch() {
+    if (!watching()) return;
+    room.leave();
+    viewNotice = '';
+    deltas.clear();
+    refresh();
+  }
   function leave() {
     if (!active()) return;
     room.leave();
@@ -54,6 +81,13 @@ export function initRoom(ctx) {
     refresh();
   }
   function onRoomChange() {
+    if (R.status === 'full' && R.role === 'guest') { // two players are already there: watch instead (the game on this phone stays as it was)
+      const code = R.code, before = joinBefore;
+      room.leave();
+      if (before) ctx.commit(before, true);
+      watch(code, { note: AUTO_WATCH_NOTICE });
+      return;
+    }
     if (R.status === 'full' || R.status === 'busy') { notice = statusText(R); room.leave(); view = R.status === 'busy' ? 'pick' : 'join'; ctx.commit(leaveRoomState(ctx.getState()), true); }
     if (!R.peer && drawer.open) drawer = setDrawer(drawer, false);
     if (R.codeChanged) { R.codeChanged = false; view = 'pick'; notice = `Your old code was taken. Share this new code with ${R.peerName || 'your friend'}.`; ctx.openOverlay('ov-room'); }
@@ -62,22 +96,27 @@ export function initRoom(ctx) {
 
   // ---------- hooks for app.js ----------
   const hooks = {
-    available, active, join, host, leave,
+    available, active: playing, playing, watching, join, host, leave, watch, leaveWatch,
     /** next state before it is stored: a room never asks who goes first */
-    settle: (s) => (active() ? settleRoom(s, R.role) : s),
-    afterReset: (s) => (active() ? afterRoomReset(s, R.role) : s),
+    settle: (s) => (playing() ? settleRoom(s, R.role) : s),
+    afterReset: (s) => (playing() ? afterRoomReset(s, R.role) : s),
     endTurn: (s) => passTurn(s, R.role),
     changed(prev, next, remote) {
-      if (!active()) return;
+      if (!playing()) return;
       if (!next.rooms) { leave(); return; }
       if (!remote && sharedDiffers(sharedOf(prev), sharedOf(next))) room.sharedChanged();
       if (selfDiffers(prev, next)) room.selfChanged();
     },
     remembered: () => (available && ctx.getState().rooms ? readSession(localStorage, Date.now()) : null),
     rejoin(rec) { notice = ''; room.rejoin(rec); refresh(); },
-    forget() { if (!active()) { try { localStorage.removeItem(ROOM_KEY); } catch { /* private mode */ } } },
+    forget() { if (!playing()) { try { localStorage.removeItem(ROOM_KEY); } catch { /* private mode */ } } },
     rejoinLine,
     openSheet() { view = 'pick'; notice = ''; refresh(); ctx.openOverlay('ov-room'); },
+    openWatchSheet() { view = 'watch'; notice = ''; refresh(); ctx.openOverlay('ov-room'); $('#watch-code').value = ''; $('#watch-code').focus({ preventScroll: true }); },
+    /** A reload keeps watching (this tab only). */
+    resumeWatch() { const w = available ? readWatch(window.sessionStorage) : null; if (!w) return false; watch(w.code, { sid: w.sid }); return true; },
+    /** Day or night as the players share it, while watching (else null). */
+    watchNight: () => (watching() ? displayView(R).night : null),
     paint: paintAll,
     escape() { if (drawer.open) { drawer = setDrawer(drawer, false); paintDrawer(); return true; } return false; },
   };
@@ -120,10 +159,11 @@ export function initRoom(ctx) {
   // ---------- the sheet ----------
   const show = (id, on) => { $(`#${id}`).hidden = !on; };
   function paintSheet() {
-    const live = active();
+    const live = playing();
     show('rv-off', !available);
     show('rv-pick', available && !live && view === 'pick');
     show('rv-join', available && !live && view === 'join');
+    show('rv-watch', available && !live && view === 'watch');
     show('rv-live', available && live);
     $('#room-note').textContent = notice;
     $('#room-note').hidden = !notice;
@@ -136,11 +176,25 @@ export function initRoom(ctx) {
         const svg = qrSvg(joinLink(R.code));
         if ($('#rv-qr').dataset.code !== R.code) { $('#rv-qr').innerHTML = svg; $('#rv-qr').dataset.code = R.code; }
       }
+      $('#rv-watchlink').textContent = watchLink(R.code);
+      if ($('#rv-qr2').dataset.code !== R.code) { $('#rv-qr2').innerHTML = qrSvg(watchLink(R.code)); $('#rv-qr2').dataset.code = R.code; }
     }
     $('#btn-scan').hidden = !('BarcodeDetector' in window);
     $('#scan-hint').hidden = 'BarcodeDetector' in window;
   }
   $('#btn-room-host').addEventListener('click', host);
+  $('#btn-room-watch').addEventListener('click', () => { view = 'watch'; notice = ''; paintSheet(); $('#watch-code').value = ''; $('#watch-code').focus({ preventScroll: true }); });
+  $('#btn-watch-back').addEventListener('click', () => { view = 'pick'; paintSheet(); });
+  $('#watch-code').addEventListener('input', (e) => {
+    const c = cleanCode(e.target.value);
+    e.target.value = c;
+    if (validCode(c)) watch(c);
+  });
+  $('#btn-copy-watch').addEventListener('click', async (e) => {
+    const b = e.currentTarget, link = watchLink(R.code);
+    try { await navigator.clipboard.writeText(link); b.textContent = 'Copied'; } catch { b.textContent = 'Copy failed'; }
+    setTimeout(() => { b.textContent = 'Copy'; }, 1600);
+  });
   $('#btn-room-join').addEventListener('click', () => { view = 'join'; notice = ''; paintSheet(); $('#join-code').value = ''; $('#join-code').focus({ preventScroll: true }); });
   $('#btn-join-back').addEventListener('click', () => { stopScan(); view = 'pick'; paintSheet(); });
   $('#btn-room-leave').addEventListener('click', () => { leave(); ctx.closeOverlay(); });
@@ -191,7 +245,10 @@ export function initRoom(ctx) {
     tiles[key] = t;
   }
   function paintDrawer() {
-    const on = active();
+    const on = playing();
+    const mark = $('#room-mark'); // a faint line on the board: how others can watch
+    mark.hidden = !on;
+    mark.textContent = on ? `Room ${R.code} \u00b7 watch at ${watchText(R.code)}` : '';
     opp.hidden = !on;
     stage.dataset.room = on ? 'on' : 'off';
     if (!on) return;
@@ -247,10 +304,87 @@ export function initRoom(ctx) {
     drawer = toggleDrawer(drawer); paintDrawer();
   });
 
+  // ---------- the display (watching: read only, nothing upside down, for a TV) ----------
+  const deltas = createDeltas();
+  const disp = $('#display');
+  const sunSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.4 5.4l1.6 1.6M17 17l1.6 1.6M5.4 18.6 7 17M17 7l1.6-1.6"/></svg>';
+  const moonSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>';
+  const panelHtml = (role) => `
+    <article class="dp-panel" data-role="${role}" data-state="waiting" data-active="off">
+      <header class="dp-ph"><h2 class="dp-name"></h2><span class="dp-their">Their turn</span></header>
+      <div class="dp-life"><span class="ico">${icons.life}</span><b class="dp-num" data-k="life">0</b><span class="delta" aria-hidden="true"></span></div>
+      <div class="dp-res">
+        <div class="dp-r" data-k="mat"><span class="ico">${icons.mat}</span><span class="lbl">Material</span><b class="dp-n">0</b><span class="delta" aria-hidden="true"></span></div>
+        <div class="dp-r" data-k="ing"><span class="ico">${icons.ing}</span><span class="lbl">Ingredient</span><b class="dp-n">0</b><span class="delta" aria-hidden="true"></span></div>
+      </div>
+      <div class="dp-souls" data-k="up"><span class="ico">${icons.soul}</span><span class="lbl">Souls</span><b class="dp-n">0</b><span class="dp-of"></span><span class="delta" aria-hidden="true"></span></div>
+      <p class="dp-wait">Waiting for player\u2026</p>
+    </article>`;
+  disp.innerHTML = `
+    <header class="dp-top">
+      <span class="dp-chip" id="dp-time" data-time="day"><span class="dp-sun">${sunSvg}</span><span class="dp-moon">${moonSvg}</span><b id="dp-time-w">Day</b></span>
+      <span class="dp-turn" id="dp-turn"></span>
+      <span class="dp-actions">
+        <button type="button" class="dp-btn" id="dp-full">Full screen</button>
+        <button type="button" class="dp-btn" id="dp-leave">Leave</button>
+      </span>
+    </header>
+    <p class="dp-line" id="dp-line" role="status"></p>
+    <div class="dp-panels">${panelHtml('host')}${panelHtml('guest')}</div>
+    <footer class="dp-foot"><p class="dp-mark" id="dp-mark"></p><div class="dp-qr" id="dp-qr"></div></footer>`;
+  $('#dp-leave').addEventListener('click', leaveWatch);
+  $('#dp-full').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }).catch(() => {}); });
+  let deltaTimer = 0;
+  function paintDisplay() {
+    const on = watching();
+    stage.dataset.display = on ? 'on' : 'off';
+    disp.hidden = !on;
+    if (!on) { clearTimeout(deltaTimer); return; }
+    const v = displayView(R);
+    const now = Date.now();
+    $('#dp-time').dataset.time = v.night ? 'night' : 'day';
+    $('#dp-time-w').textContent = v.night ? 'Night' : 'Day';
+    $('#dp-turn').textContent = v.turn === null ? '' : `Turn ${v.turn}`;
+    $('#dp-line').textContent = [viewNotice, v.line].filter(Boolean).join('\n');
+    $('#dp-line').hidden = !viewNotice && !v.line;
+    $('#dp-mark').textContent = `Room ${v.code} \u00b7 watch at ${watchText(v.code)}`;
+    const qr = $('#dp-qr');
+    if (qr.dataset.code !== v.code) { qr.innerHTML = qrSvg(watchLink(v.code)); qr.dataset.code = v.code; }
+    let live = false;
+    for (const p of v.players) {
+      const el = $(`.dp-panel[data-role="${p.role}"]`, disp);
+      el.dataset.state = p.ready ? 'ready' : 'waiting';
+      el.dataset.active = p.active ? 'on' : 'off';
+      $('.dp-name', el).textContent = p.name;
+      $('.dp-wait', el).textContent = p.here ? 'Connecting\u2026' : 'Waiting for player\u2026';
+      el.dataset.souls = p.souls ? 'on' : 'off';
+      const put = (key, value, node) => {
+        const n = value === null ? 0 : deltas.note(`${p.role}.${key}`, p.ready ? value : null, now);
+        const out = $('.delta', node);
+        out.textContent = deltaText(n); out.classList.toggle('neg', n < 0); out.classList.toggle('show', n !== 0);
+        if (n !== 0) live = true;
+      };
+      const life = $('.dp-life', el), num = $('.dp-num', life);
+      num.textContent = p.ready ? String(p.life) : ''; num.dataset.len = String(Math.max(2, num.textContent.length));
+      put('life', p.life, life);
+      for (const key of ['mat', 'ing']) {
+        const node = $(`.dp-r[data-k="${key}"]`, el);
+        $('.dp-n', node).textContent = p.ready ? String(p[key]) : '';
+        put(key, p[key], node);
+      }
+      const sn = $('.dp-souls', el);
+      $('.dp-n', sn).textContent = p.ready ? String(p.up) : '';
+      $('.dp-of', sn).textContent = p.ready ? `/ ${p.soul}` : '';
+      put('up', p.souls ? p.up : null, sn);
+    }
+    clearTimeout(deltaTimer);
+    if (live) deltaTimer = setTimeout(paintDisplay, 5100);
+  }
+
   // ---------- the bar ----------
   function paintBar() {
     const s = ctx.getState();
-    const on = active();
+    const on = playing();
     const end = $('#btn-end');
     if (on) {
       $('.et-word').textContent = 'End Turn';
@@ -260,7 +394,7 @@ export function initRoom(ctx) {
     } else end.disabled = false;
     stage.dataset.mine = on && s.active === 0 ? 'on' : 'off';
   }
-  function paintAll() { paintSheet(); paintDrawer(); paintBar(); paintSync(); }
+  function paintAll() { paintSheet(); paintDrawer(); paintBar(); paintSync(); paintDisplay(); }
   hooks.closed = stopScan;
   return hooks;
 }

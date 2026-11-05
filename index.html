@@ -72,6 +72,11 @@
     </nav>
 
     <section class="seat" data-seat="0" aria-label="You"></section>
+    <!-- Room mode: a faint line on the board saying how others can watch -->
+    <p class="room-mark" id="room-mark" aria-hidden="true" hidden></p>
+
+    <!-- Watching a room: the big-screen display (built by js/room-ui.js) -->
+    <section class="display" id="display" aria-label="Game display" hidden></section>
 
     <!-- Overlays live INSIDE the stage so they turn with it in landscape (a native dialog element would not). -->
     <div class="room-toast" id="room-toast" role="status" hidden></div>
@@ -148,6 +153,7 @@
           <div><h2 id="set-title">Settings</h2><p class="sub" id="app-ver">&nbsp;</p></div>
           <button class="xbtn" type="button" data-close aria-label="Close">×</button>
         </header>
+        <button type="button" class="btn danger set-reset" id="btn-reset">Reset game</button>
         <div class="set-row">
           <label class="set-label" for="set-name">Your name<small>Shown behind your life number</small></label>
           <input class="txt" id="set-name" type="text" maxlength="24" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="Username">
@@ -198,7 +204,6 @@
             <button type="button" data-v="cardsSides"><b>Cards, tap a side</b><small>No number. Tap left to rest a soul, right to stand one.</small></button>
           </div>
         </div>
-        <button type="button" class="btn danger" id="btn-reset">Reset game</button>
         <p class="set-note">Both players start at 10 life. Material and Ingredient start at 0. Everything stays on this device and works with no signal.</p>
         <footer class="credits">
           <p>Inspired by <a href="https://palify.org/tools/counter" target="_blank" rel="noopener">Palify</a>'s counter.</p>
@@ -291,6 +296,12 @@
         <div id="rv-pick" class="room-pick" hidden>
           <button type="button" class="room-choice" id="btn-room-host"><b>Show my code</b><span>Your friend types it or scans it</span></button>
           <button type="button" class="room-choice" id="btn-room-join"><b>Join a friend</b><span>Type their 4-digit code</span></button>
+          <button type="button" class="room-choice" id="btn-room-watch"><b>Watch a game</b><span>See a game on a big screen, read only</span></button>
+        </div>
+        <div id="rv-watch" hidden>
+          <label class="room-label" for="watch-code">Code of the game to watch</label>
+          <input class="txt room-input" id="watch-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000">
+          <button type="button" class="btn link" id="btn-watch-back">Back</button>
         </div>
         <div id="rv-join" hidden>
           <label class="room-label" for="join-code">Your friend's code</label>
@@ -304,6 +315,11 @@
           <div class="room-codebox"><span class="room-label">Room code</span><b class="room-code" id="rv-code">0000</b></div>
           <div class="room-qr" id="rv-qrwrap" hidden><div id="rv-qr" aria-hidden="false"></div></div>
           <p class="room-status" id="rv-status" aria-live="polite">&nbsp;</p>
+          <div class="room-big" id="rv-big">
+            <span class="room-label">Show on a big screen</span>
+            <div class="room-linkrow"><code id="rv-watchlink">&nbsp;</code><button type="button" class="btn" id="btn-copy-watch">Copy</button></div>
+            <div class="room-qr small" id="rv-qr2"></div>
+          </div>
           <button type="button" class="btn danger" id="btn-room-leave">Leave room</button>
         </div>
       </div>

@@ -237,19 +237,23 @@ svg { display: block; }
 
 /* icon colours (drawn for this app) */
 /* All four icons: flat sticker style, one solid fill, an outline in a darker shade of the same colour (paint-order puts it behind the fill), light details */
-.i-heart, .i-wisp, .i-log, .i-end, .i-fruit, .i-leaf { stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
+.i-heart, .i-wisp, .i-log, .i-fruit, .i-leaf { stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
 .i-heart { fill: #ef5a63; stroke: #6e0d1c; }
 .i-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; }
 .i-wisp { fill: #8f6ee6; stroke: #2f1f6b; }
 .i-wisp-in { fill: #e4dbff; }
 .i-log { fill: #7b4a12; stroke: #3f240a; }
-.i-end { fill: #a8692a; stroke: #3f240a; } /* the cut end a lighter wood, so its dark rings read */
 .i-rings { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
 .i-grain { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
 .i-fruit, .i-leaf { fill: #1eab3f; stroke: #0f6b26; }
-.i-stem { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.i-stem { fill: none; stroke: #0f6b26; stroke-width: 2.6; stroke-linecap: round; } /* where the stalk goes into the fruit */
+.i-stalk-o, .i-stalk { fill: none; stroke-linecap: round; }
+.i-stalk-o { stroke: #3f240a; stroke-width: 7.4; }
+.i-stalk { stroke: #8a5418; stroke-width: 3.2; }
 /* the fruit is drawn on a 100-unit grid: same look, strokes scaled to match the 64-unit icons */
-.ico-100 .i-fruit, .ico-100 .i-leaf { stroke-width: 5; }
+.ico-100 .i-fruit, .ico-100 .i-leaf, .ico-100 .i-log { stroke-width: 5; }
+.ico-100 .i-rings { stroke-width: 3.2; }
+.ico-100 .i-grain { stroke-width: 3.4; }
 .ico-100 .i-stem { stroke-width: 3.4; stroke-linejoin: round; }
 .i-shine2 { fill: #fff; }
 

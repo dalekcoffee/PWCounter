@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+- Ingredient: the check mark is a dark-green line where the stalk goes into the fruit, and the stalk is brown with a dark-brown outline.
+- Material: the log retraced against the card game's icon (longer, a big oval end), one brown for the whole log, dark-brown rings and grain.
+
 ## 0.2.3
 - Ingredient icon redrawn from scratch against an upscaled reference of the card game's fruit: clean curves, the leaf in front of the fruit with its own outline, a light check-mark stem and a bean-shaped shine.
 

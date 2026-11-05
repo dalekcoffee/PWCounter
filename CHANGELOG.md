@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.3
+- Ingredient icon redrawn from scratch against an upscaled reference of the card game's fruit: clean curves, the leaf in front of the fruit with its own outline, a light check-mark stem and a bean-shaped shine.
+
 ## 0.2.2
 - Real 3D dice: each die is one bevelled block (rounded edges and corners, one continuous surface, no seams between faces) with pips set into the surface, drawn with WebGL. They tumble in 3D and land on the rolled numbers, slightly tipped so they read as solid. Without WebGL the flat dice are used.
 

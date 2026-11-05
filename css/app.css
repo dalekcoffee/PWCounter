@@ -247,10 +247,10 @@ svg { display: block; }
 .i-rings { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
 .i-grain { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
 .i-fruit, .i-leaf { fill: #1eab3f; stroke: #0f6b26; }
-.i-stem { fill: none; stroke: #5b3a1a; stroke-width: 2.6; stroke-linecap: round; }
+.i-stem { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
 /* the fruit is drawn on a 100-unit grid: same look, strokes scaled to match the 64-unit icons */
 .ico-100 .i-fruit, .ico-100 .i-leaf { stroke-width: 5; }
-.ico-100 .i-stem { stroke-width: 4.2; stroke-linejoin: round; }
+.ico-100 .i-stem { stroke-width: 3.4; stroke-linejoin: round; }
 .i-shine2 { fill: #fff; }
 
 /* ---------- souls ---------- */

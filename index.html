@@ -116,15 +116,29 @@
         </header>
         <div class="dice-row">
           <button type="button" class="roll" id="btn-roll">
-            <span class="die-scene" id="die-scene" aria-hidden="true"><span class="die" id="die"></span></span>
+            <span class="die-scene" aria-hidden="true"><span class="die" data-die></span></span>
             <span class="roll-label">Roll a die</span>
           </button>
           <button type="button" class="roll" id="btn-coin">
-            <span class="coin-scene" id="coin-scene" aria-hidden="true"><span class="coin" id="coin"></span></span>
+            <span class="coin-scene" aria-hidden="true"><span class="coin" data-coin></span></span>
             <span class="roll-label">Flip a coin</span>
           </button>
         </div>
-        <p class="dice-out" id="dice-out" aria-live="polite">&nbsp;</p>
+      </div>
+    </div>
+
+    <div class="overlay throw" id="ov-throw" hidden>
+      <div class="throw-box" role="dialog" aria-modal="true" aria-labelledby="throw-out">
+        <div class="throw-stage" aria-hidden="true">
+          <span class="die-scene big" id="die-scene"><span class="die" id="die" data-die></span></span>
+          <span class="coin-scene big" id="coin-scene"><span class="coin" id="coin" data-coin></span></span>
+          <span class="throw-shadow"></span>
+        </div>
+        <p class="throw-out" id="throw-out" aria-live="polite">&nbsp;</p>
+        <div class="throw-btns">
+          <button type="button" class="btn" data-close>Done</button>
+          <button type="button" class="btn primary" id="btn-again">Roll again</button>
+        </div>
       </div>
     </div>
 

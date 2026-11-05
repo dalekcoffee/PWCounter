@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.9
+- Dice and coin: the sheet closes and the die or coin is thrown big across the screen, with the result in large type, Roll / Flip again and Done.
+- The die has rounded corners with a solid body, so no square corners or gaps show while it tumbles; the coin has a gold edge.
+
 ## 0.1.8
 - Installed app: goes full screen on the first tap even when the phone opened it as a window (Settings: "Full screen when installed", on by default). The full screen button stays available.
 

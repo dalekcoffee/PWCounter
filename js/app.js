@@ -356,43 +356,79 @@ function calcKey(e) {
 $('#btn-dice').addEventListener('click', () => openOverlay('ov-dice'));
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-const die = $('#die');
-for (let n = 1; n <= 6; n++) {
-  const f = document.createElement('div');
-  f.className = `die-f f${n}`;
-  f.innerHTML = PIPS[n].map((p) => `<i style="grid-area:p${p}"></i>`).join('');
-  die.append(f);
+// Rounded die: six faces with rounded corners, plus a slightly smaller solid core whose edges fill the
+// rounded corners, so a turning die shows a solid body instead of square faces with see-through corners.
+function buildDie(el) {
+  for (let n = 1; n <= 6; n++) {
+    const c = document.createElement('div');
+    c.className = `die-core c${n}`;
+    el.append(c);
+  }
+  for (let n = 1; n <= 6; n++) {
+    const f = document.createElement('div');
+    f.className = `die-f f${n}`;
+    f.innerHTML = PIPS[n].map((p) => `<i style="grid-area:p${p}"></i>`).join('');
+    el.append(f);
+  }
 }
-const coin = $('#coin');
-coin.innerHTML = `
+const COIN_HTML = `
+  <div class="coin-edge"></div>
   <div class="coin-f heads"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><circle class="c-sun" cx="32" cy="22" r="6"/><path class="c-rays" d="M32 8v4M32 32v4M16 22h4M44 22h4M21 11l3 3M43 11l-3 3M21 33l3-3M43 33l-3-3"/><text x="32" y="55" text-anchor="middle" class="c-letter">H</text></svg></div>
   <div class="coin-f tails"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><path class="c-moon" d="M38 9a14 14 0 1 0 0 26 11 11 0 1 1 0-26Z"/><circle class="c-star" cx="46" cy="30" r="1.6"/><text x="32" y="55" text-anchor="middle" class="c-letter">T</text></svg></div>`;
-let dieAt = [-20, 25], coinAt = 0, busy = false;
+$$('[data-die]').forEach(buildDie);
+$$('[data-coin]').forEach((el) => { el.innerHTML = COIN_HTML; });
+const die = $('#die');
+const coin = $('#coin');
+$('.dice .die').style.transform = 'rotateX(-20deg) rotateY(25deg)';
+$('.dice .coin').style.transform = 'rotateX(0deg)';
+
+let dieAt = [-20, 25], coinAt = 0, busy = false, kind = 'die';
 const setDie = (a, ms) => { die.style.transition = ms ? `transform ${ms}ms cubic-bezier(.15,.7,.2,1)` : 'none'; die.style.transform = `rotateX(${a[0]}deg) rotateY(${a[1]}deg)`; };
 const setCoin = (a, ms) => { coin.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3,.6,.3,1)` : 'none'; coin.style.transform = `rotateX(${a}deg)`; };
 setDie(dieAt, 0);
-function play(scene, ms, start, land, words) {
+setCoin(coinAt, 0);
+function play(scene, ms, start, words) {
   if (busy) return; // taps during a roll are ignored
   busy = true;
-  const out = $('#dice-out');
+  const out = $('#throw-out');
+  const again = $('#btn-again');
   out.classList.remove('show');
   out.textContent = '\u00a0';
-  const done = () => { land(); out.textContent = words; out.classList.add('show'); busy = false; scene.classList.remove('going'); };
+  again.disabled = true;
+  const done = () => {
+    out.textContent = words; out.classList.add('show');
+    busy = false; again.disabled = false;
+    $('#ov-throw').classList.remove('going');
+  };
   if (reduceMotion()) { start(0); done(); return; }
-  scene.classList.add('going');
+  void scene.offsetWidth;
+  $('#ov-throw').classList.add('going');
   start(ms);
   setTimeout(done, ms + 40);
 }
-$('#btn-roll').addEventListener('click', () => {
+function rollNow() {
   const n = rollDie(6); // the result is decided here; the die only shows it
   dieAt = dieTarget(dieAt, n);
-  play($('#die-scene'), 1000, (ms) => setDie(dieAt, ms), () => {}, `Rolled a ${n}`);
-});
-$('#btn-coin').addEventListener('click', () => {
+  play($('#die-scene'), 1300, (ms) => setDie(dieAt, ms), `Rolled a ${n}`);
+}
+function flipNow() {
   const c = flipCoin();
-  coinAt = coinTarget(coinAt, c);
-  play($('#coin-scene'), 1200, (ms) => setCoin(coinAt, ms), () => {}, c === 'heads' ? 'Heads' : 'Tails');
-});
+  coinAt = coinTarget(coinAt, c, 6);
+  play($('#coin-scene'), 1500, (ms) => setCoin(coinAt, ms), c === 'heads' ? 'Heads' : 'Tails');
+}
+function throwBig(k) {
+  kind = k;
+  const ov = $('#ov-throw');
+  ov.dataset.kind = k;
+  $('#btn-again').textContent = k === 'die' ? 'Roll again' : 'Flip again';
+  openOverlay('ov-throw'); // replaces the chooser sheet
+  (k === 'die' ? rollNow : flipNow)();
+}
+$('#btn-roll').addEventListener('click', () => throwBig('die'));
+$('#btn-coin').addEventListener('click', () => throwBig('coin'));
+$('#btn-again').addEventListener('click', () => (kind === 'die' ? rollNow : flipNow)());
+// a tap on the big die / coin throws again too
+$('.throw-stage').addEventListener('click', () => { if (!busy) (kind === 'die' ? rollNow : flipNow)(); });
 
 // ---------- settings ----------
 $('#app-ver').textContent = `Version ${APP_VERSION}`;

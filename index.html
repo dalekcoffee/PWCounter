@@ -28,6 +28,7 @@
   <link rel="modulepreload" href="js/dice-anim.js">
   <link rel="modulepreload" href="js/die3d.js">
   <link rel="modulepreload" href="js/dom-write.js">
+  <link rel="modulepreload" href="js/first-pick.js">
   <link rel="modulepreload" href="js/room-memory.js">
   <link rel="modulepreload" href="js/room-sync.js">
   <link rel="modulepreload" href="js/room-proto.js">
@@ -75,7 +76,7 @@
       </div>
       <button class="endturn" id="btn-end" type="button">
         <span class="et-word">End Turn</span>
-        <span class="et-turn" id="turn-label">Turn 1</span>
+        <span class="et-turn"><span id="turn-label">Turn 1</span><span class="et-clock" id="turn-clock" hidden></span></span>
       </button>
       <div class="bar-side end">
         <button class="ibtn" id="btn-calc" type="button" aria-label="Calculator" title="Calculator">
@@ -186,7 +187,7 @@
             <button type="button" data-v="1">One</button><button type="button" data-v="2">Two</button>
           </div>
         </div>
-        <div class="set-row">
+        <div class="set-row" id="row-land">
           <span class="set-label">Landscape<small>Turns the board without rotating the phone</small></span>
           <div class="seg" data-setting="landscape">
             <button type="button" data-v="off">Off</button><button type="button" data-v="left">Left</button><button type="button" data-v="right">Right</button>
@@ -278,6 +279,41 @@
         </section>
       </div>
     </div>
+
+    <!-- two players on one screen: who goes first, a big button on each player's side -->
+    <div class="overlay first2" id="ov-first2" data-sticky role="dialog" aria-modal="true" aria-label="Who goes first?" hidden>
+      <div class="f2-side top" data-seat="1">
+        <button type="button" class="f2-big" data-pick="1">Player 2 goes first</button>
+        <div class="f2-calls"><button type="button" class="f2-call"><b></b><small></small></button><button type="button" class="f2-call"><b></b><small></small></button></div>
+        <p class="f2-say" aria-live="polite"></p>
+      </div>
+      <div class="f2-mid">
+        <div class="f2-m" data-for="pick">
+          <button type="button" class="f2-roll" id="f2-roll" aria-label="Roll a die or flip a coin to decide"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/></svg><span>Roll or flip</span></button>
+          <button type="button" class="btn link" data-close>Not now</button>
+        </div>
+        <div class="f2-m" data-for="method">
+          <button type="button" class="btn" data-method="die">Roll a die</button>
+          <button type="button" class="btn" data-method="coin">Flip a coin</button>
+          <button type="button" class="btn link" data-back>Back</button>
+        </div>
+        <div class="f2-m" data-for="call">
+          <span class="f2-hint">Either player picks one</span>
+          <button type="button" class="btn link" data-back>Back</button>
+        </div>
+        <div class="f2-m" data-for="throw result">
+          <span class="d2 f2-die" data-face="1"></span><span class="f2-coin"></span>
+        </div>
+      </div>
+      <div class="f2-side bottom" data-seat="0">
+        <button type="button" class="f2-big" data-pick="0">Player 1 goes first</button>
+        <div class="f2-calls"><button type="button" class="f2-call"><b></b><small></small></button><button type="button" class="f2-call"><b></b><small></small></button></div>
+        <p class="f2-say" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <!-- the game begins: a big word over the whole board -->
+    <div class="begin" id="begin" aria-live="assertive" hidden><b>Begin</b><span id="begin-sub"></span></div>
 
     <div class="overlay" id="ov-first" hidden>
       <div class="sheet confirm first" role="dialog" aria-modal="true" aria-labelledby="first-title" aria-describedby="first-sub">

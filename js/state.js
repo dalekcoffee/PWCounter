@@ -34,6 +34,7 @@ export function defaultState() {
     night: false,
     turn: 1,
     active: 0,
+    turnAt: 0, // two players: when the current turn began (ms), for the turn clock; 0 = not started
     first: null, // souls only: who went first (seat 0 | 1, one player: 0 = I went first, 1 = I went second); null = not chosen yet
     // settings (kept by a reset)
     players: 1, // a first visit opens in one-player mode
@@ -102,6 +103,7 @@ export function cleanState(raw) {
     turn: int(raw.turn, 0, 9999, 1),
     active: raw.active === 1 ? 1 : 0,
     first: raw.first === 0 || raw.first === 1 ? raw.first : null,
+    turnAt: Number.isFinite(raw.turnAt) && raw.turnAt > 0 ? Math.floor(raw.turnAt) : 0,
     players: raw.players === 2 ? 2 : 1,
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
     flip: raw.flip !== false,
@@ -215,7 +217,7 @@ export function needsResume(state, now) {
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {
-  return { ...state, seats: [freshSeat(), freshSeat()], night: false, turn: 1, active: 0, first: null };
+  return { ...state, seats: [freshSeat(), freshSeat()], night: false, turn: 1, active: 0, first: null, turnAt: 0 };
 }
 
 /** Change a setting, cleaned. Changing players or switching souls on starts the soul set-up again. */

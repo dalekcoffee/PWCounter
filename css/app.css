@@ -493,6 +493,65 @@ svg { display: block; }
 .sheet.sync .btn.link { width: 100%; }
 @container stage (max-height: 520px) { .sync-card ul { grid-template-columns: 1fr 1fr; column-gap: 12px; } .sync-card h4 { margin-top: 4px; } }
 
+/* ---------- who goes first, two players on one screen ---------- */
+.overlay.first2 {
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  display: grid; grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: stretch; justify-content: stretch;
+  background: rgba(3, 6, 18, .97); /* the board does not show through the big buttons */
+}
+.f2-side { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; }
+.stage[data-flip='on'] .f2-side.top { transform: rotate(180deg); } /* the top player reads their side */
+.f2-big, .f2-call {
+  min-height: 0; border-radius: var(--radius); background: var(--tile), #08112a; color: var(--num); text-align: center; padding: 14px;
+  border: 2px solid color-mix(in srgb, var(--acc) 55%, transparent);
+}
+.f2-big { font: 600 clamp(28px, 7vmin, 56px)/1.15 var(--font-head); }
+.f2-big:active, .f2-call:not(:disabled):active { background: color-mix(in srgb, var(--acc) 30%, var(--bg, #0b1020)); }
+.f2-calls { display: none; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
+.f2-call { display: grid; place-content: center; gap: 8px; }
+.f2-call b { font: 600 clamp(26px, 6vmin, 50px)/1 var(--font-head); }
+.f2-call small { font: 500 13px/1 var(--font-mono); color: var(--text-2); }
+.f2-call[aria-pressed='true'] { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); opacity: 1; }
+.f2-call[aria-pressed='true'] small { color: var(--acc-ink); }
+.f2-call:disabled:not([aria-pressed='true']) { opacity: .3; }
+#ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-big { display: none; }
+#ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-calls { display: grid; }
+.f2-say { margin: 0; min-height: 1.35em; text-align: center; font: 600 clamp(15px, 3.4vmin, 22px)/1.35 var(--font-ui); color: var(--text); }
+.f2-side.won .f2-say { color: var(--gold); }
+.f2-mid { display: grid; place-items: center; min-height: 72px; }
+.f2-m { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+#ov-first2[data-step='pick'] .f2-m:not([data-for~='pick']), #ov-first2[data-step='method'] .f2-m:not([data-for~='method']),
+#ov-first2[data-step='call'] .f2-m:not([data-for~='call']), #ov-first2[data-step='throw'] .f2-m:not([data-for~='throw']),
+#ov-first2[data-step='result'] .f2-m:not([data-for~='result']) { display: none; }
+.f2-roll {
+  display: inline-flex; align-items: center; gap: 10px; height: 64px; padding: 0 24px 0 18px; border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--acc) 60%, transparent); background: rgba(13, 19, 38, .9); color: var(--text); font: 700 16px/1 var(--font-ui);
+}
+.f2-roll svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.f2-hint { color: var(--text-2); font: 600 14px/1.2 var(--font-ui); }
+.f2-die { --d: 84px; }
+.f2-m .btn { min-height: 52px; padding: 0 22px; font-size: 16px; }
+#ov-first2[data-kind='coin'] .f2-die, #ov-first2[data-kind='die'] .f2-coin { display: none; }
+.f2-coin { padding: 14px 26px; border-radius: 999px; background: radial-gradient(circle at 35% 30%, #fff1c2, #e3c069 55%, #b88a2e); color: #3a2706; font: 700 22px/1 var(--font-head); min-width: 120px; text-align: center; }
+
+/* ---------- the game begins ---------- */
+.begin { position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; justify-items: center; gap: 10px; pointer-events: none; }
+.stage[data-face='top'] .begin { transform: rotate(180deg); }
+.begin b { font: 600 clamp(72px, 22vmin, 180px)/1 var(--font-head); color: var(--gold); letter-spacing: .02em; text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 60px rgba(227, 200, 147, .35); }
+.begin span { font: 700 clamp(16px, 4vmin, 26px)/1.2 var(--font-ui); color: var(--text); text-shadow: 0 2px 16px rgba(3, 6, 18, .95); }
+.begin.go { animation: beginIn 2.1s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes beginIn { 0% { opacity: 0; transform: scale(.6); } 18% { opacity: 1; transform: scale(1.06); } 28% { transform: scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: scale(1.04); } }
+.stage[data-face='top'] .begin.go { animation-name: beginInTop; }
+@keyframes beginInTop { 0% { opacity: 0; transform: rotate(180deg) scale(.6); } 18% { opacity: 1; transform: rotate(180deg) scale(1.06); } 28% { transform: rotate(180deg) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: rotate(180deg) scale(1.04); } }
+
+/* the first 10 seconds of a game the turn button rests (greyed, a bar fills), so nobody ends turn 1 by accident */
+.endturn { position: relative; }
+.endturn.wait::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--acc); transform-origin: left; animation: lockbar 10s linear forwards; }
+@keyframes lockbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* the two players' turn clock, after the turn number */
+.et-clock { font-variant-numeric: tabular-nums; }
+.et-clock::before { content: ' \00b7  '; white-space: pre; }
+
 /* ---------- overlays ---------- */
 /* settings rows far down the sheet are laid out only when scrolled to */
 #ov-set .set-row { content-visibility: auto; contain-intrinsic-size: auto 72px; }

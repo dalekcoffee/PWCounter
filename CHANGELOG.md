@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- Who goes first, two players on one screen: a big button on each player's side ("Player 1 goes first" at the bottom, "Player 2 goes first" at the top, facing that player). In the middle, "Roll or flip": roll a die (high 4–6 / low 1–3) or flip a coin; either player calls on their side, the other side lights up with the other call, and whoever's call comes up goes first.
+- The game begins with a big "Begin" over the board (one and two players), facing the player who goes first. The turn button rests (greyed, a bar fills) for the first 10 seconds so nobody ends turn 1 by accident.
+- Two players: a clock on the turn button shows how long the current turn has been going.
+- Landscape is not offered with two players on one screen (the board stays upright).
+
 ## 0.2.10
 - Second performance pass (nothing changed in how it works or looks):
   - Day / night switch: the tiles no longer run a colour transition (their gradient could not fade anyway, and fading the edge redrew every tile on every frame): about a tenth of the drawing work per switch. The sky still crossfades.

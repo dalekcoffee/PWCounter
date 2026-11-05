@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.6"; }
+:root { --pwc-v: "0.3.7"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -164,7 +164,7 @@ svg { display: block; }
 /* where each tile sits: life on top, the resources, then souls (when tracked) */
 .t-life { grid-area: life; } .res { grid-area: res; } .t-soul { grid-area: soul; }
 .seat-in { grid-template-areas: 'life' 'res'; }
-.stage[data-souls='on'] .seat-in { grid-template-areas: 'life' 'res' 'soul'; grid-template-rows: minmax(0, 1fr) clamp(88px, 11cqh, 120px) clamp(104px, 12cqh, 124px); }
+.stage[data-souls='on'] .seat-in { grid-template-areas: 'life' 'res' 'soul'; grid-template-rows: minmax(0, 1fr) clamp(84px, 10cqh, 116px) clamp(138px, 15cqh, 164px); } /* 0.3.7: souls taller, for the − of N + strip */
 .stage[data-souls='on'][data-players='1'] .seat-in { grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .8fr); }
 .stage[data-souls='on'][data-players='1'][data-soulbg='on'] .seat-in, .stage[data-souls='on'][data-soulview='cards'] .seat-in { grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1fr); }
 .stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-areas: 'life res'; }
@@ -289,6 +289,21 @@ svg { display: block; }
 .soul-adj b { color: var(--text); }
 .soul-adj { gap: 8px; }
 .soul-adj button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--pm-edge); background: var(--pm-fill); color: var(--pm); font: 700 15px/1 var(--font-ui); padding: 0; }
+/* 0.3.7: "− of 5 +" has its own strip along the bottom of the soul tile, under a line, with bigger buttons;
+   the big rest / stand halves stop above it, so a tap that misses a small button does nothing */
+.t-soul { --adj-h: 44px; }
+.stage[data-players='2'] .t-soul { --adj-h: 40px; }
+.stage[data-players='2']:not([data-soulview='cards']) .soul-adj button { height: 30px; }
+.stage:not([data-soulview='cards']) .t-soul { padding-bottom: var(--adj-h); }
+.stage:not([data-soulview='cards']) .t-soul > .hit { bottom: var(--adj-h); }
+.stage:not([data-soulview='cards']) .t-soul::after { bottom: calc(var(--adj-h) + 6px); }
+.stage:not([data-soulview='cards']) .soul-adj {
+  left: 0; right: 0; bottom: 0; translate: none; height: var(--adj-h); justify-content: center; gap: 10px;
+  border-top: 1px solid var(--border); background: rgba(3, 6, 18, .28); font-size: 13px;
+}
+.stage:not([data-soulview='cards']) .soul-adj button { width: 54px; height: 32px; border-radius: 10px; font-size: 20px; }
+.stage:not([data-soulview='cards']) .soul-adj button:active { background: var(--tile-press); }
+.stage:not([data-soulview='cards']) .soul-adj .of { min-width: 4.5em; text-align: center; }
 .soul-cards { display: none; }
 /* cards view (one player): the souls as cards, tap to rest or stand */
 .stage[data-soulview='cards'] .t-soul > .hit, .stage[data-soulview='cards'] .t-soul > .pm, .stage[data-soulview='cards'] .t-soul .core { display: none; }
@@ -328,13 +343,13 @@ svg { display: block; }
 /* cards-only styles show no number */
 .stage[data-soulview='cards'] .sc-count { display: none; }
 /* "Numbers on cards": the cards drawn faintly behind the count; not tappable, the halves do the work */
-.stage[data-soulbg='on'] .soul-cards { display: flex; position: absolute; inset: 12px 64px 40px; z-index: 1; opacity: .3; pointer-events: none; }
+.stage[data-soulbg='on'] .soul-cards { display: flex; position: absolute; inset: 12px 64px calc(var(--adj-h) + 6px); z-index: 1; opacity: .3; pointer-events: none; }
 .stage[data-soulbg='on'] .sc-head, .stage[data-soulbg='on'] .sc-hit, .stage[data-soulbg='on'] .sc-pm { display: none; }
 .stage[data-soulbg='on'] .sc-body { margin: 0; }
 .stage[data-soulbg='on'] .t-soul .num { text-shadow: 0 2px 14px rgba(3, 6, 18, .85); }
 /* two players, Numbers on cards: small soul cards behind the count, two rows of five bunched in the middle
    (standing = a card face with a soul flame, rested = face down, empty = a dashed outline) */
-.stage[data-players='2'][data-soulbg='on'] .soul-cards { inset: 4px 48px 28px; opacity: .55; }
+.stage[data-players='2'][data-soulbg='on'] .soul-cards { inset: 4px 48px calc(var(--adj-h) + 4px); opacity: .55; }
 .stage[data-players='2'][data-soulbg='on'] .sc-row { grid-template-columns: repeat(5, 38px); justify-content: center; gap: 4px 6px; }
 .stage[data-players='2'][data-soulbg='on'] .sc-card {
   aspect-ratio: 63 / 88; height: 100%; width: auto; max-width: 100%; border-radius: 4px; transform: none; filter: none;

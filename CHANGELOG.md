@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.7
+- Souls: the small "− of 5 +" buttons (add or remove a soul) have their own strip along the bottom of the soul tile, under a line, and are bigger. The big rest / stand halves stop above the strip, so a tap that misses a small button no longer rests or stands a soul. With two players the soul tile is a little taller (the life tile a little shorter) to make room.
+
 ## 0.3.6
 - Fixed: on some devices the who-goes-first screen showed every button at once (Go first / Go second on both sides, I go second, the one-player heading). The page had arrived with an old stylesheet from the previous version's offline copy. The page now asks for its own version of the stylesheet and checks that the page, stylesheet and scripts match; if they do not, it forgets the old offline copy and reloads once. The offline copy also refuses a new version whose stylesheet is not that version.
 

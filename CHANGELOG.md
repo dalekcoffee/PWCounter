@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.7
+- With souls on, the turn button says "Start game" until who goes first is chosen, then "Start turn" / "End Turn".
+
 ## 0.1.6
 - Souls show the "+1" / "−2" badge too (resting, standing, a tapped card, or adding / removing souls), like life and resources.
 

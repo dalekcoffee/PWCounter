@@ -192,9 +192,11 @@ function render(prev) {
     });
   }
   const oneSouls = players === 1 && s.souls && !inRoom;
-  $('.et-word').textContent = oneSouls ? 'Start turn' : 'End Turn';
-  $('#turn-label').textContent = oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`;
-  $('#btn-end').setAttribute('aria-label', oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
+  const setup = needsFirst(s) && !inRoom; // souls on, who goes first not chosen yet
+  $('.et-word').textContent = setup ? 'Start game' : oneSouls ? 'Start turn' : 'End Turn';
+  $('#btn-end').classList.toggle('long', setup);
+  $('#turn-label').textContent = setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`;
+  $('#btn-end').setAttribute('aria-label', setup ? 'Start game: choose who goes first.' : oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
   const tb = $('#btn-time');
   tb.setAttribute('aria-pressed', String(s.night));
   tb.setAttribute('aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');

@@ -167,7 +167,7 @@ svg { display: block; }
   display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
   background: var(--tile); border: 1px solid var(--tile-edge); border-radius: var(--radius-sm);
   box-shadow: 0 14px 34px rgba(3, 6, 18, .35);
-  container-type: size; transition: background .6s, border-color .6s;
+  container-type: size; /* no colour transition: the gradient cannot fade anyway, and fading the edge redrew every tile on every frame of the day / night switch */
 }
 .t-life { border-radius: var(--radius); }
 .hit { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 1; border: 0; padding: 0; transition: background .12s; }

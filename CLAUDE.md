@@ -10,7 +10,7 @@ Static PWA served by GitHub Pages at pwcounter.dalek.coffee. Vanilla ES modules,
 - Face to face (`stage[data-face=top]`, two players, flip on, the top player's turn): `.bar` and every `.overlay` are rotated 180° to face the active player.
 - Overlays are divs inside `#stage` (never a native dialog element, which would not turn with the landscape setting).
 - Every file the app needs must be in `sw.js` SHELL (tested). Version lives in js/version.js, package.json, sw.js VERSION and CHANGELOG.md (tested equal); bump on every change.
-- Performance (0.2.8, for old tablets): write the DOM through js/dom-write.js (`setText`, `setHidden`, `setData`, `setAttr`, `setProp` only write a changed value); save through `saveSoon()` (flushed on hide / pagehide); no `backdrop-filter` and no animated `filter` / `box-shadow` (animate opacity or transform on a layer instead); nothing animates by day; the dice shader stays loop-free.
+- Performance (0.2.8, for old tablets): write the DOM through js/dom-write.js (`setText`, `setHidden`, `setData`, `setAttr`, `setProp` only write a changed value); save through `saveSoon()` (flushed on hide / pagehide); no `backdrop-filter` and no animated `filter` / `box-shadow` (animate opacity or transform on a layer instead); nothing animates by day; the dice shader stays loop-free; no colour transitions on tiles; every module is `modulepreload`ed in index.html (except the lazily imported js/qr.js + vendor, still in SHELL).
 - Original design only: never copy another site's markup, art or branding.
 - Commit identity: `dalekcoffee <78516780+dalekcoffee@users.noreply.github.com>`.
 

@@ -8,7 +8,6 @@ import { makeCode, validCode, cleanCode, joinLink, watchLink, watchText, codeFro
 import { displayView, createDeltas, deltaText, AUTO_WATCH_NOTICE } from './room-display.js';
 import { startRoomGame, afterRoomReset, leaveRoomState, settleRoom, applyShared, sharedOf, sharedDiffers, selfDiffers, statusText, handleView, turnText, turnWords } from './room-game.js';
 import { toggleDrawer, setDrawer, initialDrawer, toStageDy, dragResult, dragProgress, DRAG_MIN } from './drawer.js';
-import { qrSvg } from './qr.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 
 const LABEL = { life: 'Life', mat: 'Material', ing: 'Ingredient', soul: 'Souls' };
@@ -159,6 +158,12 @@ export function initRoom(ctx) {
 
   // ---------- the sheet ----------
   const show = (id, on) => { $(`#${id}`).hidden = !on; };
+  // The QR encoder (46 KB) loads the first time a QR code is shown, not with the counter; then everything repaints.
+  let qrSvg = null, qrLoad = null;
+  function qrReady() {
+    if (!qrLoad) qrLoad = import('./qr.js').then((m) => { qrSvg = m.qrSvg; paintAll(); }, () => { qrLoad = null; });
+    return !!qrSvg;
+  }
   function paintSheet() {
     const live = playing();
     show('rv-off', !available);
@@ -174,12 +179,11 @@ export function initRoom(ctx) {
       const showQr = R.role === 'host' && R.status !== 'connected';
       setHidden($('#rv-qrwrap'), !showQr);
       if (showQr) {
-        const svg = qrSvg(joinLink(R.code));
-        if ($('#rv-qr').dataset.code !== R.code) { $('#rv-qr').innerHTML = svg; $('#rv-qr').dataset.code = R.code; }
+        if ($('#rv-qr').dataset.code !== R.code && qrReady()) { $('#rv-qr').innerHTML = qrSvg(joinLink(R.code)); $('#rv-qr').dataset.code = R.code; }
       }
       setText($('#rv-watchlink'), watchLink(R.code));
       setHidden($('#rv-qr2'), showQr); // the join code is the one to scan while waiting; the big-screen code follows
-      if ($('#rv-qr2').dataset.code !== R.code) { $('#rv-qr2').innerHTML = qrSvg(watchLink(R.code)); $('#rv-qr2').dataset.code = R.code; }
+      if ($('#rv-qr2').dataset.code !== R.code && qrReady()) { $('#rv-qr2').innerHTML = qrSvg(watchLink(R.code)); $('#rv-qr2').dataset.code = R.code; }
     }
     setHidden($('#btn-scan'), !('BarcodeDetector' in window));
     setHidden($('#scan-hint'), 'BarcodeDetector' in window);
@@ -351,7 +355,7 @@ export function initRoom(ctx) {
     setHidden($('#dp-line'), !viewNotice && !v.line);
     setText($('#dp-mark'), `Room ${v.code} \u00b7 watch at ${watchText(v.code)}`);
     const qr = $('#dp-qr');
-    if (qr.dataset.code !== v.code) { qr.innerHTML = qrSvg(watchLink(v.code)); qr.dataset.code = v.code; }
+    if (qr.dataset.code !== v.code && qrReady()) { qr.innerHTML = qrSvg(watchLink(v.code)); qr.dataset.code = v.code; }
     let live = false;
     for (const p of v.players) {
       const el = $(`.dp-panel[data-role="${p.role}"]`, disp);

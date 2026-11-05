@@ -40,3 +40,12 @@ test('overlays sit inside the stage (so they turn with it) and no native dialog 
   }
   assert.doesNotMatch(html, /<dialog[\s>]/);
 });
+
+test('every module the page preloads is in the offline shell, and the QR encoder loads only when needed', () => {
+  const html = read('index.html'), sw = read('sw.js');
+  const pre = [...html.matchAll(/rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(pre.length > 10);
+  for (const f of pre) assert.ok(sw.includes(`'${f}'`), f);
+  assert.ok(!pre.includes('js/qr.js') && !pre.includes('js/vendor/qrcodegen.js'));
+  assert.ok(sw.includes("'js/qr.js'") && sw.includes("'js/vendor/qrcodegen.js'")); // still there offline
+});

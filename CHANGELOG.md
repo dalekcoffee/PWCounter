@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10
+- Second performance pass (nothing changed in how it works or looks):
+  - Day / night switch: the tiles no longer run a colour transition (their gradient could not fade anyway, and fading the edge redrew every tile on every frame): about a tenth of the drawing work per switch. The sky still crossfades.
+  - Loading: every module is requested at once instead of one import level at a time, and the QR encoder (46 KB) loads only when a QR code is first shown. On a slow first visit the counter is ready in about 1.4 s instead of 2.0 s.
+  - In a room the join QR code is no longer worked out again on every repaint.
+
 ## 0.2.9
 - Who goes first (two players): the top player's button is now above the bottom player's.
 - Face to face: on the top player's turn the bar (End Turn, day / night, calculator, dice, settings) and the pop-ups turn round to face them.

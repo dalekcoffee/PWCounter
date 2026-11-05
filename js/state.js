@@ -137,8 +137,8 @@ export function beginTurn(state, seat) {
   return withSeat(state, seat, { soul, up: soul });
 }
 
-/** Does the game still need to know who goes first? (only while souls are tracked) */
-export const needsFirst = (state) => state.souls && state.first === null;
+/** Does the game still need to know who goes first? Two players: always (0.3.5). One player: only while souls are tracked. */
+export const needsFirst = (state) => (state.souls || state.players === 2) && state.first === null;
 
 /**
  * Who goes first. Two players: `seat` is the seat going first (0 bottom, 1 top).
@@ -148,6 +148,7 @@ export const needsFirst = (state) => state.souls && state.first === null;
  */
 export function chooseFirst(state, seat) {
   if (seat !== 0 && seat !== 1) return state;
+  if (!state.souls) return { ...state, first: seat, active: state.players === 2 ? seat : 0, turn: 1 }; // turns only
   // only the souls and the turn start over: life and resources stay (souls can be switched on mid-game)
   let s = { ...state, first: seat, seats: state.seats.map((x) => ({ ...x, soul: 0, up: 0 })) };
   if (s.players === 1) {
@@ -168,7 +169,7 @@ export function endTurn(state) {
     return state.souls ? beginTurn(next, 0) : next;
   }
   const active = state.active === 0 ? 1 : 0;
-  const first = state.souls && state.first !== null ? state.first : 0;
+  const first = state.first !== null ? state.first : 0;
   const turn = active === first ? Math.min(9999, state.turn + 1) : state.turn;
   const next = { ...state, active, turn };
   return state.souls ? beginTurn(next, active) : next;

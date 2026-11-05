@@ -161,3 +161,17 @@ test('a game saved before soul styles keeps its look', () => {
   assert.equal(cleanSoulStyle({}), 'numbersCards');
   assert.equal(cleanSoulStyle({ soulStyle: 'numbers' }), 'numbers'); // a chosen style is kept
 });
+
+test('two players settle who goes first even without souls (0.3.5); one player only with souls', () => {
+  const two = setSetting(defaultState(), 'players', 2);
+  assert.equal(two.souls, false);
+  assert.equal(needsFirst(two), true);
+  assert.equal(needsFirst(defaultState()), false);
+  const s = chooseFirst(two, 1);
+  assert.equal(s.first, 1);
+  assert.equal(s.active, 1);
+  assert.equal(s.turn, 1);
+  assert.deepEqual(s.seats.map((x) => [x.soul, x.up]), [[0, 0], [0, 0]]); // no souls dealt
+  assert.equal(needsFirst(s), false);
+  assert.equal(needsFirst(resetGame(s)), true); // a reset asks again
+});

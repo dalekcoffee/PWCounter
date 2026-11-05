@@ -213,7 +213,7 @@ function render(prev) {
     });
   }
   const oneSouls = players === 1 && s.souls && !inRoom;
-  const setup = needsFirst(s) && !inRoom; // souls on, who goes first not chosen yet
+  const setup = needsFirst(s) && !inRoom; // who goes first not chosen yet (two players, or one player with souls)
   setText($('.et-word'), setup ? 'Start game' : oneSouls ? 'Start turn' : 'End Turn');
   $('#btn-end').classList.toggle('long', setup);
   setText($('#turn-label'), setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`);
@@ -341,8 +341,10 @@ function paintF2() {
   // the choice after the toss: yours, or (one player) the one your opponent tells you
   const theirs = solo && f2.winner === 1;
   const [cf, cs] = $$('.f2-side.bottom .f2-choose .f2-call', f2Ov);
-  setText($('b', cf), theirs ? 'They go first' : 'Go first'); setText($('small', cf), theirs ? 'you get 1 soul now' : '2 souls now');
-  setText($('b', cs), theirs ? 'They go second' : 'Go second'); setText($('small', cs), theirs ? 'you get 2 souls now' : '1 soul now');
+  const sl = state.souls; // without souls the buttons say nothing about souls
+  $$('.f2-side.top .f2-choose small', f2Ov).forEach((x, i) => setText(x, !sl ? '' : i === 0 ? '2 souls now' : '1 soul now'));
+  setText($('b', cf), theirs ? 'They go first' : 'Go first'); setText($('small', cf), !sl ? '' : theirs ? 'you get 1 soul now' : '2 souls now');
+  setText($('b', cs), theirs ? 'They go second' : 'Go second'); setText($('small', cs), !sl ? '' : theirs ? 'you get 2 souls now' : '1 soul now');
   for (const side of $$('.f2-side', f2Ov)) {
     const seat = Number(side.dataset.seat);
     if (f2.kind) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.5
+- Two players without Track souls: a new game or a reset asks who goes first again (tap, roll or flip), so End Turn, the turn panel, the face-to-face turning and the turn clock start from the right player. Before, only games with souls asked, and the turn just started with Player 1. One player without souls still has no turns to track.
+
 ## 0.3.4
 - Fixed: after an update, the dice / coin buttons and settings could stop working. The offline copy could end up with the page from one version and the scripts from another; it now downloads each version whole, checks the files match, and never mixes them.
 - Who goes first: whoever wins the roll or flip now chooses to go first or second (Go first / Go second on their side).

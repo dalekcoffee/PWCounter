@@ -135,7 +135,8 @@ export function myTurnStarts(state) {
 }
 /** Room mode asks nobody who goes first: the host does. Souls: the second player starts with 1 soul (6.2.1.5). */
 export function roomSetup(state, role) {
-  if (!state.souls || state.first !== null) return state;
+  if (state.first !== null) return state;
+  if (!state.souls) return { ...state, first: role === 'host' ? 0 : 1 }; // no souls to deal, but who goes first is known
   const s = { ...state, turn: 1 };
   if (role === 'host') return { ...beginTurn({ ...s, first: 0 }, 0), active: 0 };
   return { ...s, first: 1, active: 1, seats: s.seats.map((x, i) => (i === 0 ? { ...x, soul: 1, up: 1 } : { ...x, soul: 0, up: 0 })) };

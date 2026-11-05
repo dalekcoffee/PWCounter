@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.8
+- Faster on slow and older devices, nothing changed in how it works or looks:
+  - 3D dice: the pips are worked out without a loop and the dice are drawn at a capped resolution; the shadow is a plain oval instead of a blur redone on every frame. On a slow graphics chip a roll went from about 5 to about 45 frames a second.
+  - By day nothing animates any more (the stars, invisible then, kept the screen redrawing); at night the twinkle runs on opacity, which the graphics chip does alone.
+  - No blur behind the round buttons, the turn button and the opponent drawer (it was redone on every frame of the moving sky).
+  - A tap only updates what changed on the board, and the game is saved a moment later (always when the app is hidden or closed): about a sixth of the layout work per tap.
+  - Pop-ups open with their own layer (about 60% less drawing), and settings rows far down are laid out only when scrolled to.
+  - The turn glow fades as its own layer instead of repainting a blurred shadow.
+
 ## 0.2.7
 - Souls are no longer experimental: "Track souls" sits with the other settings, and the soul styles show only while it is on.
 - The default soul style is Numbers on cards (listed first). A style you already picked is kept.

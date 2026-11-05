@@ -1,6 +1,6 @@
 // PW Counter service worker: the app works offline after the first visit.
 // Bump VERSION (it follows js/version.js) and the cache is replaced on the next visit.
-const VERSION = '0.2.7';
+const VERSION = '0.2.8';
 const CACHE = `pwc-${VERSION}`;
 const FONTS = 'pwc-fonts';
 const SHELL = [
@@ -17,6 +17,7 @@ const SHELL = [
   'js/room-game.js',
   'js/dice-anim.js',
   'js/die3d.js',
+  'js/dom-write.js',
   'js/room-memory.js',
   'js/room-sync.js',
   'js/room-proto.js',

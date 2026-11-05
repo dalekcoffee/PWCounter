@@ -9,6 +9,7 @@ import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
 import { createDice } from './die3d.js';
 import { initRoom } from './room-ui.js';
+import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 
 const KEY = 'pwc.state';
@@ -25,13 +26,19 @@ function save(s) {
 }
 
 let state = load();
+// Saving waits a moment so a run of taps (or a held button) writes once; it is flushed when the app is hidden or closed.
+let saveTimer = 0;
+function flushSave() { if (!saveTimer) return; clearTimeout(saveTimer); saveTimer = 0; save(state); }
+function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = 0; save(state); }, 300); }
+addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 
 function commit(next, remote = false) {
   next = roomUi.settle(next); // in a room nobody is asked who goes first
   if (next === state) return;
   const prev = state;
   state = next;
-  save(state);
+  saveSoon();
   render(prev);
   roomUi.changed(prev, state, remote);
 }
@@ -157,53 +164,53 @@ let lastNight = null;
 function render(prev) {
   const s = state;
   const night = roomUi.watching() ? roomUi.watchNight() : s.night; // watching: the sky follows the game on the table
-  stage.dataset.time = night ? 'night' : 'day';
+  setData(stage, 'time', night ? 'night' : 'day');
   const inRoom = roomUi.active(); // in a room your seat is the one-player layout, whatever the players setting says
   const players = inRoom ? 1 : s.players;
-  stage.dataset.players = String(players);
-  stage.dataset.land = s.landscape;
-  stage.dataset.flip = players === 2 && s.flip ? 'on' : 'off';
-  stage.dataset.souls = s.souls ? 'on' : 'off';
-  stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
-  $('#btn-room').hidden = !s.rooms || (s.players === 2 && !inRoom); // online play replaces the shared-phone view, so it is offered from one player
+  setData(stage, 'players', String(players));
+  setData(stage, 'land', s.landscape);
+  setData(stage, 'flip', players === 2 && s.flip ? 'on' : 'off');
+  setData(stage, 'souls', s.souls ? 'on' : 'off');
+  setData(stage, 'icons', s.iconsOnly ? 'only' : 'words');
+  setHidden($('#btn-room'), !s.rooms || (s.players === 2 && !inRoom)); // online play replaces the shared-phone view, so it is offered from one player
   const sd = soulDisplay(s.soulStyle, players === 1);
-  stage.dataset.soulview = s.souls && sd.cards && !sd.number ? 'cards' : 'number'; // the cards ARE the tile
-  stage.dataset.soulbg = s.souls && sd.cards && sd.number ? 'on' : 'off'; // the cards are a faint background behind the count
-  stage.dataset.soultap = sd.cards && !sd.number && !sd.tapCards ? 'halves' : 'card';
-  $('[data-seat="1"]').hidden = players === 1;
+  setData(stage, 'soulview', s.souls && sd.cards && !sd.number ? 'cards' : 'number'); // the cards ARE the tile
+  setData(stage, 'soulbg', s.souls && sd.cards && sd.number ? 'on' : 'off'); // the cards are a faint background behind the count
+  setData(stage, 'soultap', sd.cards && !sd.number && !sd.tapCards ? 'halves' : 'card');
+  setHidden($('[data-seat="1"]'), players === 1);
   for (const seatEl of $$('.seat')) {
     const i = Number(seatEl.dataset.seat);
     const seat = s.seats[i];
     seatEl.classList.toggle('active', (players === 2 || inRoom) && s.active === i);
     for (const key of COUNTERS) {
       const n = $(`.t-${key} .num`, seatEl);
-      n.textContent = String(seat[key]);
-      n.dataset.len = String(Math.max(2, String(seat[key]).length));
+      setText(n, String(seat[key]));
+      setData(n, 'len', String(Math.max(2, String(seat[key]).length)));
     }
     const whose = $('.whose', seatEl);
-    whose.textContent = i === 1 ? 'Opponent' : (s.name || 'Username not set · ⚙ Settings');
+    setText(whose, i === 1 ? 'Opponent' : (s.name || 'Username not set · ⚙ Settings'));
     whose.classList.toggle('unset', i === 0 && !s.name);
     const st = $('.t-soul', seatEl);
-    st.hidden = !s.souls;
-    $('.num', st).textContent = String(seat.up);
-    $('.total', st).textContent = String(seat.soul);
-    $('.sc-count', st).textContent = `${seat.up} standing · ${seat.soul} of ${SOUL_MAX}`;
+    setHidden(st, !s.souls);
+    setText($('.num', st), String(seat.up));
+    setText($('.total', st), String(seat.soul));
+    setText($('.sc-count', st), `${seat.up} standing · ${seat.soul} of ${SOUL_MAX}`);
     $$('.sc-card', st).forEach((c, n) => {
-      c.dataset.state = n < seat.up ? 'up' : n < seat.soul ? 'rest' : 'empty';
-      c.setAttribute('aria-label', n < seat.up ? `Soul ${n + 1}: standing. Tap to rest it.` : n < seat.soul ? `Soul ${n + 1}: rested. Tap to stand it.` : `Empty soul slot ${n + 1}`);
-      c.disabled = n >= seat.soul;
+      setData(c, 'state', n < seat.up ? 'up' : n < seat.soul ? 'rest' : 'empty');
+      setAttr(c, 'aria-label', n < seat.up ? `Soul ${n + 1}: standing. Tap to rest it.` : n < seat.soul ? `Soul ${n + 1}: rested. Tap to stand it.` : `Empty soul slot ${n + 1}`);
+      setProp(c, 'disabled', n >= seat.soul);
     });
   }
   const oneSouls = players === 1 && s.souls && !inRoom;
   const setup = needsFirst(s) && !inRoom; // souls on, who goes first not chosen yet
-  $('.et-word').textContent = setup ? 'Start game' : oneSouls ? 'Start turn' : 'End Turn';
+  setText($('.et-word'), setup ? 'Start game' : oneSouls ? 'Start turn' : 'End Turn');
   $('#btn-end').classList.toggle('long', setup);
-  $('#turn-label').textContent = setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`;
-  $('#btn-end').setAttribute('aria-label', setup ? 'Start game: choose who goes first.' : oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
+  setText($('#turn-label'), setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`);
+  setAttr($('#btn-end'), 'aria-label', setup ? 'Start game: choose who goes first.' : oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
   const tb = $('#btn-time');
-  tb.setAttribute('aria-pressed', String(s.night));
-  tb.setAttribute('aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');
-  $('.dn-word', tb).textContent = s.night ? 'Night' : 'Day';
+  setAttr(tb, 'aria-pressed', String(s.night));
+  setAttr(tb, 'aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');
+  setText($('.dn-word', tb), s.night ? 'Night' : 'Day');
   if (lastNight !== null && lastNight !== night) {
     stage.classList.remove('flash');
     void stage.offsetWidth; // restart the animation
@@ -460,7 +467,7 @@ $('#btn-set').addEventListener('click', () => openOverlay('ov-set'));
 function paintSettings() {
   for (const seg of $$('.seg')) {
     const cur = String(state[seg.dataset.setting]);
-    for (const b of $$('button', seg)) b.setAttribute('aria-pressed', String(b.dataset.v === cur));
+    for (const b of $$('button', seg)) setAttr(b, 'aria-pressed', String(b.dataset.v === cur));
   }
   $('#set-flip').checked = state.flip;
   $('#set-awake').checked = state.awake;
@@ -469,8 +476,8 @@ function paintSettings() {
   $('#set-icons').checked = state.iconsOnly;
   $('#set-rooms').checked = state.rooms;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
-  $('#row-flip').hidden = state.players === 1;
-  $('#row-soulstyle').hidden = !state.souls;
+  setHidden($('#row-flip'), state.players === 1);
+  setHidden($('#row-soulstyle'), !state.souls);
 }
 for (const seg of $$('.seg')) {
   seg.addEventListener('click', (e) => {
@@ -524,6 +531,7 @@ document.addEventListener('visibilitychange', syncWake);
 // another tab or window of the app changed the game
 window.addEventListener('storage', (e) => {
   if (e.key !== KEY) return;
+  clearTimeout(saveTimer); saveTimer = 0; // the other window's game wins
   const prev = state;
   state = load();
   render(prev);
@@ -603,7 +611,7 @@ if (pendingWatch !== null) {
 } else if (!openRejoin()) {
   maybeAskFirst();
 }
-$('#btn-resume').addEventListener('click', () => { commit({ ...state }); save(state); closeOverlay(true); if (pendingJoin) runPendingJoin(); else maybeAskFirst(); });
+$('#btn-resume').addEventListener('click', () => { commit({ ...state }); flushSave(); save(state); closeOverlay(true); if (pendingJoin) runPendingJoin(); else maybeAskFirst(); });
 $('#btn-new').addEventListener('click', () => {
   roomUi.forget();
   commit(resetGame(state));

@@ -85,7 +85,7 @@ svg { display: block; }
 .sky i { z-index: 1; }
 .stars { inset: 0; opacity: 0; }
 .stars.s1 {
-  background-size: 220px 220px; animation: twinkle 7s ease-in-out infinite;
+  background-size: 220px 220px;
   background-image: radial-gradient(1.4px 1.4px at 24px 42px, rgba(255, 255, 255, .85), transparent 100%),
     radial-gradient(1px 1px at 152px 96px, rgba(198, 214, 255, .6), transparent 100%),
     radial-gradient(1.7px 1.7px at 88px 178px, rgba(255, 255, 255, .7), transparent 100%),
@@ -93,13 +93,16 @@ svg { display: block; }
     radial-gradient(1.2px 1.2px at 176px 200px, rgba(255, 255, 255, .5), transparent 100%);
 }
 .stars.s2 {
-  inset: -10%; background-size: 380px 380px; animation: drift 120s linear infinite alternate;
+  inset: -10%; background-size: 380px 380px;
   background-image: radial-gradient(1px 1px at 60px 20px, rgba(255, 255, 255, .6), transparent 100%),
     radial-gradient(1.5px 1.5px at 300px 140px, rgba(230, 240, 255, .5), transparent 100%),
     radial-gradient(1px 1px at 180px 300px, rgba(255, 255, 255, .45), transparent 100%);
 }
 .stage[data-time='night'] .stars { opacity: 1; }
 .stage[data-time='night'] .stars.s2 { opacity: .65; }
+/* the stars move only at night (by day they are invisible, and a running animation keeps the screen redrawing) */
+.stage[data-time='night'] .stars.s1 { animation: twinkle 7s ease-in-out infinite; }
+.stage[data-time='night'] .stars.s2 { animation: drift 120s linear infinite alternate; }
 .sun {
   width: 220px; height: 220px; right: -60px; top: -60px; border-radius: 50%;
   background: radial-gradient(circle, #fffef6 0 22%, rgba(255, 248, 220, .7) 30%, rgba(255, 244, 210, .16) 52%, transparent 70%);
@@ -118,14 +121,16 @@ svg { display: block; }
 .haze { inset: 0; opacity: 0; background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .22), transparent 70%); }
 .stage.flash .haze { animation: flash .7s ease-out; }
 @keyframes flash { 0% { opacity: .9; } 100% { opacity: 0; } }
-@keyframes twinkle { 0%, 100% { filter: brightness(.6); } 50% { filter: brightness(1.2); } }
+@keyframes twinkle { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
 @keyframes drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-160px, -50px, 0); } }
 
 /* ---------- seats ---------- */
-.seat { min-height: 0; position: relative; border-radius: calc(var(--radius) + 8px); padding: 8px; transition: box-shadow .35s, background .35s; }
+.seat { min-height: 0; position: relative; isolation: isolate; border-radius: calc(var(--radius) + 8px); padding: 8px; }
 .stage[data-flip='on'] .seat[data-seat='1'] { transform: rotate(180deg); }
 /* whose turn: a soft filled panel behind that player's tiles, no outline */
-.seat.active { background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 26%, transparent), color-mix(in srgb, var(--acc) 12%, transparent)); box-shadow: 0 12px 40px color-mix(in srgb, var(--acc) 20%, transparent); }
+/* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame) */
+.seat::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 26%, transparent), color-mix(in srgb, var(--acc) 12%, transparent)); box-shadow: 0 12px 40px color-mix(in srgb, var(--acc) 20%, transparent); }
+.seat.active::before { opacity: 1; }
 .seat-in {
   height: 100%; display: grid; gap: 8px;
   grid-template-columns: minmax(0, 1fr);
@@ -333,7 +338,7 @@ svg { display: block; }
 .bar-side.end { justify-content: flex-end; }
 .ibtn {
   width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%;
-  border: 1px solid var(--border); background: rgba(13, 19, 38, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border); background: rgba(13, 19, 38, .88);
 }
 .ibtn svg, .daynight svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .ibtn:active { transform: scale(.94); }
@@ -352,8 +357,7 @@ svg { display: block; }
 .stage[data-time='night'] .daynight .ico-moon { display: block; fill: currentColor; }
 .endturn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 10px 22px; min-height: 60px; border-radius: 999px;
-  background: color-mix(in srgb, var(--acc) 16%, rgba(13, 19, 38, .75)); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--acc) 16%, rgba(13, 19, 38, .9)); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent);
 }
 .endturn:active { transform: scale(.97); }
 /* the turn button never grows into the buttons beside it: its words shrink instead */
@@ -403,8 +407,8 @@ svg { display: block; }
   position: absolute; z-index: 5; top: max(10px, env(safe-area-inset-top));
   left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); height: 45cqh;
   display: flex; flex-direction: column; overflow: hidden;
-  border: 1px solid var(--border); border-radius: 22px; background: rgba(13, 19, 38, .88);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 14px 34px rgba(3, 6, 18, .4);
+  border: 1px solid var(--border); border-radius: 22px; background: rgba(13, 19, 38, .96);
+  box-shadow: 0 14px 34px rgba(3, 6, 18, .4);
   transform: translateY(calc((var(--p) - 1) * (100% - var(--h))));
   transition: transform .32s cubic-bezier(.2, .8, .2, 1);
 }
@@ -488,16 +492,20 @@ svg { display: block; }
 @container stage (max-height: 520px) { .sync-card ul { grid-template-columns: 1fr 1fr; column-gap: 12px; } .sync-card h4 { margin-top: 4px; } }
 
 /* ---------- overlays ---------- */
+/* settings rows far down the sheet are laid out only when scrolled to */
+#ov-set .set-row { content-visibility: auto; contain-intrinsic-size: auto 72px; }
 .overlay {
   position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px;
   background: rgba(3, 6, 18, .74); /* a plain dim: a full-screen blur made pop-ups slow to open on phones */
   container-type: inline-size; animation: fade .18s ease-out;
+  will-change: opacity; /* its own layer: the opening fade is not painted twice (it is display:none while closed) */
 }
 @keyframes fade { from { opacity: 0; } }
 .sheet {
   width: min(560px, 100%); max-height: 100%; overflow: auto; padding: 18px;
   background: linear-gradient(180deg, rgba(24, 33, 64, .97), rgba(14, 20, 42, .98));
   border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 24px 60px rgba(3, 6, 18, .6);
+  will-change: transform;
   -webkit-user-select: none; user-select: none; animation: rise .25s cubic-bezier(.2, .7, .3, 1);
 }
 @keyframes rise { from { transform: translateY(12px); opacity: 0; } }
@@ -593,7 +601,13 @@ svg { display: block; }
 .dice-pair.gl { gap: min(16vmin, 96px); }
 .dice-pair.gl .d2-slot { gap: calc(min(30vmin, 180px) * .32); } /* the numbers sit clear below the dice, even mid-roll */
 .dice-pair.gl .d2 { display: none; }
-.dice-pair.gl .d3 { display: block; width: calc(var(--d) * 1.75); height: calc(var(--d) * 1.75); margin: calc(var(--d) * -.375); filter: drop-shadow(0 calc(var(--d) * .07) calc(var(--d) * .08) rgba(0, 0, 0, .5)); }
+.dice-pair.gl .d3 { display: block; width: calc(var(--d) * 1.75); height: calc(var(--d) * 1.75); margin: calc(var(--d) * -.375); }
+/* the shadow is a plain soft oval under the die (a CSS filter on the canvas was re-blurred on every frame of the roll) */
+.dice-pair.gl .d2-spin { position: relative; isolation: isolate; }
+.dice-pair.gl .d2-spin::after {
+  content: ''; position: absolute; z-index: -1; left: 4%; right: 4%; bottom: -12%; height: 26%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .55), rgba(0, 0, 0, .25) 60%, transparent);
+}
 .throw.going .dice-pair.gl .d2-spin.a { animation: hopA 1.15s cubic-bezier(.25, .65, .3, 1); }
 .throw.going .dice-pair.gl .d2-spin.b { animation: hopB 1.15s cubic-bezier(.25, .65, .3, 1); }
 @keyframes hopA { 0% { transform: translate(-55%, 45%) scale(.6); } 38% { transform: translate(-6%, -34%) scale(1.06); } 64% { transform: translate(2%, 3%) scale(.98); } 80% { transform: translate(0, -7%) scale(1.01); } 100% { transform: none; } }
@@ -633,7 +647,7 @@ svg { display: block; }
 .throw-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(360px, 100%); }
 .throw-btns .btn { min-height: 52px; font-size: 16px; }
 /* while a pop-up is open the board behind it stays still (no twinkling stars to repaint) */
-.stage.ov-open .stars { animation-play-state: paused; }
+.stage.ov-open[data-time] .stars.s1, .stage.ov-open[data-time] .stars.s2 { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .throw.going .coin-scene.big, .throw.going .throw-shadow { animation: none; } }
 
 /* settings */

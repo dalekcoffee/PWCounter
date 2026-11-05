@@ -34,3 +34,11 @@ test('pip table matches the faces', () => {
 test('a flat die at rest shows only its face, square on', () => {
   for (let n = 1; n <= 6; n++) assert.ok(close(rotate(qMat(restQ(n, 0, [0, 0])), FACE_AXIS[n]), [0, 0, 1], 1e-12));
 });
+import { pipOn } from '../js/die3d.js';
+test("the shader's pip rule draws every face as PIP_CELLS says", () => {
+  for (let v = 1; v <= 6; v++) {
+    const cells = [];
+    for (let c = 1; c <= 9; c++) { const gx = ((c - 1) % 3) - 1, gy = 1 - Math.floor((c - 1) / 3); if (pipOn(v, gx, gy)) cells.push(c); }
+    assert.deepEqual(cells, PIP_CELLS[v], `face ${v}`);
+  }
+});

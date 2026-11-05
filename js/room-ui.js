@@ -9,6 +9,7 @@ import { displayView, createDeltas, deltaText, AUTO_WATCH_NOTICE } from './room-
 import { startRoomGame, afterRoomReset, leaveRoomState, settleRoom, applyShared, sharedOf, sharedDiffers, selfDiffers, statusText, handleView, turnText, turnWords } from './room-game.js';
 import { toggleDrawer, setDrawer, initialDrawer, toStageDy, dragResult, dragProgress, DRAG_MIN } from './drawer.js';
 import { qrSvg } from './qr.js';
+import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 
 const LABEL = { life: 'Life', mat: 'Material', ing: 'Ingredient', soul: 'Souls' };
 
@@ -147,10 +148,10 @@ export function initRoom(ctx) {
     const c = syncCards(sy.snap, sy.theirs, name);
     $('#sync-mine').innerHTML = cardHtml(c.mine, c.diff, 'You', name, souls);
     $('#sync-theirs').innerHTML = cardHtml(c.theirs, c.diff, 'You', name, souls);
-    $('#sync-use-mine').disabled = sy.waiting;
-    $('#sync-use-theirs').disabled = sy.waiting;
-    $('#sync-use-theirs').textContent = `Use ${name}'s counters`;
-    $('#sync-wait').hidden = !sy.waiting;
+    setProp($('#sync-use-mine'), 'disabled', sy.waiting);
+    setProp($('#sync-use-theirs'), 'disabled', sy.waiting);
+    setText($('#sync-use-theirs'), `Use ${name}'s counters`);
+    setHidden($('#sync-wait'), !sy.waiting);
   }
   $('#sync-use-mine').addEventListener('click', () => room.choose('me'));
   $('#sync-use-theirs').addEventListener('click', () => room.choose('you'));
@@ -165,23 +166,23 @@ export function initRoom(ctx) {
     show('rv-join', available && !live && view === 'join');
     show('rv-watch', available && !live && view === 'watch');
     show('rv-live', available && live);
-    $('#room-note').textContent = notice;
-    $('#room-note').hidden = !notice;
+    setText($('#room-note'), notice);
+    setHidden($('#room-note'), !notice);
     if (live) {
-      $('#rv-code').textContent = R.code;
-      $('#rv-status').textContent = statusText(R);
+      setText($('#rv-code'), R.code);
+      setText($('#rv-status'), statusText(R));
       const showQr = R.role === 'host' && R.status !== 'connected';
-      $('#rv-qrwrap').hidden = !showQr;
+      setHidden($('#rv-qrwrap'), !showQr);
       if (showQr) {
         const svg = qrSvg(joinLink(R.code));
         if ($('#rv-qr').dataset.code !== R.code) { $('#rv-qr').innerHTML = svg; $('#rv-qr').dataset.code = R.code; }
       }
-      $('#rv-watchlink').textContent = watchLink(R.code);
-      $('#rv-qr2').hidden = showQr; // the join code is the one to scan while waiting; the big-screen code follows
+      setText($('#rv-watchlink'), watchLink(R.code));
+      setHidden($('#rv-qr2'), showQr); // the join code is the one to scan while waiting; the big-screen code follows
       if ($('#rv-qr2').dataset.code !== R.code) { $('#rv-qr2').innerHTML = qrSvg(watchLink(R.code)); $('#rv-qr2').dataset.code = R.code; }
     }
-    $('#btn-scan').hidden = !('BarcodeDetector' in window);
-    $('#scan-hint').hidden = 'BarcodeDetector' in window;
+    setHidden($('#btn-scan'), !('BarcodeDetector' in window));
+    setHidden($('#scan-hint'), 'BarcodeDetector' in window);
   }
   $('#btn-room-host').addEventListener('click', host);
   $('#btn-room-watch').addEventListener('click', () => { view = 'watch'; notice = ''; paintSheet(); $('#watch-code').value = ''; $('#watch-code').focus({ preventScroll: true }); });
@@ -212,8 +213,8 @@ export function initRoom(ctx) {
     clearInterval(scan.timer);
     scan.stream.getTracks().forEach((t) => t.stop());
     scan = null;
-    const v = $('#scan-video'); v.srcObject = null; v.hidden = true;
-    $('#btn-scan').textContent = 'Scan QR code';
+    const v = $('#scan-video'); v.srcObject = null; setHidden(v, true);
+    setText($('#btn-scan'), 'Scan QR code');
   }
   $('#btn-scan').addEventListener('click', async () => {
     if (scan) { stopScan(); return; }
@@ -221,8 +222,8 @@ export function initRoom(ctx) {
       const det = new BarcodeDetector({ formats: ['qr_code'] });
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
       const v = $('#scan-video');
-      v.srcObject = stream; v.hidden = false; await v.play();
-      $('#btn-scan').textContent = 'Stop scanning';
+      v.srcObject = stream; setHidden(v, false); await v.play();
+      setText($('#btn-scan'), 'Stop scanning');
       scan = { stream, timer: setInterval(async () => {
         try {
           const found = await det.detect(v);
@@ -248,28 +249,28 @@ export function initRoom(ctx) {
   function paintDrawer() {
     const on = playing();
     const mark = $('#room-mark'); // a faint line on the board: how others can watch
-    mark.hidden = !on;
-    mark.textContent = on ? `Room ${R.code} \u00b7 watch at ${watchText(R.code)}` : '';
-    opp.hidden = !on;
-    stage.dataset.room = on ? 'on' : 'off';
+    setHidden(mark, !on);
+    setText(mark, on ? `Room ${R.code} \u00b7 watch at ${watchText(R.code)}` : '');
+    setHidden(opp, !on);
+    setData(stage, 'room', on ? 'on' : 'off');
     if (!on) return;
     const hv = handleView(R);
     const peer = R.peer;
-    $('#opp-name').textContent = hv.here ? hv.name : hv.text;
-    $('#opp-life').hidden = !hv.here;
-    $('#opp-life b').textContent = hv.here ? String(hv.life) : '';
+    setText($('#opp-name'), hv.here ? hv.name : hv.text);
+    setHidden($('#opp-life'), !hv.here);
+    setText($('#opp-life b'), hv.here ? String(hv.life) : '');
     const open = drawer.open && !!peer;
-    opp.dataset.open = open ? 'on' : 'off';
-    handle.setAttribute('aria-expanded', String(open));
-    handle.setAttribute('aria-label', hv.here ? `${hv.name}, life ${hv.life}. ${open ? 'Close' : 'Open'} the opponent's counters.` : `${hv.text}. Show the room code.`);
-    opp.dataset.souls = peer?.souls ? 'on' : 'off';
-    tiles.soul.hidden = !peer?.souls;
+    setData(opp, 'open', open ? 'on' : 'off');
+    setAttr(handle, 'aria-expanded', String(open));
+    setAttr(handle, 'aria-label', hv.here ? `${hv.name}, life ${hv.life}. ${open ? 'Close' : 'Open'} the opponent's counters.` : `${hv.text}. Show the room code.`);
+    setData(opp, 'souls', peer?.souls ? 'on' : 'off');
+    setHidden(tiles.soul, !peer?.souls);
     if (peer) {
       for (const key of ['life', 'mat', 'ing']) {
-        const n = $('.num', tiles[key]); n.textContent = String(peer.seat[key]); n.dataset.len = String(Math.max(2, String(peer.seat[key]).length));
+        const n = $('.num', tiles[key]); setText(n, String(peer.seat[key])); setData(n, 'len', String(Math.max(2, String(peer.seat[key]).length)));
       }
-      $('.num', tiles.soul).textContent = String(peer.seat.up);
-      $('.of b', tiles.soul).textContent = String(peer.seat.soul);
+      setText($('.num', tiles.soul), String(peer.seat.up));
+      setText($('.of b', tiles.soul), String(peer.seat.soul));
     }
   }
   let drag = null;
@@ -283,7 +284,7 @@ export function initRoom(ctx) {
     const dy = toStageDy(stage.dataset.land, e.clientX - drag.x, e.clientY - drag.y);
     if (!drag.moved && Math.abs(dy) < DRAG_MIN) return;
     drag.moved = true;
-    opp.dataset.drag = 'on';
+    setData(opp, 'drag', 'on');
     opp.style.setProperty('--p', String(dragProgress(drag.was, dy, body.offsetHeight)));
   });
   const endDrag = (e, cancel) => {
@@ -338,44 +339,44 @@ export function initRoom(ctx) {
   let deltaTimer = 0;
   function paintDisplay() {
     const on = watching();
-    stage.dataset.display = on ? 'on' : 'off';
-    disp.hidden = !on;
+    setData(stage, 'display', on ? 'on' : 'off');
+    setHidden(disp, !on);
     if (!on) { clearTimeout(deltaTimer); return; }
     const v = displayView(R);
     const now = Date.now();
-    $('#dp-time').dataset.time = v.night ? 'night' : 'day';
-    $('#dp-time-w').textContent = v.night ? 'Night' : 'Day';
-    $('#dp-turn').textContent = v.turn === null ? '' : `Turn ${v.turn}`;
-    $('#dp-line').textContent = [viewNotice, v.line].filter(Boolean).join('\n');
-    $('#dp-line').hidden = !viewNotice && !v.line;
-    $('#dp-mark').textContent = `Room ${v.code} \u00b7 watch at ${watchText(v.code)}`;
+    setData($('#dp-time'), 'time', v.night ? 'night' : 'day');
+    setText($('#dp-time-w'), v.night ? 'Night' : 'Day');
+    setText($('#dp-turn'), v.turn === null ? '' : `Turn ${v.turn}`);
+    setText($('#dp-line'), [viewNotice, v.line].filter(Boolean).join('\n'));
+    setHidden($('#dp-line'), !viewNotice && !v.line);
+    setText($('#dp-mark'), `Room ${v.code} \u00b7 watch at ${watchText(v.code)}`);
     const qr = $('#dp-qr');
     if (qr.dataset.code !== v.code) { qr.innerHTML = qrSvg(watchLink(v.code)); qr.dataset.code = v.code; }
     let live = false;
     for (const p of v.players) {
       const el = $(`.dp-panel[data-role="${p.role}"]`, disp);
-      el.dataset.state = p.ready ? 'ready' : 'waiting';
-      el.dataset.active = p.active ? 'on' : 'off';
-      $('.dp-name', el).textContent = p.name;
-      $('.dp-wait', el).textContent = p.here ? 'Connecting\u2026' : 'Waiting for player\u2026';
-      el.dataset.souls = p.souls ? 'on' : 'off';
+      setData(el, 'state', p.ready ? 'ready' : 'waiting');
+      setData(el, 'active', p.active ? 'on' : 'off');
+      setText($('.dp-name', el), p.name);
+      setText($('.dp-wait', el), p.here ? 'Connecting\u2026' : 'Waiting for player\u2026');
+      setData(el, 'souls', p.souls ? 'on' : 'off');
       const put = (key, value, node) => {
         const n = value === null ? 0 : deltas.note(`${p.role}.${key}`, p.ready ? value : null, now);
         const out = $('.delta', node);
-        out.textContent = deltaText(n); out.classList.toggle('neg', n < 0); out.classList.toggle('show', n !== 0);
+        setText(out, deltaText(n)); out.classList.toggle('neg', n < 0); out.classList.toggle('show', n !== 0);
         if (n !== 0) live = true;
       };
       const life = $('.dp-life', el), num = $('.dp-num', life);
-      num.textContent = p.ready ? String(p.life) : ''; num.dataset.len = String(Math.max(2, num.textContent.length));
+      setText(num, p.ready ? String(p.life) : ''); setData(num, 'len', String(Math.max(2, num.textContent.length)));
       put('life', p.life, life);
       for (const key of ['mat', 'ing']) {
         const node = $(`.dp-r[data-k="${key}"]`, el);
-        $('.dp-n', node).textContent = p.ready ? String(p[key]) : '';
+        setText($('.dp-n', node), p.ready ? String(p[key]) : '');
         put(key, p[key], node);
       }
       const sn = $('.dp-souls', el);
-      $('.dp-n', sn).textContent = p.ready ? String(p.up) : '';
-      $('.dp-of', sn).textContent = p.ready ? `/ ${p.soul}` : '';
+      setText($('.dp-n', sn), p.ready ? String(p.up) : '');
+      setText($('.dp-of', sn), p.ready ? `/ ${p.soul}` : '');
       put('up', p.souls ? p.up : null, sn);
     }
     clearTimeout(deltaTimer);
@@ -388,12 +389,12 @@ export function initRoom(ctx) {
     const on = playing();
     const end = $('#btn-end');
     if (on) {
-      $('.et-word').textContent = 'End Turn';
-      $('#turn-label').textContent = turnText(s);
-      end.disabled = s.active !== 0;
-      end.setAttribute('aria-label', s.active === 0 ? `End turn. ${turnWords(s)}.` : `Waiting for your friend. ${turnWords(s)}.`);
+      setText($('.et-word'), 'End Turn');
+      setText($('#turn-label'), turnText(s));
+      setProp(end, 'disabled', s.active !== 0);
+      setAttr(end, 'aria-label', s.active === 0 ? `End turn. ${turnWords(s)}.` : `Waiting for your friend. ${turnWords(s)}.`);
     } else end.disabled = false;
-    stage.dataset.mine = on && s.active === 0 ? 'on' : 'off';
+    setData(stage, 'mine', on && s.active === 0 ? 'on' : 'off');
   }
   function paintAll() { paintSheet(); paintDrawer(); paintBar(); paintSync(); paintDisplay(); }
   hooks.closed = stopScan;

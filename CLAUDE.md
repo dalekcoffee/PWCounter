@@ -9,6 +9,7 @@ Static PWA served by GitHub Pages at pwcounter.dalek.coffee. Vanilla ES modules,
 - Tiles: the number sits on the tile's centre line, level with the −/+ buttons; icon and word above it. Never hide the Material / Ingredient words.
 - Overlays are divs inside `#stage` (never a native dialog element, which would not turn with the landscape setting).
 - Every file the app needs must be in `sw.js` SHELL (tested). Version lives in js/version.js, package.json, sw.js VERSION and CHANGELOG.md (tested equal); bump on every change.
+- Performance (0.2.8, for old tablets): write the DOM through js/dom-write.js (`setText`, `setHidden`, `setData`, `setAttr`, `setProp` only write a changed value); save through `saveSoon()` (flushed on hide / pagehide); no `backdrop-filter` and no animated `filter` / `box-shadow` (animate opacity or transform on a layer instead); nothing animates by day; the dice shader stays loop-free.
 - Original design only: never copy another site's markup, art or branding.
 - Commit identity: `dalekcoffee <78516780+dalekcoffee@users.noreply.github.com>`.
 

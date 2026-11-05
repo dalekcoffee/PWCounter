@@ -97,6 +97,13 @@ export function roundedBox(r = BEVEL, steps = 12) {
 
 // 6 faces x 9 cells: 1 where a pip is. Face order as in FACE_ORDER (the shader's order).
 export const FACE_ORDER = [1, 6, 2, 5, 3, 4];
+// The shader's rule for the spot at grid (gx, gy) (each -1, 0 or 1; gy = 1 is the top row) on face v.
+export function pipOn(v, gx, gy) {
+  if (gx === 0 && gy === 0) return v % 2 === 1;
+  if (gx !== 0 && gy !== 0) return gx !== gy ? v >= 2 : v >= 4;
+  if (gy === 0) return v >= 6;
+  return false;
+}
 export function pipTable() {
   const t = [];
   for (const f of FACE_ORDER) for (let c = 1; c <= 9; c++) t.push(PIP_CELLS[f].includes(c) ? 1 : 0);
@@ -119,26 +126,24 @@ void main() {
 const FS = `
 precision mediump float;
 varying vec3 vNor; varying vec3 vCube; varying vec3 vView;
-uniform float uPips[54];
 void main() {
   vec3 a = abs(vCube);
-  float f; vec2 uv; float sg;
-  if (a.z >= a.x && a.z >= a.y) { sg = sign(vCube.z); f = sg > 0.0 ? 0.0 : 1.0; uv = vec2(vCube.x * sg, vCube.y); }
-  else if (a.y >= a.x) { sg = sign(vCube.y); f = sg > 0.0 ? 2.0 : 3.0; uv = vec2(vCube.x, -vCube.z * sg); }
-  else { sg = sign(vCube.x); f = sg > 0.0 ? 4.0 : 5.0; uv = vec2(-vCube.z * sg, vCube.y); }
-  // pips: dark dimples, the 1 a bigger red one
-  float pip = 0.0; vec2 off = vec2(0.0);
+  float f; float v; vec2 uv; float sg;
+  // which face, and its number (opposite faces add up to 7)
+  if (a.z >= a.x && a.z >= a.y) { sg = sign(vCube.z); f = sg > 0.0 ? 0.0 : 1.0; v = sg > 0.0 ? 1.0 : 6.0; uv = vec2(vCube.x * sg, vCube.y); }
+  else if (a.y >= a.x) { sg = sign(vCube.y); f = sg > 0.0 ? 2.0 : 3.0; v = sg > 0.0 ? 2.0 : 5.0; uv = vec2(vCube.x, -vCube.z * sg); }
+  else { sg = sign(vCube.x); f = sg > 0.0 ? 4.0 : 5.0; v = sg > 0.0 ? 3.0 : 4.0; uv = vec2(-vCube.z * sg, vCube.y); }
+  // pips: only the nearest of the 9 grid spots is looked at (no loop: cheap on old graphics chips).
+  // A spot has a pip by the rule pipOn() mirrors in JS: centre = odd, one diagonal from 2, the other from 4, the sides on 6.
+  vec2 g = clamp(floor(uv * 2.0 + 0.5), -1.0, 1.0);
+  float on = 0.0;
+  if (g.x == 0.0 && g.y == 0.0) on = mod(v, 2.0);
+  else if (g.x != 0.0 && g.y != 0.0) on = (g.x != g.y) ? step(2.0, v) : step(4.0, v);
+  else if (g.y == 0.0) on = step(6.0, v);
   float rad = f == 0.0 ? 0.25 : 0.165;
-  for (int i = 0; i < 54; i++) {
-    float fi = floor(float(i) / 9.0);
-    if (fi == f && uPips[i] > 0.5) {
-      float c = float(i) - fi * 9.0;
-      vec2 ctr = vec2(mod(c, 3.0) - 1.0, 1.0 - floor(c / 3.0)) * 0.5;
-      vec2 d = uv - ctr;
-      float m = 1.0 - smoothstep(rad - 0.018, rad + 0.006, length(d));
-      if (m > pip) { pip = m; off = d / rad; }
-    }
-  }
+  vec2 d = uv - g * 0.5;
+  float pip = on * (1.0 - smoothstep(rad - 0.018, rad + 0.006, length(d)));
+  vec2 off = d / rad;
   vec3 n = normalize(vNor);
   vec3 L = normalize(vec3(-0.45, 0.65, 0.85));
   vec3 H = normalize(L + normalize(vView));
@@ -176,7 +181,6 @@ function dieView(canvas, mesh) {
   };
   buf(mesh.pos, 'aPos', 3); buf(mesh.nor, 'aNor', 3); buf(mesh.cube, 'aCube', 3);
   const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.idx, gl.STATIC_DRAW);
-  gl.uniform1fv(gl.getUniformLocation(prog, 'uPips'), pipTable());
   const U = (n) => gl.getUniformLocation(prog, n);
   const uRot = U('uRot'), uDist = U('uDist'), uFocal = U('uFocal');
   const DIST = 7, FOCAL = DIST / 1.75; // a long lens (little distortion); the canvas spans +-1.75 die units
@@ -188,7 +192,7 @@ function dieView(canvas, mesh) {
     get lost() { return lost || gl.isContextLost(); },
     draw(q) {
       if (lost) return;
-      const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
+      const dpr = Math.min(1.5, globalThis.devicePixelRatio || 1); // sharp enough for a moving die, far fewer pixels to shade
       const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
       if (!w || !h) return;
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }

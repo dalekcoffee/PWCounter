@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.10
+- Game over: the confetti and the rain fade out toward the top of each side (the middle of the board with two players) instead of stopping at a hard line.
+
 ## 0.3.9
 - Game over: confetti falls on the winner's side and rain on the loser's, for the 5 seconds of "Game over" (none with reduced motion). The "−1" badge no longer shows over it.
 

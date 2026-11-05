@@ -3,7 +3,7 @@
 // The cache always holds ONE version of every file: a new version is fetched whole (past the CDN, with ?v=) and
 // checked before it is used, and files are never refreshed one by one. A page from one version with scripts from
 // another breaks every button wired after the first missing element (0.3.3: dice, coin and settings stopped working).
-const VERSION = '0.3.9';
+const VERSION = '0.3.10';
 const CACHE = `pwc-${VERSION}`;
 const FONTS = 'pwc-fonts';
 const SHELL = [

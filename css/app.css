@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.9"; }
+:root { --pwc-v: "0.3.10"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -628,6 +628,8 @@ svg { display: block; }
 .over .bg-side { position: relative; overflow: hidden; }
 .over .bg-side > :not(.fx) { position: relative; z-index: 1; }
 .fx { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: 0; }
+/* each side fades in from its top edge (the middle of the board with two players), so the two effects never meet at a hard line */
+.fx { -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .35) 12%, #000 34%); mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .35) 12%, #000 34%); }
 .over.go .fx { animation: fxShow 5s linear forwards; }
 @keyframes fxShow { 0% { opacity: 0; } 6% { opacity: 1; } 84% { opacity: 1; } 100% { opacity: 0; } }
 .fx i { position: absolute; top: -24px; display: block; will-change: transform; }

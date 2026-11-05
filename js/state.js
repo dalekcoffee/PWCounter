@@ -37,7 +37,16 @@ export function defaultState() {
     souls: false, // experimental
     soulView: 'number', // experimental, one player only: 'number' | 'cards'
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
+    name: '', // your username (a setting): shown on your board and to a friend in a room
   };
+}
+
+export const NAME_MAX = 24;
+/** A username: text only, control characters removed, spaces collapsed, trimmed, at most 24 characters. */
+export function cleanName(raw) {
+  if (typeof raw !== 'string') return '';
+  const t = raw.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim();
+  return [...t].slice(0, NAME_MAX).join('').trim();
 }
 
 const int = (n, lo, hi, dflt) => (Number.isInteger(n) && n >= lo && n <= hi ? n : dflt);
@@ -70,6 +79,7 @@ export function cleanState(raw) {
     souls: raw.souls === true,
     soulView: SOUL_VIEWS.includes(raw.soulView) ? raw.soulView : 'number',
     iconsOnly: raw.iconsOnly === true,
+    name: cleanName(raw.name),
   };
 }
 

@@ -78,3 +78,19 @@ test('going to one player makes seat 0 active', () => {
   assert.equal(s.players, 1);
   assert.equal(s.active, 0);
 });
+
+import { cleanName, NAME_MAX } from '../js/state.js';
+
+test('name: cleaned, trimmed, capped, kept by a reset', () => {
+  assert.equal(defaultState().name, '');
+  assert.equal(cleanName('  Dalek  '), 'Dalek');
+  assert.equal(cleanName('a\u0000b\nc\u007fd'), 'a b c d');
+  assert.equal(cleanName(42), '');
+  assert.equal(cleanName(null), '');
+  assert.equal(NAME_MAX, 24);
+  assert.equal(cleanName('x'.repeat(40)).length, 24);
+  assert.equal(cleanName('é'.repeat(30)), 'é'.repeat(24));
+  assert.equal(cleanState({ ...defaultState(), name: '  Pal  Fan ' }).name, 'Pal Fan');
+  assert.equal(setSetting(defaultState(), 'name', ' Me ').name, 'Me');
+  assert.equal(resetGame({ ...defaultState(), name: 'Keep' }).name, 'Keep');
+});

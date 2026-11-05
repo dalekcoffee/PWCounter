@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { otherCall, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, clockText } from '../js/first-pick.js';
+import { otherCall, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, passChoice, clockText } from '../js/first-pick.js';
 
 test('one call gives the other player the other call', () => {
   assert.equal(otherCall('die', 'high'), 'low');
@@ -43,4 +43,12 @@ test('the turn clock reads m:ss, then h:mm:ss', () => {
   assert.equal(clockText(754000), '12:34');
   assert.equal(clockText(3723000), '1:02:03');
   assert.equal(clockText(-5), '0:00');
+});
+
+test('the toss winner can pass the choice to the other player, once', () => {
+  assert.deepEqual(passChoice(0, false), { chooser: 1, passed: true });
+  assert.deepEqual(passChoice(1, false), { chooser: 0, passed: true });
+  assert.deepEqual(passChoice(1, true), { chooser: 1, passed: true }); // no passing back
+  const { chooser } = passChoice(1, false); // Player 2 won and passed: Player 1 chooses to go second
+  assert.equal(firstSeat(chooser, 'second'), 1);
 });

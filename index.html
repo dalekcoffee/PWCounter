@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.3.16"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.3.17"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=0.3.16">
+  <link rel="stylesheet" href="css/app.css?v=0.3.17">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/calc.js">
@@ -302,7 +302,8 @@
       <div class="f2-side top" data-seat="1">
         <div class="f2-picks"><button type="button" class="f2-big" data-pick="1">Player 2 goes first</button></div>
         <div class="f2-calls"><button type="button" class="f2-call"><b></b><small></small></button><button type="button" class="f2-call"><b></b><small></small></button></div>
-        <div class="f2-choose" role="group" aria-label="You won: go first or second?"><button type="button" class="f2-call" data-order="first"><b>Go first</b><small>2 souls now</small></button><button type="button" class="f2-call" data-order="second"><b>Go second</b><small>1 soul now</small></button></div>
+        <div class="f2-choose" role="group" aria-label="You won: go first or second?"><button type="button" class="f2-call" data-order="first"><b>Go first</b><small>2 souls now</small></button><button type="button" class="f2-call" data-order="second"><b>Go second</b><small>1 soul now</small></button><button type="button" class="f2-pass" data-order="pass">Pass: let the other player choose</button></div>
+        <div class="f2-wait" aria-live="polite"><b></b></div>
         <p class="f2-say" aria-live="polite"></p>
       </div>
       <div class="f2-mid">
@@ -326,7 +327,8 @@
       <div class="f2-side bottom" data-seat="0">
         <div class="f2-picks"><button type="button" class="f2-big" data-pick="0">Player 1 goes first</button><button type="button" class="f2-big solo" data-pick="1">I go second</button></div>
         <div class="f2-calls"><button type="button" class="f2-call"><b></b><small></small></button><button type="button" class="f2-call"><b></b><small></small></button></div>
-        <div class="f2-choose" role="group" aria-label="You won: go first or second?"><button type="button" class="f2-call" data-order="first"><b>Go first</b><small>2 souls now</small></button><button type="button" class="f2-call" data-order="second"><b>Go second</b><small>1 soul now</small></button></div>
+        <div class="f2-choose" role="group" aria-label="You won: go first or second?"><button type="button" class="f2-call" data-order="first"><b>Go first</b><small>2 souls now</small></button><button type="button" class="f2-call" data-order="second"><b>Go second</b><small>1 soul now</small></button><button type="button" class="f2-pass" data-order="pass">Pass: let the other player choose</button></div>
+        <div class="f2-wait" aria-live="polite"><b></b></div>
         <p class="f2-say" aria-live="polite"></p>
       </div>
     </div>

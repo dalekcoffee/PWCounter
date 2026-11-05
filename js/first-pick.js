@@ -49,6 +49,12 @@ export function soloResultLine(kind, value, winner) {
   return `${what} ${winner === 0 ? 'You win.' : 'Your opponent wins.'}`;
 }
 
+/** The toss winner may pass the choice to the other player, once: -> the new chooser and whether it was passed. */
+export function passChoice(chooser, passed) {
+  if (passed || (chooser !== 0 && chooser !== 1)) return { chooser, passed };
+  return { chooser: 1 - chooser, passed: true };
+}
+
 /** The toss winner's choice: 'first' or 'second' -> the seat that goes first, or null. */
 export function firstSeat(winner, order) {
   if ((winner !== 0 && winner !== 1) || (order !== 'first' && order !== 'second')) return null;

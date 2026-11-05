@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.17
+- Who goes first: whoever wins the roll or flip can Pass, giving the choice of going first or second to the other player (once; it cannot be passed back). One player: "Pass: let them choose", or "They pass: I choose" when your opponent won and passed.
+- Who goes first, two players: while one player chooses, the other side shows a card saying "Player 1 is choosing…" / "Player 2 is choosing…" instead of the High / Low buttons.
+
 ## 0.3.16
 - Tablet mode: the board only turns itself while the screen is portrait (orientation lock on). If the browser has already turned to landscape, the board is no longer turned a second time (that put everything sideways); the two players just sit side by side. Left / Right still put Player 1 on that side.
 

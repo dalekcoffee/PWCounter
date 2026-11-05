@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.16"; }
+:root { --pwc-v: "0.3.17"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -597,7 +597,22 @@ svg { display: block; }
 #ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-picks { display: none; }
 #ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-calls { display: grid; }
 /* the toss winner chooses: their calls make way for Go first / Go second */
-.f2-choose { display: none; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
+.f2-choose { display: none; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; }
+/* Pass: a slimmer button under the two choices (0.3.17) */
+.f2-pass {
+  grid-column: 1 / -1; min-height: 48px; padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(13, 19, 38, .9); color: var(--text);
+  border: 1.5px dashed color-mix(in srgb, var(--text) 40%, transparent); font: 600 16px/1.2 var(--font-ui);
+}
+.f2-pass:active { background: color-mix(in srgb, var(--acc) 25%, var(--bg, #0b1020)); }
+/* the side that is not choosing: a card that says who is (instead of the old High / Low) */
+.f2-wait {
+  display: none; place-content: center; min-height: 0; padding: 14px; text-align: center; border-radius: var(--radius);
+  background: rgba(8, 17, 42, .7); border: 2px dashed color-mix(in srgb, var(--text) 22%, transparent);
+}
+.f2-wait b { font: 600 clamp(26px, 6vmin, 48px)/1.15 var(--font-head); color: var(--text-2); }
+#ov-first2[data-step='result'] .f2-side:not(.won) .f2-calls { display: none; }
+#ov-first2[data-step='result'] .f2-side:not(.won) .f2-wait { display: grid; }
+.stage[data-players='1'] .f2-wait { display: none !important; }
 #ov-first2[data-step='result'] .f2-side.won .f2-calls { display: none; }
 #ov-first2[data-step='result'] .f2-side.won .f2-choose { display: grid; }
 .f2-choose .f2-call { border-color: var(--gold); }

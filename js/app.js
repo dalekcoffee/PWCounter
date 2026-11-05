@@ -8,7 +8,7 @@ import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
 import { createDice } from './die3d.js';
-import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, clockText } from './first-pick.js';
+import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, passChoice, clockText } from './first-pick.js';
 import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
@@ -397,7 +397,7 @@ const f2Ov = $('#ov-first2');
 const f2 = { step: 'pick', kind: null, calls: null, value: null, winner: null, timer: 0 };
 function f2Reset() {
   clearTimeout(f2.timer);
-  Object.assign(f2, { step: 'pick', kind: null, calls: null, value: null, winner: null, timer: 0 });
+  Object.assign(f2, { step: 'pick', kind: null, calls: null, value: null, winner: null, chooser: null, passed: false, timer: 0 });
   paintF2();
 }
 function paintF2() {
@@ -406,8 +406,13 @@ function paintF2() {
   setData(f2Ov, 'kind', f2.kind || '');
   setText($('.f2-picks [data-pick="0"]', f2Ov), solo ? 'I go first' : 'Player 1 goes first');
   setText($('.f2-hint', f2Ov), solo ? 'Your opponent gets the other call' : 'Either player picks one');
-  // the choice after the toss: yours, or (one player) the one your opponent tells you
-  const theirs = solo && f2.winner === 1;
+  // the choice after the toss: whoever won (or was passed the choice) chooses; one player: yours, or your opponent's
+  const chooser = f2.chooser ?? f2.winner;
+  const theirs = solo && chooser === 1;
+  for (const p of $$('.f2-pass', f2Ov)) {
+    setHidden(p, f2.passed);
+    setText(p, solo ? (chooser === 0 ? 'Pass: let them choose' : 'They pass: I choose') : `Pass: ${SEAT_NAME[1 - Number(p.closest('.f2-side').dataset.seat)]} chooses`);
+  }
   const [cf, cs] = $$('.f2-side.bottom .f2-choose .f2-call', f2Ov);
   const sl = state.souls; // without souls the buttons say nothing about souls
   $$('.f2-side.top .f2-choose small', f2Ov).forEach((x, i) => setText(x, !sl ? '' : i === 0 ? '2 souls now' : '1 soul now'));
@@ -427,12 +432,13 @@ function paintF2() {
     }
     const say = solo
       ? (f2.step === 'call' || f2.step === 'throw' ? (f2.calls ? `Your call: ${CALL_WORD[f2.calls[0]]}` : 'Make your call')
-        : f2.step === 'result' ? `${soloResultLine(f2.kind, f2.value, f2.winner)} ${f2.winner === 0 ? 'Choose:' : 'What did they choose?'}` : '')
+        : f2.step === 'result' ? `${soloResultLine(f2.kind, f2.value, f2.winner)} ${chooser === 0 ? (f2.passed ? 'They passed. Choose:' : 'Choose:') : (f2.passed ? 'You passed. What did they choose?' : 'What did they choose?')}` : '')
       : f2.step === 'call' || f2.step === 'throw'
         ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
-        : f2.step === 'result' ? `${resultLine(f2.kind, f2.value, f2.winner)} ${seat === f2.winner ? 'You choose:' : `${SEAT_NAME[f2.winner]} is choosing…`}` : '';
+        : f2.step === 'result' ? (seat === chooser ? `${resultLine(f2.kind, f2.value, f2.winner)} ${f2.passed ? `${SEAT_NAME[1 - seat]} passed. You choose:` : 'You choose:'}` : resultLine(f2.kind, f2.value, f2.winner)) : '';
     setText($('.f2-say', side), say);
-    side.classList.toggle('won', f2.step === 'result' && f2.winner === seat);
+    setText($('.f2-wait b', side), f2.step === 'result' && chooser !== null ? `${SEAT_NAME[chooser]} is choosing…` : '');
+    side.classList.toggle('won', f2.step === 'result' && chooser === seat); // 'won': this side chooses
   }
 }
 function f2Throw() {
@@ -443,6 +449,7 @@ function f2Throw() {
     if (kind === 'die') paintFace(die, value); else setText(coinEl, CALL_WORD[value]);
     f2.value = value;
     f2.winner = winnerOf(f2.calls, outcomeOf(kind, value));
+    f2.chooser = f2.winner; f2.passed = false;
     f2.step = 'result';
     paintF2(); // the winner chooses to go first or second (no timer)
   };
@@ -461,7 +468,11 @@ f2Ov.addEventListener('click', (e) => {
   if (m) { f2.kind = m.dataset.method; f2.calls = null; f2.step = 'call'; paintF2(); return; }
   if (e.target.closest('[data-back]')) { f2Reset(); return; }
   const o = e.target.closest('[data-order]');
-  if (o && f2.step === 'result' && (state.players === 1 || Number(o.closest('.f2-side').dataset.seat) === f2.winner)) { startGame(firstSeat(f2.winner, o.dataset.order)); return; }
+  const chooser = f2.chooser ?? f2.winner;
+  if (o && f2.step === 'result' && (state.players === 1 || Number(o.closest('.f2-side').dataset.seat) === chooser)) {
+    if (o.dataset.order === 'pass') { Object.assign(f2, passChoice(chooser, f2.passed)); paintF2(); return; }
+    startGame(firstSeat(chooser, o.dataset.order)); return;
+  }
   const c = e.target.closest('.f2-calls .f2-call');
   if (c && f2.step === 'call' && !f2.calls) {
     f2.calls = callsFor(f2.kind, Number(c.closest('.f2-side').dataset.seat), c.dataset.call);

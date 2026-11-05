@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.8
+- Life changes colour: near white at 10, turning red as it falls toward 0, turning green as it climbs toward 20, and staying green above 20.
+- Game over: when a life reaches 0, "Game over" shows over the board for 5 seconds, like "Begin": "You win" on the winner's side and "You lose" on the loser's (one player: "You lose").
+
 ## 0.3.7
 - Souls: the small "− of 5 +" buttons (add or remove a soul) have their own strip along the bottom of the soul tile, under a line, and are bigger. The big rest / stand halves stop above the strip, so a tap that misses a small button no longer rests or stands a soul. With two players the soul tile is a little taller (the life tile a little shorter) to make room.
 

@@ -12,6 +12,7 @@ import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, 
 import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
+import { lifeTone, justLost, overWords } from './life.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
 const KEY = 'pwc.state';
@@ -51,6 +52,7 @@ function commit(next, remote = false) {
   saveSoon();
   render(prev);
   roomUi.changed(prev, state, remote);
+  if (!remote && !roomUi.watching()) { const lost = justLost(prev, state, roomUi.active() ? 1 : state.players); if (lost.length) announceOver(lost[0]); }
 }
 
 // ---------- seats ----------
@@ -199,6 +201,10 @@ function render(prev) {
       setText(n, String(seat[key]));
       setData(n, 'len', String(Math.max(2, String(seat[key]).length)));
     }
+    // life: near white at 10, redder toward 0, greener toward 20 (and green above)
+    const tone = lifeTone(seat.life, night);
+    const ln = $('.t-life .num', seatEl);
+    if (ln.dataset.tone !== tone) { ln.dataset.tone = tone; ln.style.color = tone; }
     const whose = $('.whose', seatEl);
     setText(whose, i === 1 ? 'Player 2' : (s.name || 'Username not set · ⚙ Settings'));
     whose.classList.toggle('unset', i === 0 && !s.name);
@@ -309,6 +315,25 @@ function announceBegin() {
   clearTimeout(lockTimer);
   lockTimer = setTimeout(() => render(), TURN_LOCK_MS + 30);
   render();
+}
+
+/** A life reached 0: "Game over" over the board for 5 s, You win / You lose on each player's side. */
+const OVER_MS = 5000;
+let overTimer = 0;
+function announceOver(loser) {
+  const begin = $('#begin');
+  clearTimeout(beginTimer); begin.hidden = true; begin.classList.remove('go');
+  for (const d of $$('.delta.show')) d.classList.remove('show'); // no change badges behind the words
+  const el = $('#over');
+  for (const side of $$('.bg-side', el)) {
+    const words = overWords(Number(side.dataset.seat), loser);
+    setData(side, 'result', words === 'You win' ? 'win' : 'lose');
+    setText($('span', side), words);
+  }
+  el.hidden = false;
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  clearTimeout(overTimer);
+  overTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); }, OVER_MS);
 }
 
 // two players: how long the current turn has been going, on the turn button

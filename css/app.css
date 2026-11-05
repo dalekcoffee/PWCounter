@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.7"; }
+:root { --pwc-v: "0.3.8"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -34,7 +34,7 @@ svg { display: block; }
   --pm: rgba(255, 255, 255, .92); --pm-edge: rgba(255, 255, 255, .42); --pm-fill: rgba(255, 255, 255, .1);
   --acc: var(--gold);
   --acc-ink: #2a1f08;
-  --num: #fff6e2;
+  --num: #fff6e2; /* js/life.js knows this colour too (the life number at 10) */
   position: fixed; inset: 0; overflow: hidden; isolation: isolate;
   display: grid; gap: 14px;
   grid-template-columns: minmax(0, 1fr);
@@ -50,7 +50,7 @@ svg { display: block; }
   --pm: #dcdcfb; --pm-edge: rgba(169, 171, 238, .5); --pm-fill: rgba(169, 171, 238, .12);
   --acc: var(--accent);
   --acc-ink: #161a33;
-  --num: #e8ecfa;
+  --num: #e8ecfa; /* js/life.js knows this colour too */
 }
 .stage[data-players='1'] { grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'bottom' 'bar'; }
 .seat[data-seat='1'] { grid-area: top; }
@@ -624,6 +624,12 @@ svg { display: block; }
 .bg-side span { font: 700 clamp(22px, 6vmin, 44px)/1.15 var(--font-ui); color: var(--text); text-shadow: 0 2px 18px rgba(3, 6, 18, .95), 0 0 2px rgba(3, 6, 18, .9); }
 .bg-side[data-first='yes'] span { color: var(--gold); }
 .begin.go .bg-side > * { animation: beginIn 4s cubic-bezier(.2, .8, .2, 1) forwards; }
+/* game over: the same callout, 5 s; the winner's line in green, the loser's in red */
+.over.go::before { animation-duration: 5s; }
+.over.go .bg-side > * { animation-duration: 5s; }
+.over .bg-side b { font-size: clamp(50px, 14vmin, 130px); color: var(--text); text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 50px rgba(255, 255, 255, .2); }
+.over .bg-side[data-result='win'] span { color: #5be37d; }
+.over .bg-side[data-result='lose'] span { color: #ff6b6b; }
 @keyframes beginIn { 0% { opacity: 0; transform: scale(.6); } 9% { opacity: 1; transform: scale(1.06); } 14% { transform: scale(1); } 88% { opacity: 1; } 100% { opacity: 0; transform: scale(1.03); } }
 
 /* the first 10 seconds of a game the turn button rests (greyed, a bar fills), so nobody ends turn 1 by accident */

@@ -26,9 +26,10 @@ svg { display: block; }
 /* ---------- the stage (the whole board; turned as one in landscape) ---------- */
 .stage {
   /* day defaults */
-  --tile: linear-gradient(180deg, rgba(40, 72, 128, .62), rgba(26, 46, 92, .72));
-  --tile-edge: rgba(240, 210, 150, .38);
-  --tile-press: rgba(255, 236, 200, .1);
+  --tile: linear-gradient(180deg, rgba(10, 38, 88, .74), rgba(6, 26, 66, .82));
+  --tile-edge: rgba(255, 255, 255, .24);
+  --tile-press: rgba(255, 255, 255, .1);
+  --pm: rgba(255, 255, 255, .92); --pm-edge: rgba(255, 255, 255, .42); --pm-fill: rgba(255, 255, 255, .1);
   --acc: var(--gold);
   --acc-ink: #2a1f08;
   --num: #fff6e2;
@@ -44,6 +45,7 @@ svg { display: block; }
   --tile: linear-gradient(180deg, rgba(20, 26, 52, .86), rgba(11, 16, 34, .9));
   --tile-edge: rgba(169, 171, 238, .22);
   --tile-press: rgba(169, 171, 238, .1);
+  --pm: #dcdcfb; --pm-edge: rgba(169, 171, 238, .5); --pm-fill: rgba(169, 171, 238, .12);
   --acc: var(--accent);
   --acc-ink: #161a33;
   --num: #e8ecfa;
@@ -67,9 +69,8 @@ svg { display: block; }
 /* day: a clear blue sky warming toward the horizon */
 .sky::before {
   background:
-    radial-gradient(70% 45% at 85% 6%, rgba(255, 220, 150, .6), transparent 70%),
-    radial-gradient(120% 55% at 50% 112%, rgba(250, 178, 100, .55), transparent 72%),
-    linear-gradient(180deg, #2d5aa0 0%, #3f74b8 45%, #5f86b8 72%, #9a8aa0 100%);
+    radial-gradient(60% 38% at 86% 4%, rgba(255, 252, 235, .55), transparent 70%),
+    linear-gradient(180deg, #0d3f8f 0%, #1666c2 46%, #2f8ad8 78%, #4aa3e2 100%);
 }
 /* night: PalVault's deep navy */
 .sky::after {
@@ -101,7 +102,7 @@ svg { display: block; }
 .stage[data-time='night'] .stars.s2 { opacity: .65; }
 .sun {
   width: 220px; height: 220px; right: -60px; top: -60px; border-radius: 50%;
-  background: radial-gradient(circle, #fff3cf 0 22%, rgba(255, 214, 130, .75) 30%, rgba(255, 196, 110, .18) 52%, transparent 70%);
+  background: radial-gradient(circle, #fffef6 0 22%, rgba(255, 248, 220, .7) 30%, rgba(255, 244, 210, .16) 52%, transparent 70%);
 }
 .moon {
   width: 120px; height: 120px; left: 18px; top: 22px; border-radius: 50%; opacity: 0; transform: translateY(30px) scale(.9);
@@ -149,14 +150,10 @@ svg { display: block; }
 .t-life { border-radius: var(--radius); }
 .hit { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 1; border: 0; padding: 0; transition: background .12s; }
 /* each half is its own button: a faint tint toward its edge, a divider down the middle */
-.hit.minus { left: 0; background: linear-gradient(90deg, rgba(216, 162, 171, .13), rgba(216, 162, 171, 0) 75%); }
-.hit.plus { right: 0; background: linear-gradient(270deg, rgba(164, 212, 186, .13), rgba(164, 212, 186, 0) 75%); }
-.hit.minus:active { background: linear-gradient(90deg, rgba(216, 162, 171, .34), rgba(216, 162, 171, .1)); }
-.hit.plus:active { background: linear-gradient(270deg, rgba(164, 212, 186, .34), rgba(164, 212, 186, .1)); }
-@media (hover: hover) {
-  .hit.minus:hover { background: linear-gradient(90deg, rgba(216, 162, 171, .22), rgba(216, 162, 171, .04)); }
-  .hit.plus:hover { background: linear-gradient(270deg, rgba(164, 212, 186, .22), rgba(164, 212, 186, .04)); }
-}
+.hit.minus { left: 0; } .hit.plus { right: 0; }
+.hit { background: transparent; }
+.hit:active { background: var(--tile-press); }
+@media (hover: hover) { .hit:hover { background: color-mix(in srgb, var(--tile-press) 60%, transparent); } }
 .tile::after {
   content: ''; position: absolute; z-index: 2; left: 50%; top: 10%; bottom: 10%; width: 0; pointer-events: none;
   border-left: 1.5px dashed color-mix(in srgb, var(--text) 26%, transparent);
@@ -166,8 +163,7 @@ svg { display: block; }
   flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
   font: 700 20px/1 var(--font-ui); border: 1.5px solid;
 }
-.pm.minus { color: #f0c4cc; border-color: rgba(216, 162, 171, .55); background: rgba(216, 162, 171, .14); }
-.pm.plus { color: #c8ecd8; border-color: rgba(164, 212, 186, .55); background: rgba(164, 212, 186, .14); }
+.pm { color: var(--pm); border-color: var(--pm-edge); background: var(--pm-fill); }
 .t-life .pm { width: clamp(36px, 14cqh, 52px); height: clamp(36px, 14cqh, 52px); font-size: clamp(22px, 8cqh, 32px); }
 .core { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .num { font: 600 min(58cqh, 22cqw)/1 var(--font-head); font-variant-numeric: tabular-nums; color: var(--num); letter-spacing: -.02em; }

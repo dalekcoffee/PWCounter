@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+- Day: a clear blue sky with a white sun (no orange horizon) and deeper, crisper tiles.
+- The + and − buttons share one colour (white by day, lavender by night).
+
 ## 1.0.1
 - Life now sits above Material and Ingredient on both sides (and before them in landscape).
 - One player: End Turn and the turn count are hidden.

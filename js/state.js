@@ -39,6 +39,7 @@ export function defaultState() {
     landscape: 'off',
     flip: true,
     awake: true,
+    autoFull: true, // installed app: go full screen on the first tap
     souls: false, // experimental
     soulStyle: 'numbers', // experimental: one of SOUL_STYLES (styles with cards need one player; two players see numbers)
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
@@ -101,6 +102,7 @@ export function cleanState(raw) {
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
     flip: raw.flip !== false,
     awake: raw.awake !== false,
+    autoFull: raw.autoFull !== false,
     souls: raw.souls === true,
     soulStyle: cleanSoulStyle(raw),
     iconsOnly: raw.iconsOnly === true,

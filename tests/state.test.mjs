@@ -71,6 +71,8 @@ test('cleanState repairs anything read from storage', () => {
   assert.equal(s.landscape, 'off');
   assert.equal(s.flip, false);
   assert.equal(s.iconsOnly, false);
+  assert.equal(s.autoFull, true);
+  assert.equal(cleanState({ v: 1, autoFull: false }).autoFull, false);
   assert.equal(s.awake, false);
 });
 

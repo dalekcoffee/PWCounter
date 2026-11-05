@@ -267,12 +267,23 @@ $('#ov-first').addEventListener('click', (e) => {
 });
 
 const fullBtn = $('#btn-full');
-const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
-fullBtn.hidden = !document.fullscreenEnabled || standalone;
+// Installed app: the manifest asks for full screen, but an installed copy can keep an older manifest
+// (or the phone may open it as a window), so the app also goes full screen itself on the first tap.
+// Browsers only allow that from a tap. iPhone has no full screen API for pages: it shows no browser bars instead.
+const installed = matchMedia('(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)').matches || navigator.standalone === true;
+const goFull = () => document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }).catch(() => {});
+fullBtn.hidden = !document.fullscreenEnabled || (installed && state.autoFull && !!document.fullscreenElement);
+document.addEventListener('fullscreenchange', () => {
+  fullBtn.hidden = !document.fullscreenEnabled || (installed && state.autoFull && !!document.fullscreenElement);
+});
 fullBtn.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen?.();
-  else document.documentElement.requestFullscreen?.().catch(() => {});
+  else goFull();
 });
+// every tap while not full screen tries again (leaving the app or the system back gesture ends full screen)
+document.addEventListener('pointerup', () => {
+  if (installed && state.autoFull && document.fullscreenEnabled && !document.fullscreenElement) goFull();
+}, true);
 
 // ---------- overlays ----------
 let openId = null;
@@ -394,6 +405,7 @@ function paintSettings() {
   }
   $('#set-flip').checked = state.flip;
   $('#set-awake').checked = state.awake;
+  $('#set-autofull').checked = state.autoFull;
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
   $('#set-rooms').checked = state.rooms;
@@ -412,6 +424,7 @@ for (const seg of $$('.seg')) {
   });
 }
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
+$('#set-autofull').addEventListener('change', (e) => commit(setSetting(state, 'autoFull', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
 $('#set-rooms').addEventListener('change', (e) => { commit(setSetting(state, 'rooms', e.target.checked)); if (!e.target.checked) roomUi.forget(); });

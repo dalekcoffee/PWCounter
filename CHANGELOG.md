@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.8
+- Installed app: goes full screen on the first tap even when the phone opened it as a window (Settings: "Full screen when installed", on by default). The full screen button stays available.
+
 ## 0.1.7
 - With souls on, the turn button says "Start game" until who goes first is chosen, then "Start turn" / "End Turn".
 

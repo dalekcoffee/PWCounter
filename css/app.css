@@ -359,7 +359,7 @@ svg { display: block; }
 
 /* ---------- the bar between the seats ---------- */
 .bar { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px; min-width: 0; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
-.stage[data-face='top'] .bar, .stage[data-face='top'] :is(#ov-calc, #ov-dice, #ov-throw) { transform: rotate(180deg); } /* settings, reset and rooms stay with Player 1 */
+.stage[data-face='top'] .bar, .stage[data-face='top'] :is(#ov-calc, #ov-dice) { transform: rotate(180deg); } /* settings, reset and rooms stay with Player 1 */
 .stage[data-players='1']:not([data-souls='on']):not([data-room='on']) .endturn { visibility: hidden; } /* one player: no turns to track (its space keeps the bar balanced); with souls it starts your turn */
 .bar-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .bar-side.end { justify-content: flex-end; }
@@ -739,6 +739,17 @@ svg { display: block; }
 .throw-out.show { opacity: 1; animation: pop .3s cubic-bezier(.2, .9, .3, 1.3); }
 @keyframes pop { from { opacity: 0; scale: .7; } }
 .throw-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(360px, 100%); }
+/* two players face to face: the dice in the middle; the top player gets the numbers, the total and Done / Roll again
+   facing them (the copy is turned round, so its numbers sit under the dice from their side) */
+.throw-mirror { display: none; }
+.stage[data-players='2'][data-flip='on'] .throw-mirror { display: grid; justify-items: center; gap: 14px; width: 100%; transform: rotate(180deg); }
+.stage[data-players='2'][data-flip='on'] .throw-stage { height: min(44vmin, 320px); }
+.tm-nums { margin: 0; display: flex; justify-content: center; gap: min(16vmin, 96px); font: 600 clamp(28px, 7vmin, 46px)/1 var(--font-head); color: var(--text); }
+.tm-nums span { min-width: 1.2ch; text-align: center; }
+.throw[data-kind='coin'] .tm-nums { display: none; }
+/* two players: Done and Roll again wait 3 s after the result, a bar fills while they wait */
+.throw-btns .btn { position: relative; overflow: hidden; }
+.throw-btns.cool .btn::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--acc); transform-origin: left; animation: lockbar 3s linear forwards; }
 .throw-btns .btn { min-height: 52px; font-size: 16px; }
 /* while a pop-up is open the board behind it stays still (no twinkling stars to repaint) */
 .stage.ov-open[data-time] .stars.s1, .stage.ov-open[data-time] .stars.s2 { animation-play-state: paused; }

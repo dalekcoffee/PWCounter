@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+- Two players, dice and coin: the dice stay in the middle and both players see each die's number and the total (or heads / tails), the top player's copy facing them, each with their own Done and Roll again.
+- Two players: Done and Roll again wait 3 seconds after the result (a bar fills), so a stray tap cannot end the throw before both players have seen it.
+
 ## 0.3.2
 - Two players, Numbers on cards: the souls behind the count are soul flames instead of small cards, bigger, ten in a row on a wide screen (lit = standing, dim = rested, dashed = empty).
 - Two players: the sun and moon sit at the middle of the board and the sky is mirrored about the middle, so it looks the same from both sides.

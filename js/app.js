@@ -441,6 +441,7 @@ function closeOverlay(quiet) {
   if (!openId) return;
   if (openId === 'ov-sync' && quiet !== 'force' && quiet !== true) return; // the counters must be agreed on (or the room left)
   if (openId === 'ov-first2') clearTimeout(f2.timer);
+  if (openId === 'ov-throw' && quiet !== true && Date.now() < throwUntil) return; // two players: not before both have seen it
   $(`#${openId}`).hidden = true;
   stage.classList.remove('ov-open');
   if (openId === 'ov-room') roomUi.closed();
@@ -515,17 +516,37 @@ $('.dice .coin').style.transform = 'rotateX(0deg)';
 let coinAt = 0, busy = false, kind = 'die';
 const setCoin = (a, ms) => { coin.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3,.6,.3,1)` : 'none'; coin.style.transform = `rotateX(${a}deg)`; };
 setCoin(coinAt, 0);
+// Two players: Done and Roll again (both players' copies) wait until 3 s after the result, so a stray tap from either
+// side cannot end the throw before both have seen it. One player: Roll again only waits for the roll.
+const THROW_COOL_MS = 3000;
+let throwUntil = 0, throwTimer = 0;
+const throwBtns = () => $$('#ov-throw [data-close], #btn-again, #tm-again');
+function lockThrow(ms) { // Infinity while rolling
+  clearTimeout(throwTimer);
+  const shared = state.players === 2 && !roomUi.active();
+  const rows = $$('#ov-throw .throw-btns');
+  rows.forEach((x) => x.classList.remove('cool'));
+  if (!shared) { throwUntil = 0; $('#btn-again').disabled = ms === Infinity; return; }
+  for (const b of throwBtns()) b.disabled = true;
+  throwUntil = ms === Infinity ? Infinity : Date.now() + ms;
+  if (ms === Infinity) return;
+  rows.forEach((x) => { void x.offsetWidth; x.classList.add('cool'); });
+  throwTimer = setTimeout(() => {
+    throwUntil = 0;
+    for (const b of throwBtns()) b.disabled = false;
+    rows.forEach((x) => x.classList.remove('cool'));
+  }, ms);
+}
 function play(scene, ms, start, words, land) {
   if (busy) return; // taps during a roll are ignored
   busy = true;
-  const out = $('#throw-out');
-  const again = $('#btn-again');
-  out.classList.remove('show');
-  out.textContent = '\u00a0';
-  again.disabled = true;
+  const out = $('#throw-out'), tmOut = $('#tm-out');
+  for (const o of [out, tmOut]) { o.classList.remove('show'); o.textContent = '\u00a0'; }
+  lockThrow(Infinity);
   const done = () => {
-    out.textContent = words; out.classList.add('show');
-    busy = false; again.disabled = false;
+    for (const o of [out, tmOut]) { o.textContent = words; o.classList.add('show'); }
+    busy = false;
+    lockThrow(THROW_COOL_MS);
     $('#ov-throw').classList.remove('going');
   };
   if (reduceMotion()) { start(0); land?.(); done(); return; }
@@ -553,8 +574,9 @@ function rollNow() {
   const a = $('#d2a'), b2 = $('#d2b');
   const label = (el, n) => { el.textContent = n ? String(n) : '\u00a0'; el.classList.toggle('show', !!n); };
   label($('#d2a-n'), 0); label($('#d2b-n'), 0);
+  setText($('#tm-a'), '\u00a0'); setText($('#tm-b'), '\u00a0');
   const d3 = dice3d();
-  const finish = () => { paintFace(a, n1); paintFace(b2, n2); if (d3 && reduceMotion()) d3.show(n1, n2); label($('#d2a-n'), n1); label($('#d2b-n'), n2); };
+  const finish = () => { paintFace(a, n1); paintFace(b2, n2); if (d3 && reduceMotion()) d3.show(n1, n2); label($('#d2a-n'), n1); label($('#d2b-n'), n2); setText($('#tm-a'), n1); setText($('#tm-b'), n2); };
   play($('#dice-pair'), 1150, (ms) => {
     if (!ms) return;
     if (d3) { d3.roll(n1, n2, ms - 40); setTimeout(finish, ms - 40); return; }
@@ -579,15 +601,15 @@ function throwBig(k) {
   kind = k;
   const ov = $('#ov-throw');
   ov.dataset.kind = k;
-  $('#btn-again').textContent = k === 'die' ? 'Roll again' : 'Flip again';
+  for (const b of [$('#btn-again'), $('#tm-again')]) b.textContent = k === 'die' ? 'Roll again' : 'Flip again';
   openOverlay('ov-throw'); // replaces the chooser sheet
   (k === 'die' ? rollNow : flipNow)();
 }
 $('#btn-roll').addEventListener('click', () => throwBig('die'));
 $('#btn-coin').addEventListener('click', () => throwBig('coin'));
-$('#btn-again').addEventListener('click', () => (kind === 'die' ? rollNow : flipNow)());
+for (const b of [$('#btn-again'), $('#tm-again')]) b.addEventListener('click', () => { if (Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 // a tap on the big die / coin throws again too
-$('.throw-stage').addEventListener('click', () => { if (!busy) (kind === 'die' ? rollNow : flipNow)(); });
+$('.throw-stage').addEventListener('click', () => { if (!busy && Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 
 // ---------- settings ----------
 $('#app-ver').textContent = `Version ${APP_VERSION}`;

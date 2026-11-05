@@ -162,7 +162,6 @@ svg { display: block; }
   display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
   background: var(--tile); border: 1px solid var(--tile-edge); border-radius: var(--radius-sm);
   box-shadow: 0 14px 34px rgba(3, 6, 18, .35);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   container-type: size; transition: background .6s, border-color .6s;
 }
 .t-life { border-radius: var(--radius); }
@@ -243,11 +242,15 @@ svg { display: block; }
 .i-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; }
 .i-wisp { fill: #8f6ee6; stroke: #2f1f6b; }
 .i-wisp-in { fill: #e4dbff; }
-.i-log, .i-end { fill: #7b4a12; stroke: #3f240a; }
-.i-rings { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
-.i-grain { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.i-log { fill: #7b4a12; stroke: #3f240a; }
+.i-end { fill: #a8692a; stroke: #3f240a; } /* the cut end a lighter wood, so its dark rings read */
+.i-rings { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
+.i-grain { fill: none; stroke: #3f240a; stroke-width: 2.4; stroke-linecap: round; }
 .i-fruit, .i-leaf { fill: #1eab3f; stroke: #0f6b26; }
 .i-stem { fill: none; stroke: #5b3a1a; stroke-width: 2.6; stroke-linecap: round; }
+/* the fruit is drawn on a 100-unit grid: same look, strokes scaled to match the 64-unit icons */
+.ico-100 .i-fruit, .ico-100 .i-leaf { stroke-width: 5; }
+.ico-100 .i-stem { stroke-width: 4.2; stroke-linejoin: round; }
 .i-shine2 { fill: #fff; }
 
 /* ---------- souls ---------- */
@@ -483,7 +486,7 @@ svg { display: block; }
 /* ---------- overlays ---------- */
 .overlay {
   position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px;
-  background: rgba(3, 6, 18, .62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 6, 18, .74); /* a plain dim: a full-screen blur made pop-ups slow to open on phones */
   container-type: inline-size; animation: fade .18s ease-out;
 }
 @keyframes fade { from { opacity: 0; } }
@@ -543,29 +546,43 @@ svg { display: block; }
 .die-scene, .coin-scene { --s: 72px; display: grid; place-items: center; width: calc(var(--s) * 1.35); height: calc(var(--s) * 1.35); perspective: calc(var(--s) * 7); }
 .die, .coin { position: relative; display: block; width: var(--s); height: var(--s); transform-style: preserve-3d; }
 
-/* the die: rounded faces over a solid core */
-.die-f, .die-core { position: absolute; inset: 0; }
-.die-f {
-  display: grid; padding: calc(var(--s) * .13); border-radius: calc(var(--s) * .2); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+/* the dice: seen from above, a rounded ivory die with a soft bevel; they tumble in 2D, so nothing clips */
+.d2 {
+  --d: 64px; position: relative; display: grid; width: var(--d); height: var(--d); padding: calc(var(--d) * .14); border-radius: calc(var(--d) * .22);
   grid-template: 'p1 p2 p3' 1fr 'p4 p5 p6' 1fr 'p7 p8 p9' 1fr / 1fr 1fr 1fr; place-items: center;
-  background: radial-gradient(120% 120% at 30% 25%, #fffdf6, #efe8d6 60%, #ddd4bd);
-  box-shadow: inset 0 0 calc(var(--s) * .06) rgba(90, 70, 30, .22);
+  background: radial-gradient(130% 130% at 28% 22%, #fffdf7 0%, #f3ecdb 48%, #ddd3bb 100%);
+  box-shadow: inset 0 calc(var(--d) * -.05) calc(var(--d) * .06) rgba(110, 85, 40, .35), inset 0 calc(var(--d) * .04) calc(var(--d) * .05) rgba(255, 255, 255, .9), 0 calc(var(--d) * .08) calc(var(--d) * .14) rgba(0, 0, 0, .45);
 }
-.die-core { inset: calc(var(--s) * .075); border-radius: calc(var(--s) * .14); background: #e2dac5; }
-.die-f i { width: calc(var(--s) * .17); height: calc(var(--s) * .17); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #3a3f63, #14172b 70%); box-shadow: inset 0 calc(var(--s) * .02) calc(var(--s) * .02) rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .6); }
-.die-f.f1 i { width: calc(var(--s) * .23); height: calc(var(--s) * .23); background: radial-gradient(circle at 40% 35%, #e3584a, #a2241a 70%); }
-.die-f.f1 { transform: translateZ(calc(var(--s) / 2)); }
-.die-f.f2 { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); }
-.die-f.f3 { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
-.die-f.f4 { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
-.die-f.f5 { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
-.die-f.f6 { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
-.die-core.c1 { transform: translateZ(calc(var(--s) * .425)); }
-.die-core.c2 { transform: rotateY(90deg) translateZ(calc(var(--s) * .425)); }
-.die-core.c3 { transform: rotateX(90deg) translateZ(calc(var(--s) * .425)); }
-.die-core.c4 { transform: rotateX(-90deg) translateZ(calc(var(--s) * .425)); }
-.die-core.c5 { transform: rotateY(-90deg) translateZ(calc(var(--s) * .425)); }
-.die-core.c6 { transform: rotateY(180deg) translateZ(calc(var(--s) * .425)); }
+.d2 i { width: calc(var(--d) * .16); height: calc(var(--d) * .16); border-radius: 50%; background: radial-gradient(circle at 40% 35%, #3a3f63, #14172b 70%); box-shadow: inset 0 calc(var(--d) * .015) calc(var(--d) * .02) rgba(0, 0, 0, .55), 0 1px 0 rgba(255, 255, 255, .7); }
+.d2[data-face='1'] i { width: calc(var(--d) * .24); height: calc(var(--d) * .24); background: radial-gradient(circle at 40% 35%, #e3584a, #a2241a 70%); }
+.d2.sm { --d: 44px; }
+.d2-preview { display: flex; gap: 10px; align-items: center; height: 97px; }
+.d2-preview .d2:first-child { rotate: -12deg; } .d2-preview .d2:last-child { rotate: 9deg; }
+.dice-pair { grid-area: 1 / 1; display: flex; gap: min(8vmin, 56px); align-items: flex-start; justify-content: center; }
+.d2-slot { display: grid; justify-items: center; gap: 14px; }
+.d2-spin { display: block; }
+.dice-pair .d2 { --d: min(30vmin, 180px); }
+.d2-num { font: 600 clamp(28px, 7vmin, 46px)/1 var(--font-head); color: var(--text); opacity: 0; min-height: 1em; }
+.d2-num.show { opacity: 1; animation: pop .3s cubic-bezier(.2, .9, .3, 1.3); }
+.throw.going .d2-spin.a { animation: tumbleA 1.15s cubic-bezier(.25, .65, .3, 1); }
+.throw.going .d2-spin.b { animation: tumbleB 1.15s cubic-bezier(.25, .65, .3, 1); }
+@keyframes tumbleA {
+  0% { transform: translate(-60%, 40%) rotate(-260deg) scale(.55); }
+  35% { transform: translate(-8%, -38%) rotate(-40deg) scale(1.08); }
+  62% { transform: translate(4%, 4%) rotate(60deg) scale(.97); }
+  78% { transform: translate(0, -9%) rotate(80deg) scale(1.02); }
+  90% { transform: translate(0, 0) rotate(88deg) scale(1); }
+  100% { transform: translate(0, 0) rotate(90deg) scale(1); }
+}
+@keyframes tumbleB {
+  0% { transform: translate(60%, 40%) rotate(250deg) scale(.55); }
+  35% { transform: translate(8%, -32%) rotate(30deg) scale(1.08); }
+  62% { transform: translate(-4%, 4%) rotate(-70deg) scale(.97); }
+  78% { transform: translate(0, -7%) rotate(-86deg) scale(1.02); }
+  90% { transform: translate(0, 0) rotate(-90deg) scale(1); }
+  100% { transform: translate(0, 0) rotate(-90deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .throw.going .d2-spin { animation: none; } }
 
 /* the coin: two faces and a gold edge between them */
 .coin-f, .coin-edge { position: absolute; inset: 0; border-radius: 50%; }
@@ -585,10 +602,10 @@ svg { display: block; }
 .overlay.throw { background: rgba(3, 6, 18, .78); }
 .throw-box { display: grid; justify-items: center; gap: 18px; width: min(560px, 100%); }
 .throw-stage { position: relative; display: grid; place-items: center; width: 100%; height: min(62vmin, 400px); cursor: pointer; }
-.die-scene.big, .coin-scene.big { --s: min(40vmin, 240px); grid-area: 1 / 1; }
-.throw[data-kind='die'] .coin-scene.big, .throw[data-kind='coin'] .die-scene.big { display: none; }
+.coin-scene.big { --s: min(40vmin, 240px); grid-area: 1 / 1; }
+.throw[data-kind='die'] .coin-scene.big, .throw[data-kind='coin'] .dice-pair { display: none; }
+.throw[data-kind='die'] .throw-shadow { display: none; }
 .throw-shadow { grid-area: 1 / 1; align-self: end; width: min(34vmin, 210px); height: 18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent); }
-.throw.going .die-scene.big { animation: toss 1.3s cubic-bezier(.3, .6, .3, 1); }
 .throw.going .coin-scene.big { animation: toss 1.5s cubic-bezier(.3, .6, .3, 1); }
 .throw.going .throw-shadow { animation: shadow 1.3s cubic-bezier(.3, .6, .3, 1); }
 .throw[data-kind='coin'].going .throw-shadow { animation-duration: 1.5s; }
@@ -599,7 +616,9 @@ svg { display: block; }
 @keyframes pop { from { opacity: 0; scale: .7; } }
 .throw-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(360px, 100%); }
 .throw-btns .btn { min-height: 52px; font-size: 16px; }
-@media (prefers-reduced-motion: reduce) { .throw.going .die-scene.big, .throw.going .coin-scene.big, .throw.going .throw-shadow { animation: none; } }
+/* while a pop-up is open the board behind it stays still (no twinkling stars to repaint) */
+.stage.ov-open .stars { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .throw.going .coin-scene.big, .throw.going .throw-shadow { animation: none; } }
 
 /* settings */
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border); }

@@ -6,7 +6,7 @@ import {
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
-import { dieTarget, coinTarget } from './dice-anim.js';
+import { coinTarget } from './dice-anim.js';
 import { initRoom } from './room-ui.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 
@@ -41,7 +41,7 @@ const ICONS = {
   life: '<svg viewBox="4 4 56 56" aria-hidden="true"><path class="i-heart" d="M32 56C24 49 7 38 7 22 7 13 13.5 7 21 7c5 0 8.6 2.6 11 6.4C34.4 9.6 38 7 43 7c7.5 0 14 6 14 15 0 16-17 27-25 34Z"/><path class="i-shine" d="M15 21c0-4.5 3-7.5 7-7.5"/></svg>',
   mat: '<svg viewBox="1 1 62 62" aria-hidden="true"><g transform="rotate(-22 32 32)"><rect class="i-log" x="13" y="16" width="48" height="32" rx="16"/><path class="i-grain" d="M31 23h15M42 32h11M32 41h13"/><ellipse class="i-end" cx="16" cy="32" rx="13" ry="17"/><ellipse class="i-rings" cx="16" cy="32" rx="8" ry="11"/><path class="i-rings" d="M16 28c2.8 0 4.2 2 4.2 4.2s-1.9 4-4.2 4-3-1.4-3-2.8"/></g></svg>',
   soul: '<svg viewBox="4.5 4 54 54" aria-hidden="true"><path class="i-wisp" d="M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z"/><path class="i-wisp-in" d="M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z"/></svg>',
-  ing: '<svg viewBox="2 2 60 60" aria-hidden="true"><path class="i-leaf" d="M35 18c4-8 13-12 23-10-2.5 9-11 13-21 12Z"/><path class="i-fruit" d="M33 19c-5-4-14-5-20 1-6 6-7 17-3 26 4 9 11 13 18 12 3 0 4-1 6-1s3 1 6 1c8 0 15-8 17-18 2-9-2-17-9-21-5-2-10 0-15 0Z"/><path class="i-stem" d="M33 21c0-4 1-7 3-9"/><rect class="i-shine2" x="15" y="27" width="6" height="13" rx="3" transform="rotate(12 18 33)"/></svg>',
+  ing: '<svg viewBox="0 -12 100 100" aria-hidden="true" class="ico-100"><path class="i-fruit" d="M7.5 17.9C10 15.5 12.5 14.5 15 14 18 9 22 6.5 26.4 5.7 30 3.5 34 2.8 37.7 2.8c5.3 0 9.3.7 11.3 1.9 3 1.8 5.5 4.8 6.7 7.6l6.6-1.9c3.7 7.6 6.7 15.6 7.5 28.3-3.8 2.3-6.8 5.3-8.5 9.4-1.8 3.9-1.8 6.9-2.8 11.3-1 4.6-2 7.1-3.8 9.5-4.7 5.1-10.7 6.6-17 6.6-7.7 0-14.2-.5-18.8-2.9C13 69.5 9.5 65.5 7.5 61.3 4 55 2.2 52 1.9 48.1c-.5-5.1-.4-8.1 0-11.3.6-7.8 2.6-14.8 5.6-18.9Z"/><path class="i-leaf" d="M60 14c2.5-5 5.5-9.5 9.8-12.1C75 6 80 10.5 86.8 16c5.2 6 8.7 13 11.2 20.8-7 .7-13 .2-19-1-4.5-2.3-8.5-4.8-11.1-8.4C64 23 61.5 18.5 60 14Z"/><path class="i-stem" d="M50.9 16l6.6 8.5 7.5-9.5"/><rect class="i-shine2" x="13.2" y="30.2" width="7.6" height="16" rx="3.8" transform="rotate(14 17 38)"/></svg>',
 };
 
 // online play: the room sheet, the opponent drawer (js/room-ui.js); declared here, used by commit / render
@@ -298,12 +298,14 @@ function openOverlay(id) {
   const ov = $(`#${id}`);
   ov.hidden = false;
   openId = id;
+  stage.classList.add('ov-open');
   ($('[data-close]', ov) || ov.querySelector('button'))?.focus({ preventScroll: true });
 }
 function closeOverlay(quiet) {
   if (!openId) return;
   if (openId === 'ov-sync' && quiet !== 'force' && quiet !== true) return; // the counters must be agreed on (or the room left)
   $(`#${openId}`).hidden = true;
+  stage.classList.remove('ov-open');
   if (openId === 'ov-room') roomUi.closed();
   openId = null;
   if (!quiet) lastFocus?.focus?.({ preventScroll: true });
@@ -359,38 +361,24 @@ function calcKey(e) {
 $('#btn-dice').addEventListener('click', () => openOverlay('ov-dice'));
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-// Rounded die: six faces with rounded corners, plus a slightly smaller solid core whose edges fill the
-// rounded corners, so a turning die shows a solid body instead of square faces with see-through corners.
-function buildDie(el) {
-  for (let n = 1; n <= 6; n++) {
-    const c = document.createElement('div');
-    c.className = `die-core c${n}`;
-    el.append(c);
-  }
-  for (let n = 1; n <= 6; n++) {
-    const f = document.createElement('div');
-    f.className = `die-f f${n}`;
-    f.innerHTML = PIPS[n].map((p) => `<i style="grid-area:p${p}"></i>`).join('');
-    el.append(f);
-  }
+// A die seen from above (no 3D cube, so nothing clips while it tumbles): the face is drawn with pips.
+function paintFace(el, n) {
+  el.dataset.face = String(n);
+  el.innerHTML = PIPS[n].map((p) => `<i style="grid-area:p${p}"></i>`).join('');
 }
+$$('.d2').forEach((el) => paintFace(el, Number(el.dataset.face) || 1));
 const COIN_HTML = `
   <div class="coin-edge"></div>
   <div class="coin-f heads"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><circle class="c-sun" cx="32" cy="22" r="6"/><path class="c-rays" d="M32 8v4M32 32v4M16 22h4M44 22h4M21 11l3 3M43 11l-3 3M21 33l3-3M43 33l-3-3"/><text x="32" y="55" text-anchor="middle" class="c-letter">H</text></svg></div>
   <div class="coin-f tails"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="c-rim" cx="32" cy="32" r="29"/><path class="c-moon" d="M38 9a14 14 0 1 0 0 26 11 11 0 1 1 0-26Z"/><circle class="c-star" cx="46" cy="30" r="1.6"/><text x="32" y="55" text-anchor="middle" class="c-letter">T</text></svg></div>`;
-$$('[data-die]').forEach(buildDie);
 $$('[data-coin]').forEach((el) => { el.innerHTML = COIN_HTML; });
-const die = $('#die');
 const coin = $('#coin');
-$('.dice .die').style.transform = 'rotateX(-20deg) rotateY(25deg)';
 $('.dice .coin').style.transform = 'rotateX(0deg)';
 
-let dieAt = [-20, 25], coinAt = 0, busy = false, kind = 'die';
-const setDie = (a, ms) => { die.style.transition = ms ? `transform ${ms}ms cubic-bezier(.15,.7,.2,1)` : 'none'; die.style.transform = `rotateX(${a[0]}deg) rotateY(${a[1]}deg)`; };
+let coinAt = 0, busy = false, kind = 'die';
 const setCoin = (a, ms) => { coin.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3,.6,.3,1)` : 'none'; coin.style.transform = `rotateX(${a}deg)`; };
-setDie(dieAt, 0);
 setCoin(coinAt, 0);
-function play(scene, ms, start, words) {
+function play(scene, ms, start, words, land) {
   if (busy) return; // taps during a roll are ignored
   busy = true;
   const out = $('#throw-out');
@@ -403,16 +391,32 @@ function play(scene, ms, start, words) {
     busy = false; again.disabled = false;
     $('#ov-throw').classList.remove('going');
   };
-  if (reduceMotion()) { start(0); done(); return; }
+  if (reduceMotion()) { start(0); land?.(); done(); return; }
   void scene.offsetWidth;
   $('#ov-throw').classList.add('going');
   start(ms);
   setTimeout(done, ms + 40);
 }
 function rollNow() {
-  const n = rollDie(6); // the result is decided here; the die only shows it
-  dieAt = dieTarget(dieAt, n);
-  play($('#die-scene'), 1300, (ms) => setDie(dieAt, ms), `Rolled a ${n}`);
+  if (busy) return;
+  const n1 = rollDie(6), n2 = rollDie(6); // decided here; the dice only show them
+  const a = $('#d2a'), b2 = $('#d2b');
+  const label = (el, n) => { el.textContent = n ? String(n) : '\u00a0'; el.classList.toggle('show', !!n); };
+  label($('#d2a-n'), 0); label($('#d2b-n'), 0);
+  const finish = () => { paintFace(a, n1); paintFace(b2, n2); label($('#d2a-n'), n1); label($('#d2b-n'), n2); };
+  // while they tumble the faces flicker, slowing down, then land on the rolled numbers
+  play($('#dice-pair'), 1150, (ms) => {
+    if (!ms) return;
+    let t = 0, gap = 45;
+    const flick = () => {
+      if (t + gap >= ms - 60) return;
+      paintFace(a, rollDie(6)); paintFace(b2, rollDie(6));
+      t += gap; gap = Math.min(170, gap * 1.18);
+      setTimeout(flick, gap);
+    };
+    flick();
+    setTimeout(finish, ms - 40);
+  }, `Total ${n1 + n2}`, finish);
 }
 function flipNow() {
   const c = flipCoin();
@@ -511,7 +515,20 @@ window.addEventListener('storage', (e) => {
 
 // ---------- offline ----------
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  // The installed app keeps an offline copy. Look for a new version on open and whenever the app comes back,
+  // and when one has taken over, reload once (the game is saved, so nothing is lost).
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+  });
 }
 
 // ---------- #join=DDDD (from a QR code or a link) ----------

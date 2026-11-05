@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+- Dice: two dice roll side by side, each number under its die and the total below. They tumble seen from above (no 3D cube, so nothing clips mid-roll).
+- Ingredient icon redrawn to the card game's fruit shape; the log's rings and grain lines are dark brown.
+- Pop-ups open faster: no full-screen blur behind them, no blur on the tiles, and the stars rest while a pop-up is open.
+- The installed app looks for a new version whenever it is opened or brought back, and reloads once onto it.
+
 ## 0.2.0
 - Watch a game: the room relay has a read-only `watch` role (up to 8 viewers who never count as players). Open `#watch=CODE` (no experimental switch needed), choose "Watch a game" in the room sheet, or get switched to watching automatically when a game already has two players.
 - Display mode for a TV or monitor: the two players side by side (stacked on a narrow screen), big life, Material, Ingredient and Souls, the player whose turn it is highlighted, day or night sky and the turn number, live "+2" / "−3" badges, a QR of the watch link. Read only, never upside down, ignores the landscape setting.

@@ -39,6 +39,7 @@ export const STATUS_TEXT = {
   connected: 'Connected',
   reconnecting: 'Reconnecting…',
   full: 'That game already has two players.',
+  viewers: 'Too many viewers.',
   busy: "Couldn't get a free code, try again.",
 };
 /** One line for the status: "Connected to NAME" once the friend's hello is in. */

@@ -38,9 +38,9 @@ function commit(next, remote = false) {
 // ---------- seats ----------
 const LABEL = { life: 'Life', mat: 'Material', ing: 'Ingredient', soul: 'Souls' };
 const ICONS = {
-  life: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-heart" d="M32 56C24 49 7 38 7 22 7 13 13.5 7 21 7c5 0 8.6 2.6 11 6.4C34.4 9.6 38 7 43 7c7.5 0 14 6 14 15 0 16-17 27-25 34Z"/><path class="i-shine" d="M15 21c0-4.5 3-7.5 7-7.5"/></svg>',
+  life: '<svg viewBox="4 4 56 56" aria-hidden="true"><path class="i-heart" d="M32 56C24 49 7 38 7 22 7 13 13.5 7 21 7c5 0 8.6 2.6 11 6.4C34.4 9.6 38 7 43 7c7.5 0 14 6 14 15 0 16-17 27-25 34Z"/><path class="i-shine" d="M15 21c0-4.5 3-7.5 7-7.5"/></svg>',
   mat: '<svg viewBox="1 1 62 62" aria-hidden="true"><g transform="rotate(-22 32 32)"><rect class="i-log" x="13" y="16" width="48" height="32" rx="16"/><path class="i-grain" d="M31 23h15M42 32h11M32 41h13"/><ellipse class="i-end" cx="16" cy="32" rx="13" ry="17"/><ellipse class="i-rings" cx="16" cy="32" rx="8" ry="11"/><path class="i-rings" d="M16 28c2.8 0 4.2 2 4.2 4.2s-1.9 4-4.2 4-3-1.4-3-2.8"/></g></svg>',
-  soul: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-wisp" d="M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z"/><path class="i-wisp-in" d="M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z"/></svg>',
+  soul: '<svg viewBox="4.5 4 54 54" aria-hidden="true"><path class="i-wisp" d="M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z"/><path class="i-wisp-in" d="M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z"/></svg>',
   ing: '<svg viewBox="2 2 60 60" aria-hidden="true"><path class="i-leaf" d="M35 18c4-8 13-12 23-10-2.5 9-11 13-21 12Z"/><path class="i-fruit" d="M33 19c-5-4-14-5-20 1-6 6-7 17-3 26 4 9 11 13 18 12 3 0 4-1 6-1s3 1 6 1c8 0 15-8 17-18 2-9-2-17-9-21-5-2-10 0-15 0Z"/><path class="i-stem" d="M33 21c0-4 1-7 3-9"/><rect class="i-shine2" x="15" y="27" width="6" height="13" rx="3" transform="rotate(12 18 33)"/></svg>',
 };
 

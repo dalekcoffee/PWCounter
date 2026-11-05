@@ -1,6 +1,6 @@
 // PW Counter room relay: one Durable Object per 4-digit code forwards messages between two phones.
 // It stores nothing. See README.md for deployment.
-import { codeFromPath, originAllowed, messageOk, peerFromQuery, admit, CLOSE_REPLACED } from './rules.js';
+import { codeFromPath, originAllowed, messageOk, peerFromQuery, admit, routeTargets, joinNotices, leaveNotices, CLOSE_REPLACED, CLOSE_CODE_IN_USE, CLOSE_VIEWERS } from './rules.js';
 
 export default {
   async fetch(request, env) {
@@ -32,7 +32,7 @@ export class Room {
     const verdict = admit(open.map((w) => w.deserializeAttachment() || {}), peer);
     if (!verdict.accept) {
       server.accept();
-      server.close(verdict.code, verdict.code === 4002 ? 'Code in use' : 'Room full');
+      server.close(verdict.code, verdict.code === CLOSE_CODE_IN_USE ? 'Code in use' : verdict.code === CLOSE_VIEWERS ? 'Too many viewers' : 'Room full');
       return new Response(null, { status: 101, webSocket: client });
     }
     if (verdict.replace >= 0) {
@@ -42,20 +42,27 @@ export class Room {
     }
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment(peer);
-    const others = this.ctx.getWebSockets().filter((w) => w !== server && !w.deserializeAttachment()?.replaced);
-    for (const o of others) send(o, { t: 'peer', here: true });
-    send(server, { t: 'peer', here: others.length > 0 });
+    const others = this.live().filter((w) => w !== server);
+    const plan = joinNotices(others.map((w) => w.deserializeAttachment() || {}), peer.role);
+    for (const { index, msg } of plan.toOthers) send(others[index], msg);
+    for (const msg of plan.toSelf) send(server, msg);
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  live() { return this.ctx.getWebSockets().filter((w) => !w.deserializeAttachment()?.replaced); }
+
   webSocketMessage(ws, message) {
     if (!messageOk(message)) { ws.close(1009, 'Message too big'); return; }
-    for (const o of this.ctx.getWebSockets()) if (o !== ws && !o.deserializeAttachment()?.replaced) { try { o.send(message); } catch { /* gone */ } }
+    const all = this.live();
+    // a viewer's message is dropped (read only is enforced here); a player's goes to everyone else
+    for (const i of routeTargets(all.map((w) => w.deserializeAttachment() || {}), all.indexOf(ws))) { try { all[i].send(message); } catch { /* gone */ } }
   }
 
   leave(ws) {
-    if (ws.deserializeAttachment()?.replaced) return; // its tab came back on a new socket: nobody left
-    for (const o of this.ctx.getWebSockets()) if (o !== ws && !o.deserializeAttachment()?.replaced) send(o, { t: 'peer', here: false });
+    const att = ws.deserializeAttachment();
+    if (att?.replaced) return; // its tab came back on a new socket: nobody left
+    const others = this.live().filter((o) => o !== ws);
+    for (const { index, msg } of leaveNotices(others.map((o) => o.deserializeAttachment() || {}), att?.role)) send(others[index], msg);
   }
   webSocketClose(ws) { try { ws.close(); } catch { /* already closed */ } this.leave(ws); }
   webSocketError(ws) { this.leave(ws); }

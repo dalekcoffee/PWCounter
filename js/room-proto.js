@@ -25,6 +25,14 @@ export function codeFromHash(hash) {
   const m = /^#join=([0-9]{4})$/.exec(String(hash ?? ''));
   return m ? m[1] : null;
 }
+export const watchLink = (code, origin = 'https://pwcounter.dalek.coffee') => `${origin}/#watch=${code}`;
+/** The short form shown on the board: no scheme. */
+export const watchText = (code, host = 'pwcounter.dalek.coffee') => `${host}/#watch=${code}`;
+/** `#watch=0427` -> '0427'; a bare `#watch` -> '' (open the sheet, no code yet); anything else -> null. */
+export function watchFromHash(hash) {
+  const m = /^#watch(?:=([0-9]{4}))?$/.exec(String(hash ?? ''));
+  return m ? (m[1] ?? '') : null;
+}
 /** The text of a scanned QR code (a join link or bare digits) -> a code or null. */
 export function codeFromScan(text) {
   const s = String(text ?? '');
@@ -44,12 +52,14 @@ export function cleanPeerSeat(raw) {
   return seat;
 }
 
-export function helloMsg({ name, seat, souls }) {
-  return JSON.stringify({ t: 'hello', v: 1, name: cleanName(name), seat: { life: seat.life, mat: seat.mat, ing: seat.ing, soul: seat.soul, up: seat.up }, souls: souls === true });
+export const PLAYER_ROLES = ['host', 'guest'];
+const cleanRole = (r) => (PLAYER_ROLES.includes(r) ? r : null);
+export function helloMsg({ name, seat, souls, role }) {
+  return JSON.stringify({ t: 'hello', v: 1, role: cleanRole(role), name: cleanName(name), seat: { life: seat.life, mat: seat.mat, ing: seat.ing, soul: seat.soul, up: seat.up }, souls: souls === true });
 }
 /** `active` is 0 (me) | 1 (you / the other phone), from the SENDER's side of the table. */
-export function sharedMsg({ night, active, turn, rev }) {
-  return JSON.stringify({ t: 'shared', night: night === true, active: active === 1 ? 'you' : 'me', turn, rev });
+export function sharedMsg({ night, active, turn, rev, role }) {
+  return JSON.stringify({ t: 'shared', role: cleanRole(role), night: night === true, active: active === 1 ? 'you' : 'me', turn, rev });
 }
 
 const cleanShared = (sh) => (sh && typeof sh === 'object' && typeof sh.night === 'boolean' && (sh.active === 'me' || sh.active === 'you') && int(sh.turn, 0, 9999)
@@ -68,18 +78,25 @@ export function parseMessage(text) {
   let m;
   try { m = JSON.parse(text); } catch { return null; }
   if (!m || typeof m !== 'object' || Array.isArray(m)) return null;
-  if (m.t === 'peer') return typeof m.here === 'boolean' ? { t: 'peer', here: m.here } : null;
+  if (m.t === 'watcher') return { t: 'watcher' }; // a viewer joined: players resend their state
+  if (m.t === 'peer') {
+    if (typeof m.here !== 'boolean') return null;
+    if (m.role === undefined) return { t: 'peer', here: m.here };
+    return cleanRole(m.role) ? { t: 'peer', role: m.role, here: m.here } : null; // a viewer is told which player came or went
+  }
   if (m.t === 'hello') {
     if (m.v !== 1) return null;
+    if (m.role !== undefined && m.role !== null && !cleanRole(m.role)) return null;
     const seat = cleanPeerSeat(m.seat);
     if (!seat || typeof m.souls !== 'boolean') return null;
-    return { t: 'hello', name: cleanName(m.name), seat, souls: m.souls };
+    return { t: 'hello', role: cleanRole(m.role), name: cleanName(m.name), seat, souls: m.souls };
   }
   if (m.t === 'shared') {
     if (typeof m.night !== 'boolean' || (m.active !== 'me' && m.active !== 'you')) return null;
     if (!int(m.turn, 0, 9999) || !int(m.rev, 0, 1e9)) return null;
-    // the sender's "me" is the other phone, i.e. 1 here
-    return { t: 'shared', night: m.night, active: m.active === 'me' ? 1 : 0, turn: m.turn, rev: m.rev };
+    if (m.role !== undefined && m.role !== null && !cleanRole(m.role)) return null;
+    // the sender's "me" is the other phone, i.e. 1 here (a viewer reads `from` + `senderActive` instead)
+    return { t: 'shared', from: cleanRole(m.role), senderActive: m.active === 'me', night: m.night, active: m.active === 'me' ? 1 : 0, turn: m.turn, rev: m.rev };
   }
   if (m.t === 'check') {
     const mine = cleanPeerSeat(m.mine);
@@ -94,6 +111,11 @@ export function parseMessage(text) {
   }
   return null;
 }
+
+/** A viewer's rule: the highest rev wins; on an equal rev the host's word counts. */
+export const acceptWatchShared = (localRev, incomingRev, from) => incomingRev > localRev || (incomingRev === localRev && from === 'host');
+/** Which player's turn is it, as a role? `from` is the sender's role, `senderActive` whether the sender said it was its own turn. */
+export const activeRoleOf = (from, senderActive) => (from === 'host' ? (senderActive ? 'host' : 'guest') : from === 'guest' ? (senderActive ? 'guest' : 'host') : null);
 
 /** Last writer wins by rev; on an equal rev the room creator (host) wins. `role` is OUR role; the sender is the other one. */
 export function acceptShared(localRev, incomingRev, role) {

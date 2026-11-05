@@ -1,6 +1,6 @@
 // The room connection: one WebSocket (or a fake transport in a test) to the relay, hello / shared messages, reconnecting.
 // The opponent's data lives in memory only. No DOM here.
-import { helloMsg, sharedMsg, checkMsg, pickMsg, parseMessage, acceptShared } from './room-proto.js';
+import { helloMsg, sharedMsg, checkMsg, pickMsg, parseMessage, acceptShared, acceptWatchShared, activeRoleOf } from './room-proto.js';
 import { compareCheck, applyPick } from './room-sync.js';
 
 export const BACKOFF = [1000, 2000, 5000, 10000];
@@ -13,6 +13,15 @@ export const makeSid = (getRandomValues = (a) => crypto.getRandomValues(a)) => {
   return [...a].map((b) => (b % 36).toString(36)).join('');
 };
 export const HOST_TRIES = 5;
+export const WATCH_KEY = 'pwc.watch';
+/** A watched room is remembered for this tab only (sessionStorage), so a reload keeps watching. Never a game room. */
+export function readWatch(storage) {
+  try {
+    const v = JSON.parse(storage.getItem(WATCH_KEY));
+    return v && /^[0-9]{4}$/.test(v.code) && /^[A-Za-z0-9]{1,32}$/.test(v.sid) ? { code: v.code, sid: v.sid } : null;
+  } catch { return null; }
+}
+const fresh = () => ({ here: { host: false, guest: false }, seats: { host: null, guest: null }, wshared: null, wrev: -1 });
 
 /** The real transport: a WebSocket to `<ROOM_URL>/room/<CODE>`. */
 export function webSocketTransport(baseUrl) {
@@ -41,31 +50,33 @@ export const REMEMBER_GAP = 30000;
  */
 export function createRoom(deps) {
   const { makeTransport, storage, getSelf, getShared, onShared, onChange = () => {} } = deps;
+  const watchStorage = deps.watchStorage || null;
   const now = deps.now || (() => Date.now());
   let sid = deps.sid || readSession(storage, now())?.sid || makeSid();
   const newCode = deps.newCode || (() => '');
   const setTimer = deps.setTimer || ((f, ms) => setTimeout(f, ms));
   const clearTimer = deps.clearTimer || ((t) => clearTimeout(t));
 
-  const room = { status: 'idle', code: '', role: null, peer: null, peerHere: false, rev: 0, peerName: '', rejoined: false, codeChanged: false, hold: false, snapPeer: null, theirs: null, sync: null, lastPick: null };
+  const room = { status: 'idle', code: '', role: null, peer: null, peerHere: false, rev: 0, peerName: '', rejoined: false, codeChanged: false, hold: false, snapPeer: null, theirs: null, sync: null, lastPick: null, ...fresh() };
   let lastRemember = 0, checkSent = false;
   const remember = () => { // small and cheap: the code, role, phone id, the other player's name, and the last seats / shared game seen
     if (room.status === 'idle') return;
+    if (room.role === 'watch') { try { watchStorage?.setItem(WATCH_KEY, JSON.stringify({ code: room.code, sid: viewSid })); } catch { /* private mode */ } return; }
     lastRemember = now();
     const sh = getShared();
     writeSession(storage, { code: room.code, role: room.role, sid, peerName: room.peerName, at: now(), peerSeat: room.hold ? room.snapPeer : (room.peer?.seat ?? room.snapPeer), shared: { night: sh.night, active: sh.active === 1 ? 'you' : 'me', turn: sh.turn } });
   };
-  let codeTries = 0, transport = null, open = false, attempt = 0, retryTimer = null, lastHello = -Infinity, helloTimer = null, gen = 0;
+  let viewSid = '', codeTries = 0, transport = null, open = false, attempt = 0, retryTimer = null, lastHello = -Infinity, helloTimer = null, gen = 0;
 
   const emit = () => { try { onChange(); } catch { /* the page's problem */ } };
-  const send = (text) => { if (open && transport) transport.send(text); };
+  const send = (text) => { if (room.role !== 'watch' && open && transport) transport.send(text); }; // a viewer never sends anything
 
   function sendHelloNow() {
     helloTimer = null;
     lastHello = now();
-    send(helloMsg(getSelf()));
+    send(helloMsg({ ...getSelf(), role: room.role }));
   }
-  function sendShared() { if (!room.hold) send(sharedMsg({ ...getShared(), rev: room.rev })); }
+  function sendShared() { if (!room.hold) send(sharedMsg({ ...getShared(), rev: room.rev, role: room.role })); }
   const snapshot = () => ({ mine: getSelf().seat, peerSeat: room.hold ? room.snapPeer : (room.peer?.seat ?? room.snapPeer), shared: getShared() });
   function sendCheck() {
     if (checkSent || !open || !transport) return;
@@ -104,6 +115,8 @@ export function createRoom(deps) {
         if (my !== gen) return;
         open = false; transport = null;
         room.peerHere = false; if (room.peer) room.snapPeer = room.peer.seat; room.peer = null; room.sync = null; room.theirs = null; checkSent = false;
+        if (room.role === 'watch') Object.assign(room, { here: { host: false, guest: false }, seats: { host: null, guest: null } }); // the relay tells us again on reconnect
+        if (code === 4003) { room.status = 'viewers'; writeWatch(null); emit(); return; }
         if (code === 4002 && room.role === 'host') {
           // another host drew the same code: take a new one, quietly
           if (++codeTries > HOST_TRIES) { room.status = 'busy'; writeSession(storage, null); emit(); return; }
@@ -115,12 +128,34 @@ export function createRoom(deps) {
         emit();
         retryTimer = setTimer(() => { retryTimer = null; connect(); }, backoffFor(attempt++));
       },
-    }, room.role, sid);
+    }, room.role, room.role === 'watch' ? viewSid : sid);
+  }
+
+  const writeWatch = (v) => { try { v ? watchStorage?.setItem(WATCH_KEY, JSON.stringify(v)) : watchStorage?.removeItem(WATCH_KEY); } catch { /* private mode */ } };
+
+  /** A viewer only reads: who is here, their seats, and the shared game (day / night, whose turn, turn number). */
+  function receiveWatch(m) {
+    if (m.t === 'peer' && m.role) {
+      room.here[m.role] = m.here;
+      if (!m.here) room.seats[m.role] = null;
+      room.status = room.here.host || room.here.guest ? 'connected' : 'waiting';
+    } else if (m.t === 'hello' && m.role) {
+      room.seats[m.role] = { name: m.name, seat: m.seat, souls: m.souls };
+      room.here[m.role] = true;
+      room.status = 'connected';
+    } else if (m.t === 'shared' && m.from) {
+      if (!acceptWatchShared(room.wrev, m.rev, m.from)) return;
+      room.wrev = m.rev;
+      room.wshared = { night: m.night, active: activeRoleOf(m.from, m.senderActive), turn: m.turn };
+    } else return;
+    emit();
   }
 
   function receive(text) {
     const m = parseMessage(text);
     if (!m) return;
+    if (room.role === 'watch') { receiveWatch(m); return; }
+    if (m.t === 'watcher') { if (open) { sendHelloNow(); sendShared(); } return; } // a viewer joined: tell it where we stand
     remember();
     if (m.t === 'peer') {
       room.peerHere = m.here;
@@ -162,25 +197,28 @@ export function createRoom(deps) {
   }
 
   function start(code, role, opts = {}) {
-    leave(true);
+    leave(true, role === 'watch');
     if (opts.sid) sid = opts.sid;
+    if (role === 'watch') viewSid = opts.sid || makeSid(); // a viewer has its own id, so it never replaces a player's socket
     room.code = code; room.role = role; room.rev = 0; attempt = 0; codeTries = 0;
+    Object.assign(room, fresh());
     room.peerName = opts.peerName || ''; room.rejoined = !!opts.rejoin; room.codeChanged = false;
     room.snapPeer = opts.peerSeat || null; room.hold = !!opts.rejoin; room.theirs = null; room.sync = null; checkSent = false;
     remember();
     connect();
   }
 
-  function leave(quiet) {
+  function leave(quiet, keepMemory) {
     gen++;
     if (retryTimer) { clearTimer(retryTimer); retryTimer = null; }
     if (helloTimer) { clearTimer(helloTimer); helloTimer = null; }
     const t = transport; transport = null; open = false;
     try { t?.close(); } catch { /* closing */ }
     const was = room.status !== 'idle';
-    Object.assign(room, { status: 'idle', code: '', role: null, peer: null, peerHere: false, rev: 0, peerName: '', rejoined: false, codeChanged: false, hold: false, snapPeer: null, theirs: null, sync: null, lastPick: null });
+    const wasWatch = room.role === 'watch';
+    Object.assign(room, { status: 'idle', code: '', role: null, peer: null, peerHere: false, rev: 0, peerName: '', rejoined: false, codeChanged: false, hold: false, snapPeer: null, theirs: null, sync: null, lastPick: null, ...fresh() });
     checkSent = false;
-    writeSession(storage, null);
+    if (wasWatch) writeWatch(null); else if (!keepMemory) writeSession(storage, null); // watching never touches a remembered game
     if (!quiet && was) emit();
   }
 
@@ -188,6 +226,8 @@ export function createRoom(deps) {
     state: room,
     host: (code) => start(code, 'host'),
     join: (code) => start(code, 'guest'),
+    /** Watch a room read only (a TV, a spectator). `opts.sid` resumes this tab's own earlier viewer socket after a reload. */
+    watch: (code, opts = {}) => start(code, 'watch', opts),
     /** Back into the remembered room, same code, role and phone id. */
     rejoin: (rec) => start(rec.code, rec.role, { sid: rec.sid, peerName: rec.peerName, peerSeat: rec.peerSeat, rejoin: true }),
     /** The person chose on the sync sheet. The host decides at once; the guest asks the host and waits for its answer. */

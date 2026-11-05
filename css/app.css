@@ -237,18 +237,19 @@ svg { display: block; }
 @container (max-height: 130px) { .delta { font-size: 17px; padding: 3px 11px; bottom: 5px; } }
 
 /* icon colours (drawn for this app) */
-.i-heart { fill: #ef5a63; stroke: #6e0d1c; stroke-width: 3; stroke-linejoin: round; }
-.i-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: .7; }
 /* Material and Ingredient: flat, one colour, white details, white outline (paint-order puts the outline behind the fill) */
-.i-log, .i-end, .i-fruit, .i-leaf { stroke: #fff; stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
+.i-heart, .i-wisp, .i-log, .i-end, .i-fruit, .i-leaf { stroke: #fff; stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
 .i-log, .i-end { fill: #7b4a12; }
 .i-rings { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
 .i-grain { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
 .i-fruit, .i-leaf { fill: #1eab3f; }
+/* Life and Souls: the same flat sticker style, one solid colour, white details */
+.i-heart { fill: #e23b4a; }
+.i-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; }
+.i-wisp { fill: #8a5cf0; }
+.i-wisp-in { fill: #fff; }
 .i-stem { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
 .i-shine2 { fill: #fff; opacity: .9; }
-.i-wisp { fill: #8f6ee6; stroke: #2f1f6b; stroke-width: 3; stroke-linejoin: round; }
-.i-wisp-in { fill: #d9ccff; }
 
 /* ---------- souls ---------- */
 /* numbers view: "− of 5 +" under the standing count changes how many souls there are */
@@ -423,7 +424,7 @@ svg { display: block; }
 .stage[data-room='on'] #btn-full { display: none; } /* room for End Turn between the buttons */
 .opp-name { min-width: 0; font: 700 15px/1.2 var(--font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .opp-life { flex: none; display: inline-flex; align-items: center; gap: 6px; font: 700 18px/1 var(--font-mono); }
-.opp-life svg { width: 18px; height: 18px; fill: #ef5a63; stroke: #6e0d1c; stroke-width: 4; stroke-linejoin: round; }
+.opp-life svg { width: 20px; height: 20px; }
 .opp-grip { position: absolute; left: 50%; bottom: 6px; translate: -50% 0; width: 38px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 38%, transparent); }
 .stage[data-room='on'] .seat[data-seat='0'] .whose { max-width: calc(100% - 140px); }
 /* short stage (landscape): the counters in one row */

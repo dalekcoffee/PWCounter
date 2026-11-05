@@ -19,7 +19,8 @@ test('every file the service worker caches exists, and every app module is cache
 
 test('manifest is installable', () => {
   const m = JSON.parse(read('manifest.webmanifest'));
-  assert.equal(m.display, 'standalone');
+  assert.equal(m.display, 'fullscreen');
+  assert.deepEqual(m.display_override, ['fullscreen', 'standalone']);
   assert.ok(m.icons.some((i) => i.sizes === '192x192'));
   assert.ok(m.icons.some((i) => i.sizes === '512x512'));
   assert.ok(m.icons.some((i) => i.purpose === 'maskable'));

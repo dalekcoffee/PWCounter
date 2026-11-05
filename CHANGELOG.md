@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+- The installed app opens full screen (Android; iPhone shows it without browser bars).
+- Q&A: every rule number is a link to that page of its source.
+
 ## 0.1.1
 - Settings Q&A: what Bushiroad allows for counters in casual games, at the Masters League and at other events (life and resources, souls as numbers, online play), with the Comprehensive Rules, Floor Rules and Masters League sources linked.
 

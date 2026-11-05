@@ -75,7 +75,13 @@ function tile(key) {
       </div>
       <div class="soul-cards" role="group" aria-label="Soul cards: tap one to rest or stand it">
         <div class="sc-head"><span class="ico">${ICONS.soul}</span><span class="lbl">Souls</span><span class="sc-count"></span></div>
-        <div class="sc-row">${Array.from({ length: SOUL_MAX }, (_, i) => `<button type="button" class="sc-card" data-i="${i}"></button>`).join('')}</div>
+        <div class="sc-body">
+          <div class="sc-row">${Array.from({ length: SOUL_MAX }, (_, i) => `<button type="button" class="sc-card" data-i="${i}"></button>`).join('')}</div>
+          <button type="button" class="hit sc-hit minus" data-d="-1" aria-label="Rest a soul (pay)"></button>
+          <button type="button" class="hit sc-hit plus" data-d="1" aria-label="Stand a soul again"></button>
+          <span class="pm minus sc-pm" aria-hidden="true">−</span>
+          <span class="pm plus sc-pm" aria-hidden="true">+</span>
+        </div>
       </div>`);
   }
   return el;
@@ -152,6 +158,7 @@ function render(prev) {
   stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
   $('#btn-room').hidden = !s.rooms || (s.players === 2 && !inRoom); // online play replaces the shared-phone view, so it is offered from one player
   stage.dataset.soulview = s.souls && players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
+  stage.dataset.soultap = s.soulTap;
   $('[data-seat="1"]').hidden = players === 1;
   for (const seatEl of $$('.seat')) {
     const i = Number(seatEl.dataset.seat);
@@ -205,7 +212,7 @@ $('#btn-end').addEventListener('click', () => {
 // souls: total +/- and the cards view
 stage.addEventListener('click', (e) => {
   const add = e.target.closest('[data-add]');
-  const card = e.target.closest('.sc-card');
+  const card = state.soulTap === 'card' ? e.target.closest('.sc-card') : null;
   if (!add && !card) return;
   const seat = Number(e.target.closest('.seat').dataset.seat);
   if (add) commit(addSoul(state, seat, Number(add.dataset.add)));
@@ -382,6 +389,7 @@ function paintSettings() {
   $('#row-flip').hidden = state.players === 1;
   $('#row-soulview').hidden = !state.souls;
   $('#soulview-note').hidden = !(state.souls && state.players === 2 && state.soulView === 'cards');
+  $('#row-soultap').hidden = !(state.souls && state.soulView === 'cards');
 }
 for (const seg of $$('.seg')) {
   seg.addEventListener('click', (e) => {

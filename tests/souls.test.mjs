@@ -127,6 +127,9 @@ test('cleanState keeps souls within limits', () => {
   assert.deepEqual(souls(s), [[0, 0], [4, 0]]);
   assert.equal(s.souls, true);
   assert.equal(s.soulView, 'cards');
+  assert.equal(s.soulTap, 'card');
+  assert.equal(cleanState({ v: 1, soulTap: 'halves' }).soulTap, 'halves');
+  assert.equal(cleanState({ v: 1, soulTap: 'x' }).soulTap, 'card');
   assert.equal(s.first, 1);
   assert.equal(cleanState({ v: 1, soulView: 'x', first: 3 }).soulView, 'number');
   assert.equal(cleanState({ v: 1, first: 3 }).first, null);

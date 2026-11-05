@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.4
+- Experimental "Tap souls by": Card (tap a card to rest or stand it, the default) or Sides (left side rests one, right side stands one, like the other counters). The total − / + stay in the header, outside the tapping area.
+
 ## 0.1.3
 - Landscape, one player, souls as cards: the souls row is taller and the cards bigger.
 - The turn button (End Turn / Start turn) is bigger and easier to tap, wider in landscape.

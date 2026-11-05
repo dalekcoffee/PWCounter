@@ -13,6 +13,7 @@ export const LIMITS = { life: [0, 99999], mat: [0, 99], ing: [0, 99] }; // rule 
 export const COUNTERS = Object.keys(LIMITS);
 export const LANDSCAPE = ['off', 'left', 'right'];
 export const SOUL_VIEWS = ['number', 'cards'];
+export const SOUL_TAPS = ['card', 'halves']; // cards view: tap a card, or tap the left / right side
 export const SOUL_MAX = 10;
 export const SOUL_GAIN = 2;
 export const SECOND_START = 1;
@@ -36,6 +37,7 @@ export function defaultState() {
     awake: true,
     souls: false, // experimental
     soulView: 'number', // experimental, one player only: 'number' | 'cards'
+    soulTap: 'card', // experimental, cards view: 'card' = tap a card to rest / stand it, 'halves' = left side rests one, right side stands one
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
@@ -80,6 +82,7 @@ export function cleanState(raw) {
     awake: raw.awake !== false,
     souls: raw.souls === true,
     soulView: SOUL_VIEWS.includes(raw.soulView) ? raw.soulView : 'number',
+    soulTap: SOUL_TAPS.includes(raw.soulTap) ? raw.soulTap : 'card',
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
     rooms: raw.rooms === true,

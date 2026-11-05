@@ -258,16 +258,32 @@ svg { display: block; }
   font: 600 12px/1 var(--font-mono); color: var(--text-2); white-space: nowrap;
 }
 .soul-adj b { color: var(--text); }
-.soul-adj button { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--pm-edge); background: var(--pm-fill); color: var(--pm); font: 700 15px/1 var(--font-ui); padding: 0; }
+.soul-adj { gap: 8px; }
+.soul-adj button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--pm-edge); background: var(--pm-fill); color: var(--pm); font: 700 15px/1 var(--font-ui); padding: 0; }
 .soul-cards { display: none; }
 /* cards view (one player): the souls as cards, tap to rest or stand */
-.stage[data-soulview='cards'] .t-soul .hit, .stage[data-soulview='cards'] .t-soul .pm, .stage[data-soulview='cards'] .t-soul .core { display: none; }
+.stage[data-soulview='cards'] .t-soul > .hit, .stage[data-soulview='cards'] .t-soul > .pm, .stage[data-soulview='cards'] .t-soul .core { display: none; }
 .stage[data-soulview='cards'] .t-soul::after { display: none; }
 .stage[data-soulview='cards'] .t-soul { padding: 10px 12px 12px; align-items: stretch; }
 .stage[data-soulview='cards'] .soul-cards { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; position: relative; z-index: 3; }
 .sc-head { display: flex; align-items: center; gap: 8px; padding-right: 96px; min-height: 26px; }
 .sc-head .ico { width: 22px; height: 22px; }
 .sc-count { margin-left: auto; font: 600 11px/1 var(--font-mono); color: var(--text-2); white-space: nowrap; }
+/* the cards area; in 'Sides' mode its left half rests a soul and its right half stands one, like the other counters */
+.sc-body { position: relative; flex: 1; min-height: 0; display: flex; }
+.stage[data-soulview='cards'] .sc-body { margin-top: 8px; } /* keeps the header's total − / + well away from the tapping area */
+.sc-hit, .sc-pm { display: none; }
+.stage[data-soultap='halves'] .sc-hit { display: block; z-index: 4; }
+.stage[data-soultap='halves'] .sc-pm { display: grid; position: absolute; z-index: 5; top: 50%; translate: 0 -50%; width: 36px; height: 36px; font-size: 22px; }
+.stage[data-soultap='halves'] .sc-pm.minus { left: 4px; } .stage[data-soultap='halves'] .sc-pm.plus { right: 4px; }
+.stage[data-soultap='halves'] .sc-body::after {
+  content: ''; position: absolute; z-index: 3; left: 50%; top: 4%; bottom: 4%; width: 0; pointer-events: none;
+  border-left: 1.5px dashed color-mix(in srgb, var(--text) 26%, transparent);
+}
+.stage[data-soultap='halves'] .sc-row { padding: 0 44px; }
+.stage[data-soultap='halves'] .sc-card { pointer-events: none; }
+/* the total − / + sit in the header, above a line, never inside the tapping area */
+.stage[data-soulview='cards'] .sc-head { border-bottom: 1px solid var(--border); padding-bottom: 6px; }
 .sc-row { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 8px; place-items: center; }
 .stage[data-land='left'] .sc-row, .stage[data-land='right'] .sc-row { grid-template-columns: repeat(10, minmax(0, 1fr)); }
 .sc-card {

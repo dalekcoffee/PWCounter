@@ -2,9 +2,10 @@
 
 ## 0.3.4
 - Fixed: after an update, the dice / coin buttons and settings could stop working. The offline copy could end up with the page from one version and the scripts from another; it now downloads each version whole, checks the files match, and never mixes them.
-- Who goes first: whoever wins the roll or flip now chooses to go first or second (Go first / Go second on their side). One player: the coin toss says who wins the toss, then you pick first or second.
+- Who goes first: whoever wins the roll or flip now chooses to go first or second (Go first / Go second on their side).
 - Two players, Numbers on cards: back to cards instead of soul flames: small cards, two rows of five bunched in the middle; standing souls show a flame, rested ones lie face down, empty slots are dashed.
 - Whose turn: the panel behind the active player is brighter, with a thicker ring and a wider glow (day and night).
+- One player, who goes first: the same big screen as two players, with only your side: big "I go first" / "I go second" buttons, and "Roll a die" / "Flip a coin" right below. Make your call (high / low or heads / tails), your opponent gets the other; if you win you choose first or second, if they win you tap what they chose. "Pick at random" is gone.
 - Two players: the life change badge ("−1") sits in the tile's corner on the + side, so it no longer covers the life number (it did on the top player's side).
 
 ## 0.3.3

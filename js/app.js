@@ -8,7 +8,7 @@ import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
 import { createDice } from './die3d.js';
-import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, firstSeat, clockText } from './first-pick.js';
+import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, clockText } from './first-pick.js';
 import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
@@ -267,7 +267,6 @@ function paintFirst() {
   $('#first-sub').textContent = two
     ? 'The player going second starts with 1 soul. The player going first gets 2 souls now.'
     : 'Going first: 2 souls now. Going second: 1 soul now, and 2 more when you start your first turn.';
-  $('#first-out').textContent = '\u00a0';
 }
 function maybeAskFirst() {
   if (askFirst && needsFirst(state) && !openId) { askFirst = false; openFirst(); }
@@ -275,21 +274,12 @@ function maybeAskFirst() {
 $('#ov-first').addEventListener('click', (e) => {
   const b = e.target.closest('[data-first]');
   if (!b) return;
-  let seat = b.dataset.first;
-  if (seat === 'random') { // a coin toss: whoever wins it chooses first or second with the buttons above
-    const won = flipCoin() === 'heads' ? 0 : 1;
-    const two = state.players === 2;
-    $('#first-out').textContent = two
-      ? `${won === 0 ? 'Bottom' : 'Top'} player wins the toss and chooses.`
-      : won === 0 ? 'You win the toss: choose first or second.' : 'Your opponent wins the toss: pick what they choose.';
-    return;
-  }
-  startGame(Number(seat));
+  startGame(Number(b.dataset.first));
 });
 
-/** One player: the sheet. Two players on one screen: a big button on each side. */
+/** On one screen (one or two players): the big who-goes-first screen. In a room: the sheet. */
 function openFirst() {
-  if (state.players === 2 && !roomUi.active()) { f2Reset(); openOverlay('ov-first2'); return; }
+  if (!roomUi.active()) { f2Reset(); openOverlay('ov-first2'); return; }
   paintFirst();
   openOverlay('ov-first');
 }
@@ -343,8 +333,16 @@ function f2Reset() {
   paintF2();
 }
 function paintF2() {
+  const solo = state.players === 1;
   setData(f2Ov, 'step', f2.step);
   setData(f2Ov, 'kind', f2.kind || '');
+  setText($('.f2-picks [data-pick="0"]', f2Ov), solo ? 'I go first' : 'Player 1 goes first');
+  setText($('.f2-hint', f2Ov), solo ? 'Your opponent gets the other call' : 'Either player picks one');
+  // the choice after the toss: yours, or (one player) the one your opponent tells you
+  const theirs = solo && f2.winner === 1;
+  const [cf, cs] = $$('.f2-side.bottom .f2-choose .f2-call', f2Ov);
+  setText($('b', cf), theirs ? 'They go first' : 'Go first'); setText($('small', cf), theirs ? 'you get 1 soul now' : '2 souls now');
+  setText($('b', cs), theirs ? 'They go second' : 'Go second'); setText($('small', cs), theirs ? 'you get 2 souls now' : '1 soul now');
   for (const side of $$('.f2-side', f2Ov)) {
     const seat = Number(side.dataset.seat);
     if (f2.kind) {
@@ -357,9 +355,12 @@ function paintF2() {
         setProp(b, 'disabled', !!f2.calls);
       });
     }
-    const say = f2.step === 'call' || f2.step === 'throw'
-      ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
-      : f2.step === 'result' ? `${resultLine(f2.kind, f2.value, f2.winner)} ${seat === f2.winner ? 'You choose:' : `${SEAT_NAME[f2.winner]} is choosing…`}` : '';
+    const say = solo
+      ? (f2.step === 'call' || f2.step === 'throw' ? (f2.calls ? `Your call: ${CALL_WORD[f2.calls[0]]}` : 'Make your call')
+        : f2.step === 'result' ? `${soloResultLine(f2.kind, f2.value, f2.winner)} ${f2.winner === 0 ? 'Choose:' : 'What did they choose?'}` : '')
+      : f2.step === 'call' || f2.step === 'throw'
+        ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
+        : f2.step === 'result' ? `${resultLine(f2.kind, f2.value, f2.winner)} ${seat === f2.winner ? 'You choose:' : `${SEAT_NAME[f2.winner]} is choosing…`}` : '';
     setText($('.f2-say', side), say);
     side.classList.toggle('won', f2.step === 'result' && f2.winner === seat);
   }
@@ -394,7 +395,7 @@ f2Ov.addEventListener('click', (e) => {
   if (m) { f2.kind = m.dataset.method; f2.calls = null; f2.step = 'call'; paintF2(); return; }
   if (e.target.closest('[data-back]')) { f2Reset(); return; }
   const o = e.target.closest('[data-order]');
-  if (o && f2.step === 'result' && Number(o.closest('.f2-side').dataset.seat) === f2.winner) { startGame(firstSeat(f2.winner, o.dataset.order)); return; }
+  if (o && f2.step === 'result' && (state.players === 1 || Number(o.closest('.f2-side').dataset.seat) === f2.winner)) { startGame(firstSeat(f2.winner, o.dataset.order)); return; }
   const c = e.target.closest('.f2-calls .f2-call');
   if (c && f2.step === 'call' && !f2.calls) {
     f2.calls = callsFor(f2.kind, Number(c.closest('.f2-side').dataset.seat), c.dataset.call);

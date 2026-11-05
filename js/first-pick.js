@@ -43,6 +43,12 @@ export function resultLine(kind, value, winner) {
   return `${what} ${SEAT_NAME[winner]} wins.`;
 }
 
+/** One player (the opponent across the table has no seat on this screen): "Rolled 5: high. You win." */
+export function soloResultLine(kind, value, winner) {
+  const what = kind === 'die' ? `Rolled ${value}: ${outcomeOf(kind, value)}.` : `${CALL_WORD[value]}.`;
+  return `${what} ${winner === 0 ? 'You win.' : 'Your opponent wins.'}`;
+}
+
 /** The toss winner's choice: 'first' or 'second' -> the seat that goes first, or null. */
 export function firstSeat(winner, order) {
   if ((winner !== 0 && winner !== 1) || (order !== 'first' && order !== 'second')) return null;

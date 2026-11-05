@@ -142,8 +142,8 @@ svg { display: block; }
 .seat { min-height: 0; position: relative; isolation: isolate; border-radius: calc(var(--radius) + 8px); padding: 8px; }
 .stage[data-flip='on'] .seat[data-seat='1'] { transform: rotate(180deg); }
 /* whose turn: a soft filled panel behind that player's tiles, no outline */
-/* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame) */
-.seat::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 40%, transparent), color-mix(in srgb, var(--acc) 22%, transparent)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--acc) 70%, transparent), 0 0 32px color-mix(in srgb, var(--acc) 40%, transparent), 0 12px 40px color-mix(in srgb, var(--acc) 25%, transparent); }
+/* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame); 0.3.4: brighter, a thicker ring and a wider glow */
+.seat::before { content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: calc(var(--radius) + 10px); pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 52%, transparent), color-mix(in srgb, var(--acc) 30%, transparent)); box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--acc) 95%, transparent), 0 0 44px color-mix(in srgb, var(--acc) 60%, transparent), 0 12px 48px color-mix(in srgb, var(--acc) 35%, transparent); }
 .seat.active::before { opacity: 1; }
 .seat-in {
   height: 100%; display: grid; gap: 8px;

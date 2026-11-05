@@ -3,7 +3,7 @@
 A life counter for the Palworld card game, built to sit on the table between two players (or just you).
 
 - **Life** (starts at 10), **Material** and **Ingredient** (start at 0) for one or two players. Tap anywhere on the left half of a counter to take one off, anywhere on the right half to add one; hold to repeat. Counters never go below 0.
-- **Day / Night**, shared by the table, with a day sky and a night sky on the board and a Day / Night badge on each player's life.
+- **Day / Night**, shared by the table, with a day sky and a night sky on the board.
 - **End Turn** with a turn count; the player whose turn it is glows.
 - **Calculator**: × and ÷ before + and −, with +100 / +300 / +500 / +1000 / −500 / −1000 shortcuts.
 - **Dice and coin**.

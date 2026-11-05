@@ -51,7 +51,7 @@ function tile(key) {
       <span class="num" aria-live="polite">0</span>
     </div>
     <span class="pm plus" aria-hidden="true">+</span>
-    <span class="delta" aria-hidden="true"></span>${key === 'life' ? '<span class="when" aria-hidden="true"></span>' : ''}`;
+    <span class="delta" aria-hidden="true"></span>`;
   return el;
 }
 
@@ -128,7 +128,6 @@ function render(prev) {
   }
   $('#turn-label').textContent = `Turn ${s.turn}`;
   $('#btn-end').setAttribute('aria-label', s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
-  for (const w of $$('.when')) w.textContent = s.night ? '☾ Night' : '☀ Day';
   const tb = $('#btn-time');
   tb.setAttribute('aria-pressed', String(s.night));
   tb.setAttribute('aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');

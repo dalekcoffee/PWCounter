@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.3
+- Removed the Day / Night badge from the life tiles: the board itself and the Day / Night button in the middle show it.
+
 ## 1.0.2
 - Day: a clear blue sky with a white sun (no orange horizon) and deeper, crisper tiles.
 - The + and − buttons share one colour (white by day, lavender by night).

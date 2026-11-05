@@ -158,7 +158,7 @@ svg { display: block; }
   content: ''; position: absolute; z-index: 2; left: 50%; top: 10%; bottom: 10%; width: 0; pointer-events: none;
   border-left: 1.5px dashed color-mix(in srgb, var(--text) 26%, transparent);
 }
-.pm, .core, .delta, .when { position: relative; z-index: 3; pointer-events: none; }
+.pm, .core, .delta { position: relative; z-index: 3; pointer-events: none; }
 .pm {
   flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
   font: 700 20px/1 var(--font-ui); border: 1.5px solid;
@@ -183,12 +183,6 @@ svg { display: block; }
 .delta.neg { color: #34121a; background: var(--rose); }
 .delta.show { opacity: 1; transform: none; }
 .t-life .delta { bottom: 14px; font-size: 15px; }
-.when {
-  position: absolute; top: 10px; left: 12px; padding: 4px 10px; border-radius: 999px;
-  font: 700 11px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
-  background: linear-gradient(180deg, #f6dda2, #e3b762); color: #3a2706;
-}
-.stage[data-time='night'] .when { background: linear-gradient(180deg, #2b2f63, #1b1e44); color: #dfe0ff; box-shadow: 0 0 0 1px rgba(169, 171, 238, .5); }
 
 /* icon colours (drawn for this app) */
 .i-heart { fill: #ef5a63; stroke: #6e0d1c; stroke-width: 3; stroke-linejoin: round; }

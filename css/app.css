@@ -248,8 +248,8 @@ svg { display: block; }
 .i-fruit, .i-leaf { fill: #1eab3f; stroke: #0f6b26; }
 .i-stem { fill: none; stroke: #0f6b26; stroke-width: 2.6; stroke-linecap: round; } /* where the stalk goes into the fruit */
 .i-stalk-o, .i-stalk { fill: none; stroke-linecap: round; }
-.i-stalk-o { stroke: #3f240a; stroke-width: 7.4; }
-.i-stalk { stroke: #8a5418; stroke-width: 3.2; }
+.i-stalk-o { stroke: #0f6b26; stroke-width: 7.4; }
+.i-stalk { stroke: #1eab3f; stroke-width: 3.2; }
 /* the fruit is drawn on a 100-unit grid: same look, strokes scaled to match the 64-unit icons */
 .ico-100 .i-fruit, .ico-100 .i-leaf, .ico-100 .i-log { stroke-width: 5; }
 .ico-100 .i-rings { stroke-width: 3.2; }

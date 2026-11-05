@@ -105,6 +105,12 @@ function bump(seat, key, d, tileEl) {
   if (next === state) return;
   commit(next);
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
+  showDelta(tileEl, d);
+}
+
+/** The "+2" / "−3" badge on a tile: taps within 5 s add up, then it fades. */
+function showDelta(tileEl, d) {
+  if (!d) return;
   const info = deltas.get(tileEl) || { sum: 0, timer: 0 };
   info.sum += d;
   clearTimeout(info.timer);
@@ -217,9 +223,11 @@ stage.addEventListener('click', (e) => {
   const card = stage.dataset.soulview === 'cards' && stage.dataset.soultap === 'card' ? e.target.closest('.sc-card') : null;
   if (!add && !card) return;
   const seat = Number(e.target.closest('.seat').dataset.seat);
+  const before = state.seats[seat].up;
   if (add) commit(addSoul(state, seat, Number(add.dataset.add)));
   else commit(toggleSoul(state, seat, Number(card.dataset.i)));
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
+  showDelta(e.target.closest('.t-soul'), state.seats[seat].up - before);
 });
 
 // who goes first (souls only)

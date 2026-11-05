@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.6
+- Souls show the "+1" / "−2" badge too (resting, standing, a tapped card, or adding / removing souls), like life and resources.
+
 ## 0.1.5
 - Souls: one "Soul style" setting with four styles that always work: Numbers, Numbers on cards (cards drawn behind the count), Cards with tap a card, Cards with tap a side. − / + for adding or removing souls stay in every style. Games saved before keep their look.
 

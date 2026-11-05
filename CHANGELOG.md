@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+- Watch a game: the room relay has a read-only `watch` role (up to 8 viewers who never count as players). Open `#watch=CODE` (no experimental switch needed), choose "Watch a game" in the room sheet, or get switched to watching automatically when a game already has two players.
+- Display mode for a TV or monitor: the two players side by side (stacked on a narrow screen), big life, Material, Ingredient and Souls, the player whose turn it is highlighted, day or night sky and the turn number, live "+2" / "−3" badges, a QR of the watch link. Read only, never upside down, ignores the landscape setting.
+- Players see a faint "Room 0427 · watch at pwcounter.dalek.coffee/#watch=0427" line on the board, and the room sheet shows the watch link (Copy) and a QR.
+- Life and Souls icons redrawn to match Material and Ingredient: flat, one colour each, an outline in a darker shade of the same colour, light details; all four the same visual size.
+- Reset game moved to the top of Settings, full width.
+
 ## 0.1.11
 - Material and Ingredient icons redrawn in the card game's flat sticker style (one colour, white details and outline), and the log is now as big as the fruit.
 

@@ -13,3 +13,7 @@ From this folder (`worker/room`):
 3. Copy the printed address (`https://pwcounter-room.<your-subdomain>.workers.dev`) into `js/room-config.js` as `ROOM_URL`, bump the version, and push.
 
 Check it: open `https://pwcounter-room.<your-subdomain>.workers.dev/health` (answers `ok`).
+
+## Watchers (read only)
+
+`?role=watch[&sid=...]` joins as a viewer, for a TV or a spectator (`https://pwcounter.dalek.coffee/#watch=0427`). At most 8 viewers per room (a 9th is closed with 4003, "Too many viewers"); they never take one of the two player places, so a full room of viewers still lets both players in, and the same `sid` replaces its own stale socket. A message from a player goes to the other player and to every viewer; a message from a viewer is dropped on the server. Players only hear `{"t":"peer","here"}` about the other player; a viewer hears `{"t":"peer","role":"host"|"guest","here"}` for each player (and on joining, one per player already there). When a viewer joins, each player gets `{"t":"watcher"}` and resends its state. Rules: `src/rules.js` (`admit`, `routeTargets`, `joinNotices`, `leaveNotices`), tests in `tests/room-rules.test.mjs`.

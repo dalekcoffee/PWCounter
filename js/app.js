@@ -8,7 +8,7 @@ import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { dieTarget, coinTarget } from './dice-anim.js';
 import { initRoom } from './room-ui.js';
-import { codeFromHash } from './room-proto.js';
+import { codeFromHash, watchFromHash } from './room-proto.js';
 
 const KEY = 'pwc.state';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -152,9 +152,11 @@ stage.addEventListener('click', (e) => {
 });
 
 // ---------- render ----------
+let lastNight = null;
 function render(prev) {
   const s = state;
-  stage.dataset.time = s.night ? 'night' : 'day';
+  const night = roomUi.watching() ? roomUi.watchNight() : s.night; // watching: the sky follows the game on the table
+  stage.dataset.time = night ? 'night' : 'day';
   const inRoom = roomUi.active(); // in a room your seat is the one-player layout, whatever the players setting says
   const players = inRoom ? 1 : s.players;
   stage.dataset.players = String(players);
@@ -201,11 +203,12 @@ function render(prev) {
   tb.setAttribute('aria-pressed', String(s.night));
   tb.setAttribute('aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');
   $('.dn-word', tb).textContent = s.night ? 'Night' : 'Day';
-  if (prev && prev.night !== s.night) {
+  if (lastNight !== null && lastNight !== night) {
     stage.classList.remove('flash');
     void stage.offsetWidth; // restart the animation
     stage.classList.add('flash');
   }
+  lastNight = night;
   paintSettings();
   roomUi.paint();
   if (!prev || prev.awake !== s.awake) syncWake();
@@ -513,8 +516,16 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 // ---------- #join=DDDD (from a QR code or a link) ----------
 let pendingJoin = codeFromHash(location.hash);
-if (pendingJoin) history.replaceState(null, '', location.pathname + location.search);
+let pendingWatch = watchFromHash(location.hash); // '0427' | '' (a bare #watch: ask for the code) | null
+if (pendingJoin || pendingWatch !== null) history.replaceState(null, '', location.pathname + location.search);
+function runPendingWatch() { // watching needs no experimental switch: a TV just opens the link
+  const code = pendingWatch;
+  pendingWatch = null;
+  if (code === null) return;
+  if (code) roomUi.watch(code); else roomUi.openWatchSheet();
+}
 function runPendingJoin() {
+  if (pendingWatch !== null) { runPendingWatch(); return; }
   const code = pendingJoin;
   pendingJoin = null;
   if (!code) return;
@@ -525,8 +536,10 @@ function runPendingJoin() {
 }
 addEventListener('hashchange', () => {
   const c = codeFromHash(location.hash);
-  if (!c) return;
+  const w = watchFromHash(location.hash);
+  if (!c && w === null) return;
   history.replaceState(null, '', location.pathname + location.search);
+  if (w !== null) { pendingWatch = w; runPendingWatch(); return; }
   pendingJoin = c;
   if (openId !== 'ov-resume') runPendingJoin();
 });
@@ -544,12 +557,16 @@ function openRejoin() {
 }
 
 render(null);
-if (needsResume(state, Date.now())) {
+if (pendingWatch !== null) {
+  runPendingWatch(); // a watch link never asks about the saved game
+} else if (needsResume(state, Date.now())) {
   const days = Math.floor((Date.now() - state.savedAt) / 86400000);
   $('#resume-when').textContent = `Last played ${days >= 2 ? `${days} days` : '2 days'} ago.`;
   openOverlay('ov-resume');
 } else if (pendingJoin) {
   runPendingJoin();
+} else if (roomUi.resumeWatch()) {
+  /* a reload while watching keeps watching (this tab only) */
 } else if (!openRejoin()) {
   maybeAskFirst();
 }

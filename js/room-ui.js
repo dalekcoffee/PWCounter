@@ -177,6 +177,7 @@ export function initRoom(ctx) {
         if ($('#rv-qr').dataset.code !== R.code) { $('#rv-qr').innerHTML = svg; $('#rv-qr').dataset.code = R.code; }
       }
       $('#rv-watchlink').textContent = watchLink(R.code);
+      $('#rv-qr2').hidden = showQr; // the join code is the one to scan while waiting; the big-screen code follows
       if ($('#rv-qr2').dataset.code !== R.code) { $('#rv-qr2').innerHTML = qrSvg(watchLink(R.code)); $('#rv-qr2').dataset.code = R.code; }
     }
     $('#btn-scan').hidden = !('BarcodeDetector' in window);

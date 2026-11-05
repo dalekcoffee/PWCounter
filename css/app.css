@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.14"; }
+:root { --pwc-v: "0.3.15"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -64,19 +64,25 @@ svg { display: block; }
 .stage[data-land='right'] { top: 0; left: 100vw; transform: rotate(90deg); }
 .stage[data-land='left'] { top: 100vh; top: 100dvh; left: 0; transform: rotate(-90deg); }
 
-/* Tablet mode (experimental, two players): the board turned right like Landscape Right, the two seats side by side,
-   both upright. Turned right, the board's right side is the tablet's bottom edge: Player 1 sits there. */
-.stage[data-tablet='on'] {
-  inset: auto; width: 100vh; height: 100vw; width: 100dvh; transform-origin: 0 0; top: 0; left: 100vw; transform: rotate(90deg);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'top bottom' 'bar bar';
+/* Tablet mode (experimental, two players): the board turned like Landscape Left / Right, the two seats side by side,
+   both upright. Player 1 sits on the tablet's bottom edge: the left side when turned left, the right side when turned right. */
+.stage:is([data-tablet='left'], [data-tablet='right']) {
+  inset: auto; width: 100vh; height: 100vw; width: 100dvh; transform-origin: 0 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto;
   column-gap: 18px;
 }
-.stage[data-tablet='on'] .bar { justify-self: center; width: min(620px, 100%); }
+.stage[data-tablet='right'] { top: 0; left: 100vw; transform: rotate(90deg); grid-template-areas: 'top bottom' 'bar bar'; }
+.stage[data-tablet='left'] { top: 100vh; top: 100dvh; left: 0; transform: rotate(-90deg); grid-template-areas: 'bottom top' 'bar bar'; }
+.stage:not([data-tablet='off']) .bar { justify-self: center; width: min(620px, 100%); }
 /* who goes first, Begin and Game over: Player 2's half on the left, Player 1's on the right */
-.stage[data-tablet='on'] .overlay.first2 { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
-.stage[data-tablet='on'] .begin { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-.stage[data-tablet='on'] .bg-side b { font-size: clamp(44px, 9vmin, 104px); } /* half the width each: the big words fit their half */
-.stage[data-tablet='on'] .over .bg-side b { font-size: clamp(40px, 7.5vmin, 88px); }
+.stage:not([data-tablet='off']) .overlay.first2 { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.stage:not([data-tablet='off']) .begin { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+/* turned left, Player 1 (the bottom side in these screens) comes first, on the left */
+.stage[data-tablet='left'] :is(.f2-side.bottom, .bg-side.bottom) { order: -1; }
+.stage[data-tablet='left'] .f2-mid { order: 0; }
+.stage[data-tablet='left'] .f2-side.top { order: 1; }
+.stage:not([data-tablet='off']) .bg-side b { font-size: clamp(44px, 9vmin, 104px); } /* half the width each: the big words fit their half */
+.stage:not([data-tablet='off']) .over .bg-side b { font-size: clamp(40px, 7.5vmin, 88px); }
 
 /* ---------- sky ---------- */
 .sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }

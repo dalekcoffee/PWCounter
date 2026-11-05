@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.15
+- Tablet mode is now Off / Left / Right. Left: the board turns left and Player 1 is on the left. Right: it turns right and Player 1 is on the right (the 0.3.14 tablet mode). Either way Player 1 is at the tablet's bottom edge. Off (the default) is the usual layout, unchanged.
+
 ## 0.3.14
 - Experimental: Tablet mode (Settings, Experimental, with two players). For a tablet on a stand: the board is turned to the right and the two players sit side by side, both facing the same way. Player 1 is on the right (the tablet's bottom edge), Player 2 on the left; the bar runs along the bottom. Who goes first, Begin and Game over are split left / right to match. Face to face is not used in this mode.
 

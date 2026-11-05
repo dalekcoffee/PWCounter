@@ -26,6 +26,8 @@ export const SECOND_START = 1;
 // soul = souls in the soul area, up = how many of them are standing (0..soul)
 export const freshSeat = () => ({ life: START_LIFE, mat: 0, ing: 0, soul: 0, up: 0 });
 
+export const TABLET = ['off', 'left', 'right'];
+
 export function defaultState() {
   return {
     v: 1,
@@ -47,7 +49,7 @@ export function defaultState() {
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
-    tablet: false, // experimental (0.3.14): two players side by side on a tablet on a stand, the board turned right
+    tablet: 'off', // experimental: two players side by side on a tablet on a stand: 'off' | 'left' | 'right' (0.3.15; the side Player 1 is on)
     savedAt: 0, // when this (the one saved) game was last saved, ms
   };
 }
@@ -115,7 +117,7 @@ export function cleanState(raw) {
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
     rooms: raw.rooms === true,
-    tablet: raw.tablet === true,
+    tablet: TABLET.includes(raw.tablet) ? raw.tablet : raw.tablet === true ? 'right' : 'off', // 0.3.14 saved true = right
     savedAt: Number.isFinite(raw.savedAt) && raw.savedAt > 0 ? Math.floor(raw.savedAt) : 0,
   };
 }

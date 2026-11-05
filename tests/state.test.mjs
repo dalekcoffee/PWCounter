@@ -119,9 +119,10 @@ test('rooms are off by default and cleaned; savedAt is cleaned', () => {
   assert.equal(resetGame(setSetting(defaultState(), 'rooms', true)).rooms, true, 'a reset keeps settings');
 });
 
-test('tablet mode is an experimental setting, off by default and kept clean', async () => {
-  const { defaultState, cleanState, setSetting } = await import('../js/state.js');
-  assert.equal(defaultState().tablet, false);
-  assert.equal(cleanState({ ...defaultState(), tablet: 'yes' }).tablet, false);
-  assert.equal(setSetting(defaultState(), 'tablet', true).tablet, true);
+test('tablet mode is off, left or right; off by default; a 0.3.14 "on" reads as right', () => {
+  assert.equal(defaultState().tablet, 'off');
+  assert.equal(cleanState({ ...defaultState(), tablet: 'yes' }).tablet, 'off');
+  assert.equal(cleanState({ ...defaultState(), tablet: true }).tablet, 'right');
+  assert.equal(setSetting(defaultState(), 'tablet', 'left').tablet, 'left');
+  assert.equal(setSetting(defaultState(), 'tablet', 'right').tablet, 'right');
 });

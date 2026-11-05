@@ -188,8 +188,8 @@ function render(prev) {
   const players = inRoom ? 1 : s.players;
   setData(stage, 'players', String(players));
   // tablet mode (experimental): two players side by side, the board turned right, nobody upside down
-  const tablet = players === 2 && s.tablet;
-  setData(stage, 'tablet', tablet ? 'on' : 'off');
+  const tablet = players === 2 && s.tablet !== 'off';
+  setData(stage, 'tablet', tablet ? s.tablet : 'off');
   setData(stage, 'land', players === 2 ? 'off' : s.landscape); // two players on one screen: no landscape setting
   const flip = players === 2 && s.flip && !tablet;
   setData(stage, 'flip', flip ? 'on' : 'off');
@@ -714,9 +714,8 @@ function paintSettings() {
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
   $('#set-rooms').checked = state.rooms;
-  $('#set-tablet').checked = state.tablet;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
-  setHidden($('#row-flip'), state.players === 1 || state.tablet); // side by side nobody needs turning
+  setHidden($('#row-flip'), state.players === 1 || state.tablet !== 'off'); // side by side nobody needs turning
   setHidden($('#row-tablet'), state.players === 1);
   setHidden($('#row-land'), state.players === 2);
   setHidden($('#row-soulstyle'), !state.souls);
@@ -729,10 +728,10 @@ for (const seg of $$('.seg')) {
     const next = setSetting(state, key, key === 'players' ? Number(b.dataset.v) : b.dataset.v);
     if (needsFirst(next) && !needsFirst(state)) askFirst = true;
     commit(next);
+    paintSettings();
   });
 }
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
-$('#set-tablet').addEventListener('change', (e) => { commit(setSetting(state, 'tablet', e.target.checked)); paintSettings(); });
 $('#set-autofull').addEventListener('change', (e) => commit(setSetting(state, 'autoFull', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));

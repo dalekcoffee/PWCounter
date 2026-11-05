@@ -5,8 +5,9 @@ Static PWA served by GitHub Pages at pwcounter.dalek.coffee. Vanilla ES modules,
 - `js/state.js`, `js/calc.js`, `js/random.js` are pure and tested (`npm test`, node:test). `js/app.js` is the DOM.
 - Style follows PalVault (dark palette, Figtree / Newsreader / JetBrains Mono). Day and night must stay obviously different on the board.
 - Counter tiles: the whole left half is the minus button, the whole right half the plus button, with a visible divider and −/+ chips in ONE uniform colour (never a colour per sign). Counters never go below 0.
-- Souls (`state.souls`, a normal setting since 0.2.7; style default `numbersCards`, the style options show only while souls are on): rules in state.js follow the official Comprehensive Rules (cited in its header); numbers in two-player view, cards allowed for one player only.
+- Souls (`state.souls`, a normal setting since 0.2.7; style default `numbersCards`, the style options show only while souls are on): rules in state.js follow the official Comprehensive Rules (cited in its header); two players get Numbers or Numbers on cards (the card-only styles fall back to Numbers on cards), the card-only styles need one player.
 - Tiles: the number sits on the tile's centre line, level with the −/+ buttons; icon and word above it. Never hide the Material / Ingredient words.
+- Face to face (`stage[data-face=top]`, two players, flip on, the top player's turn): `.bar` and every `.overlay` are rotated 180° to face the active player.
 - Overlays are divs inside `#stage` (never a native dialog element, which would not turn with the landscape setting).
 - Every file the app needs must be in `sw.js` SHELL (tested). Version lives in js/version.js, package.json, sw.js VERSION and CHANGELOG.md (tested equal); bump on every change.
 - Performance (0.2.8, for old tablets): write the DOM through js/dom-write.js (`setText`, `setHidden`, `setData`, `setAttr`, `setProp` only write a changed value); save through `saveSoon()` (flushed on hide / pagehide); no `backdrop-filter` and no animated `filter` / `box-shadow` (animate opacity or transform on a layer instead); nothing animates by day; the dice shader stays loop-free.

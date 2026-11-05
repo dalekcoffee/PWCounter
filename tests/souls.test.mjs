@@ -148,7 +148,9 @@ test('every soul style is playable: something to read and something to tap', () 
 });
 
 test('two players (no room for cards) and unknown styles fall back to numbers', () => {
-  assert.equal(soulDisplay('cardsTap', false).style, 'numbers');
+  assert.equal(soulDisplay('cardsTap', false).style, 'numbersCards');
+  assert.equal(soulDisplay('numbersCards', false).style, 'numbersCards');
+  assert.equal(soulDisplay('numbers', false).style, 'numbers');
   assert.equal(soulDisplay('nope', true).style, 'numbers');
 });
 

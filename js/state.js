@@ -66,9 +66,11 @@ export function cleanSoulStyle(raw) {
   return SOUL_STYLE_DEFAULT;
 }
 
-/** What the soul tile shows and how it is tapped. Cards need the one-player layout; otherwise numbers. */
+/** What the soul tile shows and how it is tapped. The card-only styles need the one-player layout: with two players
+ *  they show as Numbers on cards (the count with the cards faint behind it), Numbers stays Numbers. */
 export function soulDisplay(style, onePlayer) {
-  const s = onePlayer && SOUL_STYLES.includes(style) ? style : 'numbers';
+  const known = SOUL_STYLES.includes(style) ? style : 'numbers';
+  const s = onePlayer || known === 'numbers' ? known : 'numbersCards';
   return {
     style: s,
     number: s === 'numbers' || s === 'numbersCards',

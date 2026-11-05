@@ -129,7 +129,7 @@ svg { display: block; }
 .stage[data-flip='on'] .seat[data-seat='1'] { transform: rotate(180deg); }
 /* whose turn: a soft filled panel behind that player's tiles, no outline */
 /* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame) */
-.seat::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 26%, transparent), color-mix(in srgb, var(--acc) 12%, transparent)); box-shadow: 0 12px 40px color-mix(in srgb, var(--acc) 20%, transparent); }
+.seat::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 40%, transparent), color-mix(in srgb, var(--acc) 22%, transparent)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--acc) 70%, transparent), 0 0 32px color-mix(in srgb, var(--acc) 40%, transparent), 0 12px 40px color-mix(in srgb, var(--acc) 25%, transparent); }
 .seat.active::before { opacity: 1; }
 .seat-in {
   height: 100%; display: grid; gap: 8px;
@@ -150,10 +150,10 @@ svg { display: block; }
 .seat-in { grid-template-areas: 'life' 'res'; }
 .stage[data-souls='on'] .seat-in { grid-template-areas: 'life' 'res' 'soul'; grid-template-rows: minmax(0, 1fr) clamp(88px, 11cqh, 120px) clamp(104px, 12cqh, 124px); }
 .stage[data-souls='on'][data-players='1'] .seat-in { grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .8fr); }
-.stage[data-souls='on'][data-soulbg='on'] .seat-in, .stage[data-souls='on'][data-soulview='cards'] .seat-in { grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1fr); }
+.stage[data-souls='on'][data-players='1'][data-soulbg='on'] .seat-in, .stage[data-souls='on'][data-soulview='cards'] .seat-in { grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1fr); }
 .stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-areas: 'life res'; }
 .stage[data-land='left'][data-souls='on'] .seat-in, .stage[data-land='right'][data-souls='on'] .seat-in { grid-template-areas: 'life res' 'life soul'; grid-template-rows: minmax(0, 2fr) minmax(0, 1fr); }
-.stage[data-land='left'][data-soulbg='on'] .seat-in, .stage[data-land='right'][data-soulbg='on'] .seat-in, .stage[data-land='left'][data-soulview='cards'] .seat-in, .stage[data-land='right'][data-soulview='cards'] .seat-in { grid-template-areas: 'life res' 'soul soul'; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+.stage[data-land='left'][data-players='1'][data-soulbg='on'] .seat-in, .stage[data-land='right'][data-players='1'][data-soulbg='on'] .seat-in, .stage[data-land='left'][data-soulview='cards'] .seat-in, .stage[data-land='right'][data-soulview='cards'] .seat-in { grid-template-areas: 'life res' 'soul soul'; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
 /* landscape cards: a slim header and cards that use the row's full height */
 .stage[data-land='left'][data-soulview='cards'] .t-soul, .stage[data-land='right'][data-soulview='cards'] .t-soul { padding: 6px 12px 8px; }
 .stage[data-land='left'] .soul-cards, .stage[data-land='right'] .soul-cards { gap: 4px; }
@@ -326,13 +326,15 @@ svg { display: block; }
 
 /* who goes first */
 .first-btns { display: grid; gap: 10px; }
+.stage[data-players='2'] #first-b { order: -1; } /* the top player's choice sits above the bottom player's, as at the table */
 .btn.ghost { background: transparent; }
 .btn.link { border: 0; background: transparent; color: var(--text-2); min-height: 40px; margin-top: 6px; }
 .first-out { margin: 12px 0 0; font: 600 18px/1.2 var(--font-head); color: var(--gold); min-height: 22px; }
 .set-h { margin: 22px 0 2px; font: 700 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
 
 /* ---------- the bar between the seats ---------- */
-.bar { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px; min-width: 0; }
+.bar { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px; min-width: 0; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.stage[data-face='top'] .bar, .stage[data-face='top'] .overlay { transform: rotate(180deg); }
 .stage[data-players='1']:not([data-souls='on']):not([data-room='on']) .endturn { visibility: hidden; } /* one player: no turns to track (its space keeps the bar balanced); with souls it starts your turn */
 .bar-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .bar-side.end { justify-content: flex-end; }

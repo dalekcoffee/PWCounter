@@ -170,6 +170,8 @@ function render(prev) {
   setData(stage, 'players', String(players));
   setData(stage, 'land', s.landscape);
   setData(stage, 'flip', players === 2 && s.flip ? 'on' : 'off');
+  // face to face: the bar and the pop-ups turn to the top player on their turn, so they can read them
+  setData(stage, 'face', players === 2 && s.flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
   setData(stage, 'souls', s.souls ? 'on' : 'off');
   setData(stage, 'icons', s.iconsOnly ? 'only' : 'words');
   setHidden($('#btn-room'), !s.rooms || (s.players === 2 && !inRoom)); // online play replaces the shared-phone view, so it is offered from one player

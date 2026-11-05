@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+- Who goes first (two players): the top player's button is now above the bottom player's.
+- Face to face: on the top player's turn the bar (End Turn, day / night, calculator, dice, settings) and the pop-ups turn round to face them.
+- Whose turn is clearer, day and night: a stronger panel with a ring along its edge and a glow.
+- Souls: Numbers on cards now also works with two players (portrait and landscape); the card-only styles show as Numbers on cards there.
+
 ## 0.2.8
 - Faster on slow and older devices, nothing changed in how it works or looks:
   - 3D dice: the pips are worked out without a loop and the dice are drawn at a capped resolution; the shadow is a plain oval instead of a blur redone on every frame. On a slow graphics chip a roll went from about 5 to about 45 frames a second.

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <title>PW Counter</title>
+  <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
+  <meta name="theme-color" content="#070b17">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PW Counter">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="stage" class="stage" data-time="day" data-players="2" data-land="off">
+    <div class="sky" aria-hidden="true">
+      <i class="stars s1"></i><i class="stars s2"></i>
+      <i class="sun"></i><i class="moon"></i>
+      <i class="haze"></i>
+    </div>
+
+    <section class="seat" data-seat="1" aria-label="Opponent"></section>
+
+    <nav class="bar" aria-label="Game controls">
+      <div class="bar-side">
+        <button class="ibtn" id="btn-full" type="button" aria-label="Full screen" title="Full screen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+        </button>
+        <button class="daynight" id="btn-time" type="button" aria-pressed="false">
+          <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.4 5.4l1.6 1.6M17 17l1.6 1.6M5.4 18.6 7 17M17 7l1.6-1.6"/></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+          <span class="dn-word">Day</span>
+        </button>
+      </div>
+      <button class="endturn" id="btn-end" type="button">
+        <span class="et-word">End Turn</span>
+        <span class="et-turn" id="turn-label">Turn 1</span>
+      </button>
+      <div class="bar-side end">
+        <button class="ibtn" id="btn-calc" type="button" aria-label="Calculator" title="Calculator">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5M8.5 18h.01M12 18h.01"/></svg>
+        </button>
+        <button class="ibtn" id="btn-dice" type="button" aria-label="Dice and coin" title="Dice and coin">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/></svg>
+        </button>
+        <button class="ibtn" id="btn-set" type="button" aria-label="Settings" title="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3.2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.4-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3.2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.8 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.3a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <section class="seat" data-seat="0" aria-label="You"></section>
+
+    <!-- Overlays live INSIDE the stage so they turn with it in landscape (a native dialog element would not). -->
+    <div class="overlay" id="ov-calc" hidden>
+      <div class="sheet calc" role="dialog" aria-modal="true" aria-labelledby="calc-title">
+        <header class="sheet-head">
+          <div><h2 id="calc-title">Calculator</h2><p class="sub">× and ÷ before + and −</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <div class="calc-body">
+          <div class="calc-left">
+            <div class="calc-screen" aria-live="polite">
+              <div class="calc-expr" id="calc-expr">&nbsp;</div>
+              <div class="calc-val" id="calc-val">0</div>
+            </div>
+            <div class="calc-quick">
+              <button type="button" class="q up" data-quick="100">+100</button>
+              <button type="button" class="q up" data-quick="300">+300</button>
+              <button type="button" class="q up" data-quick="500">+500</button>
+              <button type="button" class="q up" data-quick="1000">+1000</button>
+              <button type="button" class="q down" data-quick="-500">−500</button>
+              <button type="button" class="q down" data-quick="-1000">−1000</button>
+            </div>
+          </div>
+          <div class="calc-keys">
+            <button type="button" data-d="7">7</button><button type="button" data-d="8">8</button><button type="button" data-d="9">9</button><button type="button" class="op" data-op="÷" aria-label="Divide">÷</button>
+            <button type="button" data-d="4">4</button><button type="button" data-d="5">5</button><button type="button" data-d="6">6</button><button type="button" class="op" data-op="×" aria-label="Multiply">×</button>
+            <button type="button" data-d="1">1</button><button type="button" data-d="2">2</button><button type="button" data-d="3">3</button><button type="button" class="op" data-op="-" aria-label="Minus">−</button>
+            <button type="button" class="clr" data-k="clear" aria-label="Clear">C</button><button type="button" data-d="0">0</button><button type="button" data-d="00">00</button><button type="button" class="op" data-op="+" aria-label="Plus">+</button>
+            <button type="button" class="wide" data-k="back" aria-label="Backspace">⌫</button><button type="button" class="wide eq" data-k="eq" aria-label="Equals">=</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-dice" hidden>
+      <div class="sheet dice" role="dialog" aria-modal="true" aria-labelledby="dice-title">
+        <header class="sheet-head">
+          <div><h2 id="dice-title">Dice &amp; coin</h2><p class="sub">Fair rolls from your device's secure random source</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <div class="dice-row">
+          <button type="button" class="roll" id="btn-roll">
+            <span class="roll-face" id="die-face" aria-hidden="true">?</span>
+            <span class="roll-label">Roll a die</span>
+          </button>
+          <button type="button" class="roll" id="btn-coin">
+            <span class="roll-face coin" id="coin-face" aria-hidden="true">?</span>
+            <span class="roll-label">Flip a coin</span>
+          </button>
+        </div>
+        <p class="dice-out" id="dice-out" aria-live="polite">&nbsp;</p>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-set" hidden>
+      <div class="sheet settings" role="dialog" aria-modal="true" aria-labelledby="set-title">
+        <header class="sheet-head">
+          <div><h2 id="set-title">Settings</h2><p class="sub" id="app-ver">&nbsp;</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <div class="set-row">
+          <span class="set-label">Players</span>
+          <div class="seg" data-setting="players">
+            <button type="button" data-v="1">One</button><button type="button" data-v="2">Two</button>
+          </div>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Landscape<small>Turns the board without rotating the phone</small></span>
+          <div class="seg" data-setting="landscape">
+            <button type="button" data-v="off">Off</button><button type="button" data-v="left">Left</button><button type="button" data-v="right">Right</button>
+          </div>
+        </div>
+        <div class="set-row" id="row-flip">
+          <span class="set-label">Face to face<small>The opponent's side faces them across the table</small></span>
+          <label class="switch"><input type="checkbox" id="set-flip"><span></span></label>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Keep screen on<small>While the counter is open</small></span>
+          <label class="switch"><input type="checkbox" id="set-awake"><span></span></label>
+        </div>
+        <button type="button" class="btn danger" id="btn-reset">Reset game</button>
+        <p class="set-note">Both players start at 10 life. Material and Ingredient start at 0. Everything stays on this device and works with no signal.</p>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-confirm" hidden>
+      <div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-text">
+        <h2 id="cf-title">Reset the game?</h2>
+        <p id="cf-text">Life goes back to 10, Material and Ingredient to 0, turn 1, day. Your settings stay.</p>
+        <div class="cf-btns">
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="button" class="btn danger" id="btn-reset-yes">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <noscript><p class="noscript">PW Counter needs JavaScript.</p></noscript>
+</body>
+</html>

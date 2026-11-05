@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.12
+- Choosing who goes first now always starts a fresh game: life back to 10, Material and Ingredient to 0, day, turn 1 (and the souls dealt as before). Before, it kept the old counters, so a game could start with a life of 0.
+- A two-player game without souls that was saved mid-game before 0.3.5 (which never recorded who went first) is no longer interrupted with "who goes first?" on opening; it carries on with whoever's turn it was.
+
 ## 0.3.11
 - Fixed: on some devices (older Android browsers) one tap on a counter changed it by 2. The tap was counted on touch and again by the keyboard path, because those browsers mark a tap's click like a keyboard click. A click right after a finger or mouse press is no longer counted; Enter / Space on a focused button still work.
 

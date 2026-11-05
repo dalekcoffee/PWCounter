@@ -102,11 +102,17 @@ test('cards view: tapping a standing soul rests one, a rested one stands one', (
   assert.equal(toggleSoul(s, 0, 7), s, 'an empty slot does nothing');
 });
 
-test('choosing who goes first keeps life and resources; a reset asks again', () => {
-  let s = step(step(on(), 0, 'life', -3), 1, 'mat', 2);
+test('choosing who goes first starts a fresh game (0.3.12); a reset asks again', () => {
+  let s = step(step(on(), 0, 'life', -10), 1, 'mat', 2);
+  s = { ...s, night: true, turn: 6 };
   s = chooseFirst(s, 0);
-  assert.equal(s.seats[0].life, 7);
-  assert.equal(s.seats[1].mat, 2);
+  assert.equal(s.seats[0].life, 10);
+  assert.equal(s.seats[1].mat, 0);
+  assert.equal(s.night, false);
+  assert.equal(s.turn, 1);
+  assert.deepEqual(souls(s), [[2, 2], [1, 1]]); // souls dealt as usual
+  const plain = chooseFirst({ ...step(setSetting(defaultState(), 'players', 2), 1, 'life', -10) }, 1);
+  assert.deepEqual(plain.seats.map((x) => x.life), [10, 10]); // without souls too
   s = resetGame(s);
   assert.equal(needsFirst(s), true);
   assert.deepEqual(souls(s), [[0, 0], [0, 0]]);
@@ -174,4 +180,15 @@ test('two players settle who goes first even without souls (0.3.5); one player o
   assert.deepEqual(s.seats.map((x) => [x.soul, x.up]), [[0, 0], [0, 0]]); // no souls dealt
   assert.equal(needsFirst(s), false);
   assert.equal(needsFirst(resetGame(s)), true); // a reset asks again
+});
+
+test('a two-player game under way, saved before 0.3.5 without a first player, is not asked again on opening', () => {
+  const old = { v: 1, players: 2, souls: false, first: null, active: 1, turn: 4, seats: [{ life: 0, mat: 2, ing: 1 }, { life: 6, mat: 0, ing: 0 }] };
+  const s = cleanState(old);
+  assert.equal(s.first, 1);
+  assert.equal(needsFirst(s), false);
+  assert.equal(s.seats[0].life, 0); // the game is kept as it was
+  const atStart = cleanState({ ...old, turn: 1, seats: [{ life: 10 }, { life: 10 }] });
+  assert.equal(needsFirst(atStart), true); // a game at its start is still asked
+  assert.equal(needsFirst(cleanState({ ...old, souls: true })), true); // with souls the set-up still needs asking
 });

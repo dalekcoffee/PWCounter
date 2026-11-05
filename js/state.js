@@ -102,7 +102,7 @@ export function cleanState(raw) {
     night: raw.night === true,
     turn: int(raw.turn, 0, 9999, 1),
     active: raw.active === 1 ? 1 : 0,
-    first: raw.first === 0 || raw.first === 1 ? raw.first : null,
+    first: raw.first === 0 || raw.first === 1 ? raw.first : legacyFirst(raw),
     turnAt: Number.isFinite(raw.turnAt) && raw.turnAt > 0 ? Math.floor(raw.turnAt) : 0,
     players: raw.players === 2 ? 2 : 1,
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
@@ -116,6 +116,14 @@ export function cleanState(raw) {
     rooms: raw.rooms === true,
     savedAt: Number.isFinite(raw.savedAt) && raw.savedAt > 0 ? Math.floor(raw.savedAt) : 0,
   };
+}
+
+/** A two-player game without souls saved before 0.3.5 never recorded who went first. If it is under way, the player
+ *  whose turn it is stands in for that (asking now would start a new game over it); a game at its start is asked. */
+function legacyFirst(raw) {
+  if (raw.players !== 2 || raw.souls === true || !Array.isArray(raw.seats)) return null;
+  const started = (Number(raw.turn) || 1) > 1 || raw.seats.some((x) => x && (x.life !== START_LIFE || x.mat > 0 || x.ing > 0));
+  return started ? (raw.active === 1 ? 1 : 0) : null;
 }
 
 const clamp = (n, [lo, hi]) => Math.min(hi, Math.max(lo, n));
@@ -148,9 +156,10 @@ export const needsFirst = (state) => (state.souls || state.players === 2) && sta
  */
 export function chooseFirst(state, seat) {
   if (seat !== 0 && seat !== 1) return state;
-  if (!state.souls) return { ...state, first: seat, active: state.players === 2 ? seat : 0, turn: 1 }; // turns only
-  // only the souls and the turn start over: life and resources stay (souls can be switched on mid-game)
-  let s = { ...state, first: seat, seats: state.seats.map((x) => ({ ...x, soul: 0, up: 0 })) };
+  // choosing who goes first starts the game (0.3.12): every counter back to its start, day, turn 1
+  const fresh = { ...resetGame(state), first: seat };
+  if (!state.souls) return { ...fresh, active: state.players === 2 ? seat : 0 }; // turns only
+  let s = fresh;
   if (s.players === 1) {
     if (seat === 0) return { ...beginTurn(s, 0), turn: 1, active: 0 };
     return { ...withSeat(s, 0, { soul: SECOND_START, up: SECOND_START }), turn: 0, active: 0 };

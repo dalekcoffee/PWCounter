@@ -12,8 +12,12 @@ export const START_LIFE = 10;
 export const LIMITS = { life: [0, 99999], mat: [0, 99], ing: [0, 99] }; // rule 3.2.1.1: life has no upper limit
 export const COUNTERS = Object.keys(LIMITS);
 export const LANDSCAPE = ['off', 'left', 'right'];
-export const SOUL_VIEWS = ['number', 'cards'];
-export const SOUL_TAPS = ['card', 'halves']; // cards view: tap a card, or tap the left / right side
+// Soul styles: every style is playable (something to read and something to tap); − / + for the total is always there.
+//   numbers       the count; tap left to rest one, right to stand one
+//   numbersCards  the same, with the cards drawn faintly behind (a visual only, cards are not tappable)
+//   cardsTap      cards only; tap a card to rest or stand it
+//   cardsSides    cards only; tap left to rest one, right to stand one
+export const SOUL_STYLES = ['numbers', 'numbersCards', 'cardsTap', 'cardsSides'];
 export const SOUL_MAX = 10;
 export const SOUL_GAIN = 2;
 export const SECOND_START = 1;
@@ -36,8 +40,7 @@ export function defaultState() {
     flip: true,
     awake: true,
     souls: false, // experimental
-    soulView: 'number', // experimental, one player only: 'number' | 'cards'
-    soulTap: 'card', // experimental, cards view: 'card' = tap a card to rest / stand it, 'halves' = left side rests one, right side stands one
+    soulStyle: 'numbers', // experimental: one of SOUL_STYLES (styles with cards need one player; two players see numbers)
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
@@ -51,6 +54,24 @@ export function cleanName(raw) {
   if (typeof raw !== 'string') return '';
   const t = raw.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim();
   return [...t].slice(0, NAME_MAX).join('').trim();
+}
+
+/** The soul style; a game saved before 0.1.5 (soulView + soulTap) keeps what it looked like. */
+export function cleanSoulStyle(raw) {
+  if (SOUL_STYLES.includes(raw?.soulStyle)) return raw.soulStyle;
+  if (raw?.soulView === 'cards') return raw.soulTap === 'halves' ? 'cardsSides' : 'cardsTap';
+  return 'numbers';
+}
+
+/** What the soul tile shows and how it is tapped. Cards need the one-player layout; otherwise numbers. */
+export function soulDisplay(style, onePlayer) {
+  const s = onePlayer && SOUL_STYLES.includes(style) ? style : 'numbers';
+  return {
+    style: s,
+    number: s === 'numbers' || s === 'numbersCards',
+    cards: s !== 'numbers',
+    tapCards: s === 'cardsTap', // else the left / right halves rest and stand
+  };
 }
 
 const int = (n, lo, hi, dflt) => (Number.isInteger(n) && n >= lo && n <= hi ? n : dflt);
@@ -81,8 +102,7 @@ export function cleanState(raw) {
     flip: raw.flip !== false,
     awake: raw.awake !== false,
     souls: raw.souls === true,
-    soulView: SOUL_VIEWS.includes(raw.soulView) ? raw.soulView : 'number',
-    soulTap: SOUL_TAPS.includes(raw.soulTap) ? raw.soulTap : 'card',
+    soulStyle: cleanSoulStyle(raw),
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
     rooms: raw.rooms === true,

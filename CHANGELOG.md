@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.5
+- Souls: one "Soul style" setting with four styles that always work: Numbers, Numbers on cards (cards drawn behind the count), Cards with tap a card, Cards with tap a side. − / + for adding or removing souls stay in every style. Games saved before keep their look.
+
 ## 0.1.4
 - Experimental "Tap souls by": Card (tap a card to rest or stand it, the default) or Sides (left side rests one, right side stands one, like the other counters). The total − / + stay in the header, outside the tapping area.
 

@@ -123,14 +123,38 @@ test('changing the number of players asks who goes first again', () => {
 });
 
 test('cleanState keeps souls within limits', () => {
-  const s = cleanState({ v: 1, seats: [{ soul: 12, up: 3 }, { soul: 4, up: 9 }], souls: true, soulView: 'cards', first: 1, turn: 0 });
+  const s = cleanState({ v: 1, seats: [{ soul: 12, up: 3 }, { soul: 4, up: 9 }], souls: true, soulStyle: 'cardsTap', first: 1, turn: 0 });
   assert.deepEqual(souls(s), [[0, 0], [4, 0]]);
   assert.equal(s.souls, true);
-  assert.equal(s.soulView, 'cards');
-  assert.equal(s.soulTap, 'card');
-  assert.equal(cleanState({ v: 1, soulTap: 'halves' }).soulTap, 'halves');
-  assert.equal(cleanState({ v: 1, soulTap: 'x' }).soulTap, 'card');
+  assert.equal(s.soulStyle, 'cardsTap');
+  assert.equal(cleanState({ v: 1, soulStyle: 'x' }).soulStyle, 'numbers');
   assert.equal(s.first, 1);
-  assert.equal(cleanState({ v: 1, soulView: 'x', first: 3 }).soulView, 'number');
+  assert.equal(cleanState({ v: 1, first: 3 }).soulStyle, 'numbers');
   assert.equal(cleanState({ v: 1, first: 3 }).first, null);
+});
+
+import { soulDisplay, cleanSoulStyle, SOUL_STYLES } from '../js/state.js';
+
+test('every soul style is playable: something to read and something to tap', () => {
+  for (const style of SOUL_STYLES) {
+    const d = soulDisplay(style, true);
+    assert.ok(d.number || d.cards, `${style} shows something`);
+    assert.ok(d.tapCards ? d.cards : true, `${style} taps cards only when cards show`);
+  }
+  assert.deepEqual(soulDisplay('numbers', true), { style: 'numbers', number: true, cards: false, tapCards: false });
+  assert.deepEqual(soulDisplay('numbersCards', true), { style: 'numbersCards', number: true, cards: true, tapCards: false });
+  assert.deepEqual(soulDisplay('cardsTap', true), { style: 'cardsTap', number: false, cards: true, tapCards: true });
+  assert.deepEqual(soulDisplay('cardsSides', true), { style: 'cardsSides', number: false, cards: true, tapCards: false });
+});
+
+test('two players (no room for cards) and unknown styles fall back to numbers', () => {
+  assert.equal(soulDisplay('cardsTap', false).style, 'numbers');
+  assert.equal(soulDisplay('nope', true).style, 'numbers');
+});
+
+test('a game saved before soul styles keeps its look', () => {
+  assert.equal(cleanSoulStyle({ soulView: 'number' }), 'numbers');
+  assert.equal(cleanSoulStyle({ soulView: 'cards', soulTap: 'card' }), 'cardsTap');
+  assert.equal(cleanSoulStyle({ soulView: 'cards', soulTap: 'halves' }), 'cardsSides');
+  assert.equal(cleanSoulStyle({}), 'numbers');
 });

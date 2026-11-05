@@ -2,7 +2,7 @@
 import { APP_VERSION } from './version.js';
 import {
   defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSetting, COUNTERS,
-  SOUL_MAX, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul, needsResume, cleanName,
+  SOUL_MAX, soulDisplay, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul, needsResume, cleanName,
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
@@ -157,8 +157,10 @@ function render(prev) {
   stage.dataset.souls = s.souls ? 'on' : 'off';
   stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
   $('#btn-room').hidden = !s.rooms || (s.players === 2 && !inRoom); // online play replaces the shared-phone view, so it is offered from one player
-  stage.dataset.soulview = s.souls && players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
-  stage.dataset.soultap = s.soulTap;
+  const sd = soulDisplay(s.soulStyle, players === 1);
+  stage.dataset.soulview = s.souls && sd.cards && !sd.number ? 'cards' : 'number'; // the cards ARE the tile
+  stage.dataset.soulbg = s.souls && sd.cards && sd.number ? 'on' : 'off'; // the cards are a faint background behind the count
+  stage.dataset.soultap = sd.cards && !sd.number && !sd.tapCards ? 'halves' : 'card';
   $('[data-seat="1"]').hidden = players === 1;
   for (const seatEl of $$('.seat')) {
     const i = Number(seatEl.dataset.seat);
@@ -212,7 +214,7 @@ $('#btn-end').addEventListener('click', () => {
 // souls: total +/- and the cards view
 stage.addEventListener('click', (e) => {
   const add = e.target.closest('[data-add]');
-  const card = state.soulTap === 'card' ? e.target.closest('.sc-card') : null;
+  const card = stage.dataset.soulview === 'cards' && stage.dataset.soultap === 'card' ? e.target.closest('.sc-card') : null;
   if (!add && !card) return;
   const seat = Number(e.target.closest('.seat').dataset.seat);
   if (add) commit(addSoul(state, seat, Number(add.dataset.add)));
@@ -387,9 +389,7 @@ function paintSettings() {
   $('#set-rooms').checked = state.rooms;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
   $('#row-flip').hidden = state.players === 1;
-  $('#row-soulview').hidden = !state.souls;
-  $('#soulview-note').hidden = !(state.souls && state.players === 2 && state.soulView === 'cards');
-  $('#row-soultap').hidden = !(state.souls && state.soulView === 'cards');
+  $('#row-soulstyle').hidden = !state.souls;
 }
 for (const seg of $$('.seg')) {
   seg.addEventListener('click', (e) => {

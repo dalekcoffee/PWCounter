@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.14
+- Experimental: Tablet mode (Settings, Experimental, with two players). For a tablet on a stand: the board is turned to the right and the two players sit side by side, both facing the same way. Player 1 is on the right (the tablet's bottom edge), Player 2 on the left; the bar runs along the bottom. Who goes first, Begin and Game over are split left / right to match. Face to face is not used in this mode.
+
 ## 0.3.13
 - Who goes first: the roll or flip now uses the big throw, the same 3D die (one die) or coin as the dice button. The result shows for a moment, then the who-goes-first screen comes back for the winner to choose first or second.
 - Who goes first: Roll a die / Flip a coin (and Roll or flip with two players) are a little bigger and stand out a little more.

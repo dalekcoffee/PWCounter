@@ -187,10 +187,14 @@ function render(prev) {
   const inRoom = roomUi.active(); // in a room your seat is the one-player layout, whatever the players setting says
   const players = inRoom ? 1 : s.players;
   setData(stage, 'players', String(players));
-  setData(stage, 'land', players === 2 ? 'off' : s.landscape); // two players on one screen: no landscape
-  setData(stage, 'flip', players === 2 && s.flip ? 'on' : 'off');
+  // tablet mode (experimental): two players side by side, the board turned right, nobody upside down
+  const tablet = players === 2 && s.tablet;
+  setData(stage, 'tablet', tablet ? 'on' : 'off');
+  setData(stage, 'land', players === 2 ? 'off' : s.landscape); // two players on one screen: no landscape setting
+  const flip = players === 2 && s.flip && !tablet;
+  setData(stage, 'flip', flip ? 'on' : 'off');
   // face to face: the bar and the pop-ups turn to the top player on their turn, so they can read them
-  setData(stage, 'face', players === 2 && s.flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
+  setData(stage, 'face', flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
   setData(stage, 'souls', s.souls ? 'on' : 'off');
   setData(stage, 'icons', s.iconsOnly ? 'only' : 'words');
   setHidden($('#btn-room'), !s.rooms || (s.players === 2 && !inRoom)); // online play replaces the shared-phone view, so it is offered from one player
@@ -710,8 +714,10 @@ function paintSettings() {
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
   $('#set-rooms').checked = state.rooms;
+  $('#set-tablet').checked = state.tablet;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
-  setHidden($('#row-flip'), state.players === 1);
+  setHidden($('#row-flip'), state.players === 1 || state.tablet); // side by side nobody needs turning
+  setHidden($('#row-tablet'), state.players === 1);
   setHidden($('#row-land'), state.players === 2);
   setHidden($('#row-soulstyle'), !state.souls);
 }
@@ -726,6 +732,7 @@ for (const seg of $$('.seg')) {
   });
 }
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
+$('#set-tablet').addEventListener('change', (e) => { commit(setSetting(state, 'tablet', e.target.checked)); paintSettings(); });
 $('#set-autofull').addEventListener('change', (e) => commit(setSetting(state, 'autoFull', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));

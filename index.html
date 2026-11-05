@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.3.13"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.3.14"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=0.3.13">
+  <link rel="stylesheet" href="css/app.css?v=0.3.14">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/calc.js">
@@ -232,6 +232,10 @@
         <div class="set-row">
           <span class="set-label">Icons only<small>Hides the words Life, Material and Ingredient and makes the icons bigger.</small></span>
           <label class="switch"><input type="checkbox" id="set-icons"><span></span></label>
+        </div>
+        <div class="set-row" id="row-tablet">
+          <span class="set-label">Tablet mode<small>Two players side by side, for a tablet on a stand: the board is turned to the right, Player 1 on the right (the tablet's bottom edge), Player 2 on the left, both facing the same way.</small></span>
+          <label class="switch"><input type="checkbox" id="set-tablet"><span></span></label>
         </div>
         <div class="set-row">
           <span class="set-label">Play with a friend (online)<small>Experimental. Needs both phones online.</small></span>

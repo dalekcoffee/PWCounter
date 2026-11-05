@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.13"; }
+:root { --pwc-v: "0.3.14"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -63,6 +63,20 @@ svg { display: block; }
 }
 .stage[data-land='right'] { top: 0; left: 100vw; transform: rotate(90deg); }
 .stage[data-land='left'] { top: 100vh; top: 100dvh; left: 0; transform: rotate(-90deg); }
+
+/* Tablet mode (experimental, two players): the board turned right like Landscape Right, the two seats side by side,
+   both upright. Turned right, the board's right side is the tablet's bottom edge: Player 1 sits there. */
+.stage[data-tablet='on'] {
+  inset: auto; width: 100vh; height: 100vw; width: 100dvh; transform-origin: 0 0; top: 0; left: 100vw; transform: rotate(90deg);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'top bottom' 'bar bar';
+  column-gap: 18px;
+}
+.stage[data-tablet='on'] .bar { justify-self: center; width: min(620px, 100%); }
+/* who goes first, Begin and Game over: Player 2's half on the left, Player 1's on the right */
+.stage[data-tablet='on'] .overlay.first2 { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.stage[data-tablet='on'] .begin { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+.stage[data-tablet='on'] .bg-side b { font-size: clamp(44px, 9vmin, 104px); } /* half the width each: the big words fit their half */
+.stage[data-tablet='on'] .over .bg-side b { font-size: clamp(40px, 7.5vmin, 88px); }
 
 /* ---------- sky ---------- */
 .sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }

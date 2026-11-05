@@ -127,15 +127,15 @@ svg { display: block; }
 .seat-in {
   height: 100%; display: grid; gap: 8px;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: clamp(64px, 12cqh, 112px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) clamp(64px, 12cqh, 112px);
 }
-.stage[data-players='1'] .seat-in { grid-template-rows: clamp(80px, 16cqh, 150px) minmax(0, 1fr); }
+.stage[data-players='1'] .seat-in { grid-template-rows: minmax(0, 1fr) clamp(80px, 16cqh, 150px); }
 .res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
 
 /* landscape: life on the left, the two resources stacked on the right */
 .stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
 .stage[data-land='left'] .res, .stage[data-land='right'] .res { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-.stage[data-land='left'] .t-life, .stage[data-land='right'] .t-life { order: -1; }
+.t-life { order: -1; } /* life above (portrait) or before (landscape) Material and Ingredient */
 
 /* ---------- a counter tile: left half takes one off, right half adds one ---------- */
 .tile {
@@ -208,6 +208,7 @@ svg { display: block; }
 
 /* ---------- the bar between the seats ---------- */
 .bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; min-width: 0; }
+.stage[data-players='1'] .endturn { visibility: hidden; } /* one player: no turns to track (its space keeps the bar balanced) */
 .bar-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .bar-side.end { justify-content: flex-end; }
 .ibtn {

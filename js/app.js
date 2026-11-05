@@ -8,7 +8,7 @@ import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
 import { createDice } from './die3d.js';
-import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, clockText } from './first-pick.js';
+import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, firstSeat, clockText } from './first-pick.js';
 import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
@@ -276,15 +276,12 @@ $('#ov-first').addEventListener('click', (e) => {
   const b = e.target.closest('[data-first]');
   if (!b) return;
   let seat = b.dataset.first;
-  if (seat === 'random') {
-    seat = flipCoin() === 'heads' ? 0 : 1;
+  if (seat === 'random') { // a coin toss: whoever wins it chooses first or second with the buttons above
+    const won = flipCoin() === 'heads' ? 0 : 1;
     const two = state.players === 2;
-    $('#first-out').textContent = two ? (seat === 0 ? 'Bottom player goes first' : 'Top player goes first') : (seat === 0 ? 'You go first' : 'You go second');
-    $$('#ov-first button').forEach((x) => { x.disabled = true; });
-    setTimeout(() => {
-      $$('#ov-first button').forEach((x) => { x.disabled = false; });
-      startGame(seat);
-    }, 1100);
+    $('#first-out').textContent = two
+      ? `${won === 0 ? 'Bottom' : 'Top'} player wins the toss and chooses.`
+      : won === 0 ? 'You win the toss: choose first or second.' : 'Your opponent wins the toss: pick what they choose.';
     return;
   }
   startGame(Number(seat));
@@ -351,7 +348,7 @@ function paintF2() {
   for (const side of $$('.f2-side', f2Ov)) {
     const seat = Number(side.dataset.seat);
     if (f2.kind) {
-      $$('.f2-call', side).forEach((b, i) => {
+      $$('.f2-calls .f2-call', side).forEach((b, i) => {
         const c = CALLS[f2.kind][i];
         b.dataset.call = c;
         setText($('b', b), CALL_WORD[c]);
@@ -362,7 +359,7 @@ function paintF2() {
     }
     const say = f2.step === 'call' || f2.step === 'throw'
       ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
-      : f2.step === 'result' ? resultLine(f2.kind, f2.value, f2.winner) : '';
+      : f2.step === 'result' ? `${resultLine(f2.kind, f2.value, f2.winner)} ${seat === f2.winner ? 'You choose:' : `${SEAT_NAME[f2.winner]} is choosing…`}` : '';
     setText($('.f2-say', side), say);
     side.classList.toggle('won', f2.step === 'result' && f2.winner === seat);
   }
@@ -376,8 +373,7 @@ function f2Throw() {
     f2.value = value;
     f2.winner = winnerOf(f2.calls, outcomeOf(kind, value));
     f2.step = 'result';
-    paintF2();
-    f2.timer = setTimeout(() => startGame(f2.winner), 2800);
+    paintF2(); // the winner chooses to go first or second (no timer)
   };
   f2.step = 'throw';
   paintF2();
@@ -397,7 +393,9 @@ f2Ov.addEventListener('click', (e) => {
   const m = e.target.closest('[data-method]');
   if (m) { f2.kind = m.dataset.method; f2.calls = null; f2.step = 'call'; paintF2(); return; }
   if (e.target.closest('[data-back]')) { f2Reset(); return; }
-  const c = e.target.closest('.f2-call');
+  const o = e.target.closest('[data-order]');
+  if (o && f2.step === 'result' && Number(o.closest('.f2-side').dataset.seat) === f2.winner) { startGame(firstSeat(f2.winner, o.dataset.order)); return; }
+  const c = e.target.closest('.f2-calls .f2-call');
   if (c && f2.step === 'call' && !f2.calls) {
     f2.calls = callsFor(f2.kind, Number(c.closest('.f2-side').dataset.seat), c.dataset.call);
     paintF2(); // the other side lights up with the other call

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { otherCall, callsFor, outcomeOf, winnerOf, resultLine, clockText } from '../js/first-pick.js';
+import { otherCall, callsFor, outcomeOf, winnerOf, resultLine, firstSeat, clockText } from '../js/first-pick.js';
 
 test('one call gives the other player the other call', () => {
   assert.equal(otherCall('die', 'high'), 'low');
@@ -15,15 +15,23 @@ test('a die is low on 1-3 and high on 4-6; a coin is its side', () => {
   assert.equal(outcomeOf('die', 7), null);
   assert.equal(outcomeOf('coin', 'tails'), 'tails');
 });
-test('whoever called what came up goes first, and there is always one winner', () => {
+test('whoever called what came up wins the toss, and there is always one winner', () => {
   for (const seat of [0, 1]) for (const call of ['high', 'low']) for (let n = 1; n <= 6; n++) {
     const calls = callsFor('die', seat, call);
     const w = winnerOf(calls, outcomeOf('die', n));
     assert.ok(w === 0 || w === 1);
     assert.equal(calls[w], outcomeOf('die', n));
   }
-  assert.equal(resultLine('die', 5, 1), 'Rolled 5: high. Player 2 goes first.');
-  assert.equal(resultLine('coin', 'heads', 0), 'Heads. Player 1 goes first.');
+  assert.equal(resultLine('die', 5, 1), 'Rolled 5: high. Player 2 wins.');
+  assert.equal(resultLine('coin', 'heads', 0), 'Heads. Player 1 wins.');
+});
+test('the toss winner chooses to go first or second', () => {
+  assert.equal(firstSeat(0, 'first'), 0);
+  assert.equal(firstSeat(0, 'second'), 1);
+  assert.equal(firstSeat(1, 'first'), 1);
+  assert.equal(firstSeat(1, 'second'), 0);
+  assert.equal(firstSeat(2, 'first'), null);
+  assert.equal(firstSeat(0, 'last'), null);
 });
 test('the turn clock reads m:ss, then h:mm:ss', () => {
   assert.equal(clockText(0), '0:00');

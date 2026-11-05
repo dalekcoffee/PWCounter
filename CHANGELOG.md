@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.9
+- Game over: confetti falls on the winner's side and rain on the loser's, for the 5 seconds of "Game over" (none with reduced motion). The "−1" badge no longer shows over it.
+
 ## 0.3.8
 - Life changes colour: near white at 10, turning red as it falls toward 0, turning green as it climbs toward 20, and staying green above 20.
 - Game over: when a life reaches 0, "Game over" shows over the board for 5 seconds, like "Begin": "You win" on the winner's side and "You lose" on the loser's (one player: "You lose").

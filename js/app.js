@@ -130,7 +130,7 @@ function bump(seat, key, d, tileEl) {
 
 /** The "+2" / "−3" badge on a tile: taps within 5 s add up, then it fades. */
 function showDelta(tileEl, d) {
-  if (!d) return;
+  if (!d || !$('#over').hidden) return; // no badge over "Game over"
   const info = deltas.get(tileEl) || { sum: 0, timer: 0 };
   info.sum += d;
   clearTimeout(info.timer);
@@ -331,9 +331,40 @@ function announceOver(loser) {
     setText($('span', side), words);
   }
   el.hidden = false;
+  for (const side of $$('.bg-side', el)) fillFx($('.fx', side), side.dataset.result); // after unhiding: it needs the side's height
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
   clearTimeout(overTimer);
-  overTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); }, OVER_MS);
+  overTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); for (const fx of $$('.fx', el)) fx.textContent = ''; }, OVER_MS);
+}
+/** Confetti (win) or rain (lose) on one side: plain divs, moved by transform only, gone with the callout. */
+const CONFETTI = ['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#c77dff', '#ffffff'];
+function fillFx(fx, result) {
+  fx.textContent = '';
+  if (reduceMotion() || getComputedStyle(fx.parentElement).display === 'none') return;
+  const fall = fx.offsetHeight + 40;
+  const win = result === 'win';
+  const bits = [];
+  for (let i = 0; i < (win ? 46 : 70); i++) {
+    const r = Math.random, d = document.createElement('i');
+    d.className = win ? 'confetti' : 'drop';
+    const s = d.style;
+    s.left = `${(r() * 104 - 2).toFixed(1)}%`;
+    s.setProperty('--fall', `${fall}px`);
+    if (win) {
+      s.background = CONFETTI[i % CONFETTI.length];
+      s.setProperty('--dx', `${Math.round(r() * 80 - 40)}px`);
+      s.setProperty('--rot', `${Math.round(r() * 900 - 450)}deg`);
+      s.animationDuration = `${(2.4 + r() * 1.4).toFixed(2)}s`;
+      s.animationDelay = `${(r() * 1.3).toFixed(2)}s`;
+      if (i % 3 === 0) { s.width = '7px'; s.height = '7px'; s.borderRadius = '50%'; }
+    } else {
+      s.animationDuration = `${(0.6 + r() * 0.45).toFixed(2)}s`;
+      s.animationDelay = `${(r() * 1.2).toFixed(2)}s`;
+      s.opacity = (0.35 + r() * 0.4).toFixed(2);
+    }
+    bits.push(d);
+  }
+  fx.append(...bits);
 }
 
 // two players: how long the current turn has been going, on the turn button

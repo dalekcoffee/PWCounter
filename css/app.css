@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.8"; }
+:root { --pwc-v: "0.3.9"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -623,10 +623,21 @@ svg { display: block; }
 .bg-side b { font: 600 clamp(64px, 17vmin, 150px)/1 var(--font-head); color: var(--gold); letter-spacing: .02em; text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 60px rgba(227, 200, 147, .35); }
 .bg-side span { font: 700 clamp(22px, 6vmin, 44px)/1.15 var(--font-ui); color: var(--text); text-shadow: 0 2px 18px rgba(3, 6, 18, .95), 0 0 2px rgba(3, 6, 18, .9); }
 .bg-side[data-first='yes'] span { color: var(--gold); }
-.begin.go .bg-side > * { animation: beginIn 4s cubic-bezier(.2, .8, .2, 1) forwards; }
+.begin.go .bg-side > :not(.fx) { animation: beginIn 4s cubic-bezier(.2, .8, .2, 1) forwards; }
 /* game over: the same callout, 5 s; the winner's line in green, the loser's in red */
+.over .bg-side { position: relative; overflow: hidden; }
+.over .bg-side > :not(.fx) { position: relative; z-index: 1; }
+.fx { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: 0; }
+.over.go .fx { animation: fxShow 5s linear forwards; }
+@keyframes fxShow { 0% { opacity: 0; } 6% { opacity: 1; } 84% { opacity: 1; } 100% { opacity: 0; } }
+.fx i { position: absolute; top: -24px; display: block; will-change: transform; }
+.fx .confetti { width: 8px; height: 13px; border-radius: 2px; animation: confetti linear both; }
+@keyframes confetti { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(var(--dx), var(--fall), 0) rotate(var(--rot)); } }
+.fx .drop { width: 2px; height: 22px; border-radius: 1px; background: linear-gradient(180deg, rgba(160, 190, 255, 0), rgba(170, 200, 255, .95)); animation: rain linear infinite both; }
+@keyframes rain { from { transform: translate3d(0, 0, 0) rotate(12deg); } to { transform: translate3d(calc(var(--fall) * -.2), var(--fall), 0) rotate(12deg); } }
+.over .bg-side[data-result='lose'] .fx { background: linear-gradient(180deg, rgba(20, 30, 60, .35), rgba(20, 30, 60, .1)); }
 .over.go::before { animation-duration: 5s; }
-.over.go .bg-side > * { animation-duration: 5s; }
+.over.go .bg-side > :not(.fx) { animation-duration: 5s; }
 .over .bg-side b { font-size: clamp(50px, 14vmin, 130px); color: var(--text); text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 50px rgba(255, 255, 255, .2); }
 .over .bg-side[data-result='win'] span { color: #5be37d; }
 .over .bg-side[data-result='lose'] span { color: #ff6b6b; }

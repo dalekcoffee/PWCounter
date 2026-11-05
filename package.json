@@ -1,6 +1,6 @@
 {
   "name": "pwcounter",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "private": true,
   "type": "module",
   "description": "Life, Material and Ingredient counter for the Palworld card game (PWA, no build step).",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.13
+- Who goes first: the roll or flip now uses the big throw, the same 3D die (one die) or coin as the dice button. The result shows for a moment, then the who-goes-first screen comes back for the winner to choose first or second.
+- Who goes first: Roll a die / Flip a coin (and Roll or flip with two players) are a little bigger and stand out a little more.
+
 ## 0.3.12
 - Choosing who goes first now always starts a fresh game: life back to 10, Material and Ingredient to 0, day, turn 1 (and the souls dealt as before). Before, it kept the old counters, so a game could start with a life of 0.
 - A two-player game without souls that was saved mid-game before 0.3.5 (which never recorded who went first) is no longer interrupted with "who goes first?" on opening; it carries on with whoever's turn it was.

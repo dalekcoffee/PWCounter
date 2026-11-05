@@ -444,14 +444,10 @@ function f2Throw() {
   };
   f2.step = 'throw';
   paintF2();
-  if (reduceMotion()) { land(); return; }
-  let t = 0, gap = 50;
-  const flick = () => {
-    if (kind === 'die') paintFace(die, rollDie(6)); else setText(coinEl, flipCoin() === 'heads' ? 'Heads' : 'Tails');
-    t += gap; gap = Math.min(180, gap * 1.2);
-    f2.timer = setTimeout(t < 1000 ? flick : land, gap);
-  };
-  flick();
+  // the same big throw as the dice button (3D die / coin), one die; then back here, where the winner chooses
+  const winner = winnerOf(f2.calls, outcomeOf(kind, value));
+  const words = state.players === 1 ? soloResultLine(kind, value, winner) : resultLine(kind, value, winner);
+  throwForFirst(kind, value, words, () => { land(); openOverlay('ov-first2'); });
 }
 f2Ov.addEventListener('click', (e) => {
   const pick = e.target.closest('[data-pick]');
@@ -507,6 +503,7 @@ function closeOverlay(quiet) {
   if (openId === 'ov-sync' && quiet !== 'force' && quiet !== true) return; // the counters must be agreed on (or the room left)
   if (openId === 'ov-first2') clearTimeout(f2.timer);
   if (openId === 'ov-throw' && quiet !== true && Date.now() < throwUntil) return; // two players: not before both have seen it
+  if (openId === 'ov-throw' && quiet !== true && firstThrowDone) return; // who goes first: it goes back by itself
   $(`#${openId}`).hidden = true;
   stage.classList.remove('ov-open');
   if (openId === 'ov-room') roomUi.closed();
@@ -602,6 +599,26 @@ function lockThrow(ms) { // Infinity while rolling
     rows.forEach((x) => x.classList.remove('cool'));
   }, ms);
 }
+// Who goes first borrows the big throw: one die (or the coin) with a value already decided, no Done / Roll again;
+// the result stays FIRST_SHOW_MS, then `firstThrowDone` takes the game back to the who-goes-first screen.
+const FIRST_SHOW_MS = 1800;
+let firstThrowDone = null;
+function throwForFirst(k, value, words, after) {
+  kind = k;
+  const ov = $('#ov-throw');
+  ov.dataset.kind = k;
+  ov.dataset.first = 'on';
+  ov.setAttribute('data-sticky', '');
+  openOverlay('ov-throw'); // replaces the who-goes-first screen while it rolls
+  firstThrowDone = () => setTimeout(() => {
+    firstThrowDone = null;
+    delete ov.dataset.first;
+    ov.removeAttribute('data-sticky');
+    closeOverlay(true);
+    after();
+  }, FIRST_SHOW_MS);
+  if (k === 'die') rollNow(value, words); else flipNow(value, words);
+}
 function play(scene, ms, start, words, land) {
   if (busy) return; // taps during a roll are ignored
   busy = true;
@@ -613,6 +630,7 @@ function play(scene, ms, start, words, land) {
     busy = false;
     lockThrow(THROW_COOL_MS);
     $('#ov-throw').classList.remove('going');
+    firstThrowDone?.();
   };
   if (reduceMotion()) { start(0); land?.(); done(); return; }
   void scene.offsetWidth;
@@ -633,9 +651,10 @@ function dice3d() {
   }
   return dice3;
 }
-function rollNow() {
+function rollNow(forced, forcedWords) {
   if (busy) return;
-  const n1 = rollDie(6), n2 = rollDie(6); // decided here; the dice only show them
+  // decided here; the dice only show them (who goes first passes its one die in, and the second die is hidden)
+  const n1 = Number.isInteger(forced) ? forced : rollDie(6), n2 = Number.isInteger(forced) ? forced : rollDie(6);
   const a = $('#d2a'), b2 = $('#d2b');
   const label = (el, n) => { el.textContent = n ? String(n) : '\u00a0'; el.classList.toggle('show', !!n); };
   label($('#d2a-n'), 0); label($('#d2b-n'), 0);
@@ -655,12 +674,12 @@ function rollNow() {
     };
     flick();
     setTimeout(finish, ms - 40);
-  }, `Total ${n1 + n2}`, finish);
+  }, forcedWords || `Total ${n1 + n2}`, finish);
 }
-function flipNow() {
-  const c = flipCoin();
+function flipNow(forced, forcedWords) {
+  const c = forced === 'heads' || forced === 'tails' ? forced : flipCoin();
   coinAt = coinTarget(coinAt, c, 6);
-  play($('#coin-scene'), 1500, (ms) => setCoin(coinAt, ms), c === 'heads' ? 'Heads' : 'Tails');
+  play($('#coin-scene'), 1500, (ms) => setCoin(coinAt, ms), forcedWords || (c === 'heads' ? 'Heads' : 'Tails'));
 }
 function throwBig(k) {
   kind = k;
@@ -674,7 +693,7 @@ $('#btn-roll').addEventListener('click', () => throwBig('die'));
 $('#btn-coin').addEventListener('click', () => throwBig('coin'));
 for (const b of [$('#btn-again'), $('#tm-again')]) b.addEventListener('click', () => { if (Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 // a tap on the big die / coin throws again too
-$('.throw-stage').addEventListener('click', () => { if (!busy && Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
+$('.throw-stage').addEventListener('click', () => { if (!busy && !firstThrowDone && Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 
 // ---------- settings ----------
 $('#app-ver').textContent = `Version ${APP_VERSION}`;

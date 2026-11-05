@@ -583,6 +583,17 @@ svg { display: block; }
   100% { transform: translate(0, 0) rotate(-90deg) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .throw.going .d2-spin { animation: none; } }
+/* the 3D dice (js/die3d.js): one bevelled block each; the canvas is bigger than the die so the corners fit while it turns */
+.d3 { display: none; }
+.dice-pair .d2-spin { --d: min(30vmin, 180px); }
+.dice-pair.gl { gap: min(16vmin, 96px); }
+.dice-pair.gl .d2 { display: none; }
+.dice-pair.gl .d3 { display: block; width: calc(var(--d) * 1.75); height: calc(var(--d) * 1.75); margin: calc(var(--d) * -.375); filter: drop-shadow(0 calc(var(--d) * .07) calc(var(--d) * .08) rgba(0, 0, 0, .5)); }
+.throw.going .dice-pair.gl .d2-spin.a { animation: hopA 1.15s cubic-bezier(.25, .65, .3, 1); }
+.throw.going .dice-pair.gl .d2-spin.b { animation: hopB 1.15s cubic-bezier(.25, .65, .3, 1); }
+@keyframes hopA { 0% { transform: translate(-55%, 45%) scale(.6); } 38% { transform: translate(-6%, -34%) scale(1.06); } 64% { transform: translate(2%, 3%) scale(.98); } 80% { transform: translate(0, -7%) scale(1.01); } 100% { transform: none; } }
+@keyframes hopB { 0% { transform: translate(55%, 45%) scale(.6); } 38% { transform: translate(6%, -28%) scale(1.06); } 64% { transform: translate(-2%, 3%) scale(.98); } 80% { transform: translate(0, -5%) scale(1.01); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .throw.going .dice-pair.gl .d2-spin { animation: none; } }
 
 /* the coin: two faces and a gold edge between them */
 .coin-f, .coin-edge { position: absolute; inset: 0; border-radius: 50%; }

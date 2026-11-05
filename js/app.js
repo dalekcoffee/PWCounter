@@ -7,6 +7,7 @@ import {
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
+import { createDice } from './die3d.js';
 import { initRoom } from './room-ui.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 
@@ -397,16 +398,31 @@ function play(scene, ms, start, words, land) {
   start(ms);
   setTimeout(done, ms + 40);
 }
+// The 3D dice (one bevelled block each, WebGL); made on the first roll, when the canvases have a size.
+// Without WebGL (or if the context is lost) the flat 2D dice are used.
+let dice3 = null, tried3 = false;
+function dice3d() {
+  if (dice3 && !dice3.ok) { dice3 = null; $('#dice-pair').classList.remove('gl'); }
+  if (!dice3 && !tried3) {
+    tried3 = true;
+    $('#dice-pair').classList.add('gl');
+    dice3 = createDice([$('#d3a'), $('#d3b')]);
+    if (!dice3) $('#dice-pair').classList.remove('gl');
+  }
+  return dice3;
+}
 function rollNow() {
   if (busy) return;
   const n1 = rollDie(6), n2 = rollDie(6); // decided here; the dice only show them
   const a = $('#d2a'), b2 = $('#d2b');
   const label = (el, n) => { el.textContent = n ? String(n) : '\u00a0'; el.classList.toggle('show', !!n); };
   label($('#d2a-n'), 0); label($('#d2b-n'), 0);
-  const finish = () => { paintFace(a, n1); paintFace(b2, n2); label($('#d2a-n'), n1); label($('#d2b-n'), n2); };
-  // while they tumble the faces flicker, slowing down, then land on the rolled numbers
+  const d3 = dice3d();
+  const finish = () => { paintFace(a, n1); paintFace(b2, n2); if (d3 && reduceMotion()) d3.show(n1, n2); label($('#d2a-n'), n1); label($('#d2b-n'), n2); };
   play($('#dice-pair'), 1150, (ms) => {
     if (!ms) return;
+    if (d3) { d3.roll(n1, n2, ms - 40); setTimeout(finish, ms - 40); return; }
+    // flat dice: the faces flicker, slowing down, then land on the rolled numbers
     let t = 0, gap = 45;
     const flick = () => {
       if (t + gap >= ms - 60) return;

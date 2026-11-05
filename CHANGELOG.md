@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.2
+- Real 3D dice: each die is one bevelled block (rounded edges and corners, one continuous surface, no seams between faces) with pips set into the surface, drawn with WebGL. They tumble in 3D and land on the rolled numbers, slightly tipped so they read as solid. Without WebGL the flat dice are used.
+
 ## 0.2.1
 - Dice: two dice roll side by side, each number under its die and the total below. They tumble seen from above (no 3D cube, so nothing clips mid-roll).
 - Ingredient icon redrawn to the card game's fruit shape; the log's rings and grain lines are dark brown.

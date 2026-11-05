@@ -353,13 +353,29 @@ svg { display: block; }
 /* the turn button never grows into the buttons beside it: its words shrink instead */
 .endturn { max-width: 100%; min-width: 0; overflow: hidden; }
 .et-word, .et-turn { max-width: 100%; white-space: nowrap; }
-.bar > .endturn { justify-self: center; }
+/* the turn button fills the middle column (up to 240 px) and its words scale to that width, so they always fit, centred */
+.bar > .endturn { justify-self: center; width: 100%; max-width: 240px; container-type: inline-size; padding-left: 8px; padding-right: 8px; }
+.et-word { font-size: clamp(13px, 15cqi, 17px) !important; }
+.et-turn { font-size: clamp(9px, 9cqi, 11px) !important; letter-spacing: .02em !important; }
+.endturn.long .et-word, .endturn.long .et-turn { letter-spacing: 0 !important; }
+/* very narrow phones (320 px): smaller round buttons, and the turn button drops its second line when it can't fit */
+@container stage (max-width: 340px) {
+  .ibtn { width: 36px; height: 36px; }
+  .daynight { width: 40px; height: 40px; }
+  .bar, .bar-side { gap: 4px; }
+}
+@container (max-width: 104px) { .et-turn { display: none; } .et-word { font-size: 12px !important; } }
+@container stage (max-width: 340px) { .bar > .endturn { padding-left: 4px; padding-right: 4px; } }
 .stage[data-land='left'] .endturn, .stage[data-land='right'] .endturn { min-width: 168px; min-height: 60px; padding: 10px 26px; }
 .stage[data-land='left'] .et-word, .stage[data-land='right'] .et-word { font-size: 18px; }
 /* a rested card is turned sideways: in the landscape row it must fit its slot's width (card width is 63/88 of its height) */
 .stage[data-land='left'] .sc-card[data-state='rest'], .stage[data-land='right'] .sc-card[data-state='rest'] { transform: rotate(90deg) scale(.66); }
 .et-word { font: 700 17px/1.1 var(--font-ui); }
 .et-turn { font: 600 11px/1 var(--font-mono); letter-spacing: .08em; color: var(--text-2); white-space: nowrap; }
+@container stage (max-width: 460px) {
+  .dn-word { display: none; }
+  .daynight { padding: 0; width: 44px; justify-content: center; }
+}
 @container stage (max-width: 400px) {
   .dn-word { display: none; }
   .daynight { padding: 0; width: 44px; justify-content: center; }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.10
+- The turn button fills the middle of the bar and its words scale to fit, so "Start game / Who goes first?" is always centred and never touches the edge. The word "Day" on the day/night button shows only on wide screens.
+
 ## 0.1.9
 - Dice and coin: the sheet closes and the die or coin is thrown big across the screen, with the result in large type, Roll / Flip again and Done.
 - The die has rounded corners with a solid body, so no square corners or gaps show while it tumbles; the coin has a gold edge.

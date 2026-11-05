@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.2
+- Life goes up to 99,999 (the rules set no upper limit); long numbers shrink to stay between the buttons.
+- Settings: a Q&A after the credits (souls as numbers, rule 13.2, with a link to the rules).
+- README: link to the live site; build and deploy notes removed.
+
 ## 0.0.1
 First test release.
 - Life (starts at 10), Material and Ingredient (start at 0) for one or two players. The whole left half of a tile takes one off, the whole right half adds one (hold to repeat); a dashed line marks the middle. Counters never go below 0.

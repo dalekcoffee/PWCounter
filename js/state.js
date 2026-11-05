@@ -9,7 +9,7 @@
 //   10.4.3   paying souls = turning standing souls to rested
 
 export const START_LIFE = 10;
-export const LIMITS = { life: [0, 999], mat: [0, 99], ing: [0, 99] };
+export const LIMITS = { life: [0, 99999], mat: [0, 99], ing: [0, 99] }; // rule 3.2.1.1: life has no upper limit
 export const COUNTERS = Object.keys(LIMITS);
 export const LANDSCAPE = ['off', 'left', 'right'];
 export const SOUL_VIEWS = ['number', 'cards'];

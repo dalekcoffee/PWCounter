@@ -19,6 +19,7 @@ test('step changes one counter and clamps at its limits', () => {
   assert.equal(s.seats[1].life, 10);
   const same = step(s, 0, 'mat', -1);
   assert.equal(same, s, 'no change returns the same object');
+  assert.equal(step(defaultState(), 0, 'life', 200000).seats[0].life, 99999);
   s = step(s, 1, 'ing', 200);
   assert.equal(s.seats[1].ing, 99);
   s = step(s, 0, 'life', -50);

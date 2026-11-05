@@ -143,7 +143,11 @@ function render(prev) {
     const i = Number(seatEl.dataset.seat);
     const seat = s.seats[i];
     seatEl.classList.toggle('active', s.players === 2 && s.active === i);
-    for (const key of COUNTERS) $(`.t-${key} .num`, seatEl).textContent = String(seat[key]);
+    for (const key of COUNTERS) {
+      const n = $(`.t-${key} .num`, seatEl);
+      n.textContent = String(seat[key]);
+      n.dataset.len = String(Math.max(2, String(seat[key]).length));
+    }
     const st = $('.t-soul', seatEl);
     st.hidden = !s.souls;
     $('.num', st).textContent = String(seat.up);

@@ -199,6 +199,15 @@ svg { display: block; }
 .t-soul .core { grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.3fr); }
 .t-soul .num { font-size: min(34cqh, 40cqw); }
 .t-life .num { font-size: min(44cqh, 40cqw); }
+/* long numbers (life can reach 99999) get smaller so they stay between the buttons */
+.stage .tile .num[data-len='3'] { font-size: min(40cqh, 30cqw); }
+.stage .tile .num[data-len='4'] { font-size: min(36cqh, 23cqw); }
+.stage .tile .num[data-len='5'] { font-size: min(32cqh, 19cqw); }
+.qa { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--text-2); }
+.qa h4 { margin: 0 0 6px; font: 700 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.qa dt { color: var(--text); font-weight: 600; margin-top: 8px; }
+.qa dd { margin: 4px 0 0; }
+.qa a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid rgba(163, 207, 216, .4); }
 .delta {
   position: absolute; bottom: 8px; left: 50%; translate: -50% 0; z-index: 3;
   padding: 3px 9px; border-radius: 999px; font: 700 13px/1.2 var(--font-mono);

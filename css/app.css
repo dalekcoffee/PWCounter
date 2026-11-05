@@ -332,6 +332,19 @@ svg { display: block; }
   min-height: 46px; padding: 0 18px; border-radius: var(--radius-sm); border: 1px solid var(--border);
   background: rgba(255, 255, 255, .05); font-weight: 600;
 }
+.btn.primary { background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.txt {
+  flex: 0 1 200px; min-width: 0; min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: rgba(7, 11, 23, .6); color: var(--text); font: 500 15px/1 var(--font-ui); -webkit-user-select: text; user-select: text;
+}
+.txt::placeholder { color: var(--text-3); }
+/* the player's name, faint, behind the life number */
+.whose {
+  position: absolute; z-index: 2; left: 50%; bottom: 8px; translate: -50% 0; max-width: calc(100% - 140px);
+  font: 700 clamp(11px, 9cqh, 22px)/1.1 var(--font-ui); letter-spacing: .02em; color: color-mix(in srgb, var(--text) 30%, transparent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; text-align: center;
+}
+.whose.unset { font-weight: 600; font-size: clamp(10px, 7cqh, 14px); }
 .btn.danger { background: rgba(216, 162, 171, .14); border-color: rgba(216, 162, 171, .5); color: #f3d5da; }
 
 /* calculator */

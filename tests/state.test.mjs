@@ -2,13 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSetting, START_LIFE } from '../js/state.js';
 
-test('a new game: 10 life, no resources, day, turn 1, two players', () => {
+test('a new game: 10 life, no resources, day, turn 1, one player', () => {
   const s = defaultState();
   assert.equal(START_LIFE, 10);
   assert.deepEqual(s.seats, [{ life: 10, mat: 0, ing: 0, soul: 0, up: 0 }, { life: 10, mat: 0, ing: 0, soul: 0, up: 0 }]);
   assert.equal(s.night, false);
   assert.equal(s.turn, 1);
-  assert.equal(s.players, 2);
+  assert.equal(s.players, 1);
+  assert.equal(s.rooms, false);
   assert.equal(s.landscape, 'off');
 });
 
@@ -36,7 +37,7 @@ test('step never mutates its input', () => {
 });
 
 test('end turn: two players pass play, a full round counts one turn', () => {
-  let s = defaultState();
+  let s = setSetting(defaultState(), 'players', 2);
   s = endTurn(s);
   assert.deepEqual([s.active, s.turn], [1, 1]);
   s = endTurn(s);
@@ -66,7 +67,7 @@ test('cleanState repairs anything read from storage', () => {
   assert.equal(s.night, false);
   assert.equal(s.turn, 1);
   assert.equal(s.active, 0);
-  assert.equal(s.players, 2);
+  assert.equal(s.players, 1);
   assert.equal(s.landscape, 'off');
   assert.equal(s.flip, false);
   assert.equal(s.iconsOnly, false);
@@ -74,7 +75,7 @@ test('cleanState repairs anything read from storage', () => {
 });
 
 test('going to one player makes seat 0 active', () => {
-  const s = setSetting(endTurn(defaultState()), 'players', 1);
+  const s = setSetting(endTurn(setSetting(defaultState(), 'players', 2)), 'players', 1);
   assert.equal(s.players, 1);
   assert.equal(s.active, 0);
 });
@@ -93,4 +94,25 @@ test('name: cleaned, trimmed, capped, kept by a reset', () => {
   assert.equal(cleanState({ ...defaultState(), name: '  Pal  Fan ' }).name, 'Pal Fan');
   assert.equal(setSetting(defaultState(), 'name', ' Me ').name, 'Me');
   assert.equal(resetGame({ ...defaultState(), name: 'Keep' }).name, 'Keep');
+});
+
+import { needsResume, isFreshGame, RESUME_AFTER_MS } from '../js/state.js';
+
+test('resume prompt: only after 48 hours, only for a game in progress', () => {
+  const now = 1_800_000_000_000;
+  const played = { ...step(defaultState(), 0, 'life', -2) };
+  assert.equal(needsResume({ ...played, savedAt: now - 47 * 3600e3 }, now), false);
+  assert.equal(needsResume({ ...played, savedAt: now - 49 * 3600e3 }, now), true);
+  assert.equal(needsResume({ ...defaultState(), savedAt: now - 49 * 3600e3 }, now), false, 'a fresh game is just loaded');
+  assert.equal(needsResume({ ...played, savedAt: 0 }, now), false);
+  assert.equal(RESUME_AFTER_MS, 48 * 3600e3);
+  assert.equal(isFreshGame(toggleNight(defaultState())), false);
+});
+
+test('rooms are off by default and cleaned; savedAt is cleaned', () => {
+  assert.equal(cleanState({ v: 1, rooms: 'yes' }).rooms, false);
+  assert.equal(cleanState({ v: 1, rooms: true }).rooms, true);
+  assert.equal(cleanState({ v: 1, savedAt: -5 }).savedAt, 0);
+  assert.equal(cleanState({ v: 1, savedAt: 1234.7 }).savedAt, 1234);
+  assert.equal(resetGame(setSetting(defaultState(), 'rooms', true)).rooms, true, 'a reset keeps settings');
 });

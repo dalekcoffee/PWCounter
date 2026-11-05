@@ -40,6 +40,9 @@
           <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
           <span class="dn-word">Day</span>
         </button>
+        <button class="ibtn" id="btn-room" type="button" aria-label="Play with a friend" title="Play with a friend" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="9" r="3"/><circle cx="16.5" cy="9" r="3"/><path d="M3.5 19c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M13 15.2c1-.5 2.2-.7 3.5-.7 2.4 0 4.4 1.5 5 4.5"/></svg>
+        </button>
       </div>
       <button class="endturn" id="btn-end" type="button">
         <span class="et-word">End Turn</span>
@@ -120,6 +123,10 @@
           <button class="xbtn" type="button" data-close aria-label="Close">×</button>
         </header>
         <div class="set-row">
+          <label class="set-label" for="set-name">Your name<small>Shown behind your life number</small></label>
+          <input class="txt" id="set-name" type="text" maxlength="24" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="Username">
+        </div>
+        <div class="set-row">
           <span class="set-label">Players</span>
           <div class="seg" data-setting="players">
             <button type="button" data-v="1">One</button><button type="button" data-v="2">Two</button>
@@ -147,6 +154,10 @@
         <div class="set-row">
           <span class="set-label">Icons only<small>Hides the words Life, Material and Ingredient and makes the icons bigger.</small></span>
           <label class="switch"><input type="checkbox" id="set-icons"><span></span></label>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Play with a friend (online)<small>Not ready yet: still being tested. Needs both phones online.</small></span>
+          <label class="switch"><input type="checkbox" id="set-rooms"><span></span></label>
         </div>
         <div class="set-row" id="row-soulview">
           <span class="set-label">Show souls as<small>Cards are for one player; two players always see numbers.</small></span>
@@ -185,6 +196,25 @@
         </div>
         <p class="first-out" id="first-out" aria-live="polite">&nbsp;</p>
         <button type="button" class="btn link" data-close>Not now</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-resume" hidden>
+      <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="resume-title" aria-describedby="resume-when">
+        <h2 id="resume-title">Continue your game?</h2>
+        <p id="resume-when">&nbsp;</p>
+        <div class="cf-btns">
+          <button type="button" class="btn" id="btn-new">New game</button>
+          <button type="button" class="btn primary" id="btn-resume">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-room" hidden>
+      <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="room-title">
+        <h2 id="room-title">Play with a friend</h2>
+        <p>Joining a friend's phone with a code is still being built. It will need both phones online and a small room server that isn't set up yet.</p>
+        <button type="button" class="btn" data-close>OK</button>
       </div>
     </div>
 

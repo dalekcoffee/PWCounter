@@ -2,7 +2,7 @@
 import { APP_VERSION } from './version.js';
 import {
   defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSetting, COUNTERS,
-  SOUL_MAX, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul,
+  SOUL_MAX, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul, needsResume, cleanName,
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
@@ -17,7 +17,7 @@ function load() {
   try { return cleanState(JSON.parse(localStorage.getItem(KEY))); } catch { return defaultState(); }
 }
 function save(s) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* private mode / full: the game still works this visit */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ ...s, savedAt: Date.now() })); } catch { /* private mode / full: the game still works this visit */ }
 }
 
 let state = load();
@@ -52,7 +52,7 @@ function tile(key) {
       <span class="num" aria-live="polite">0</span>
     </div>
     <span class="pm plus" aria-hidden="true">+</span>
-    <span class="delta" aria-hidden="true"></span>`;
+    <span class="delta" aria-hidden="true"></span>${key === 'life' ? '<span class="whose" aria-hidden="true"></span>' : ''}`;
   if (key === 'soul') {
     $('.hit.minus', el).setAttribute('aria-label', 'Rest a soul (pay)');
     $('.hit.plus', el).setAttribute('aria-label', 'Stand a soul again');
@@ -137,6 +137,7 @@ function render(prev) {
   stage.dataset.flip = s.players === 2 && s.flip ? 'on' : 'off';
   stage.dataset.souls = s.souls ? 'on' : 'off';
   stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
+  $('#btn-room').hidden = !s.rooms || s.players === 2; // online play replaces the shared-phone view, so it is offered from one player
   stage.dataset.soulview = s.souls && s.players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
   $('[data-seat="1"]').hidden = s.players === 1;
   for (const seatEl of $$('.seat')) {
@@ -148,6 +149,9 @@ function render(prev) {
       n.textContent = String(seat[key]);
       n.dataset.len = String(Math.max(2, String(seat[key]).length));
     }
+    const whose = $('.whose', seatEl);
+    whose.textContent = i === 1 ? 'Opponent' : (s.name || 'Username not set · ⚙ Settings');
+    whose.classList.toggle('unset', i === 0 && !s.name);
     const st = $('.t-soul', seatEl);
     st.hidden = !s.souls;
     $('.num', st).textContent = String(seat.up);
@@ -333,6 +337,8 @@ function paintSettings() {
   $('#set-awake').checked = state.awake;
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
+  $('#set-rooms').checked = state.rooms;
+  if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
   $('#row-flip').hidden = state.players === 1;
   $('#row-soulview').hidden = !state.souls;
   $('#soulview-note').hidden = !(state.souls && state.players === 2 && state.soulView === 'cards');
@@ -350,6 +356,10 @@ for (const seg of $$('.seg')) {
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
+$('#set-rooms').addEventListener('change', (e) => commit(setSetting(state, 'rooms', e.target.checked)));
+$('#set-name').addEventListener('input', (e) => commit(setSetting(state, 'name', e.target.value)));
+$('#set-name').addEventListener('change', (e) => { e.target.value = cleanName(e.target.value); });
+$('#btn-room').addEventListener('click', () => openOverlay('ov-room'));
 $('#set-souls').addEventListener('change', (e) => {
   const next = setSetting(state, 'souls', e.target.checked);
   if (needsFirst(next)) askFirst = true;
@@ -394,4 +404,16 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 
 render(null);
-maybeAskFirst();
+if (needsResume(state, Date.now())) {
+  const days = Math.floor((Date.now() - state.savedAt) / 86400000);
+  $('#resume-when').textContent = `Last played ${days >= 2 ? `${days} days` : '2 days'} ago.`;
+  openOverlay('ov-resume');
+} else {
+  maybeAskFirst();
+}
+$('#btn-resume').addEventListener('click', () => { commit({ ...state }); save(state); closeOverlay(); });
+$('#btn-new').addEventListener('click', () => {
+  commit(resetGame(state));
+  askFirst = needsFirst(state);
+  closeOverlay();
+});

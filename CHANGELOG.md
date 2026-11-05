@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.3
+- Opens in one-player mode on a first visit.
+- Only one game is ever saved. Opening the app more than 48 hours after it was last played asks: Continue, or New game.
+- Your name (Settings) shows faintly behind your life number; the top player shows "Opponent".
+- Experimental, off by default: "Play with a friend (online)". Not ready yet; turning it on shows the button, which says it is still being built.
+
 ## 0.0.2
 - Life goes up to 99,999 (the rules set no upper limit); long numbers shrink to stay between the buttons.
 - Settings: a Q&A after the credits (souls as numbers, rule 13.2, with a link to the rules).

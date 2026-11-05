@@ -30,7 +30,7 @@ export function defaultState() {
     active: 0,
     first: null, // souls only: who went first (seat 0 | 1, one player: 0 = I went first, 1 = I went second); null = not chosen yet
     // settings (kept by a reset)
-    players: 2,
+    players: 1, // a first visit opens in one-player mode
     landscape: 'off',
     flip: true,
     awake: true,
@@ -38,6 +38,8 @@ export function defaultState() {
     soulView: 'number', // experimental, one player only: 'number' | 'cards'
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
+    rooms: false, // experimental, off by default: play with a friend online (not ready)
+    savedAt: 0, // when this (the one saved) game was last saved, ms
   };
 }
 
@@ -72,7 +74,7 @@ export function cleanState(raw) {
     turn: int(raw.turn, 0, 9999, 1),
     active: raw.active === 1 ? 1 : 0,
     first: raw.first === 0 || raw.first === 1 ? raw.first : null,
-    players: raw.players === 1 ? 1 : 2,
+    players: raw.players === 2 ? 2 : 1,
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
     flip: raw.flip !== false,
     awake: raw.awake !== false,
@@ -80,6 +82,8 @@ export function cleanState(raw) {
     soulView: SOUL_VIEWS.includes(raw.soulView) ? raw.soulView : 'number',
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
+    rooms: raw.rooms === true,
+    savedAt: Number.isFinite(raw.savedAt) && raw.savedAt > 0 ? Math.floor(raw.savedAt) : 0,
   };
 }
 
@@ -166,6 +170,19 @@ export function toggleSoul(state, seat, i) {
 }
 
 export const toggleNight = (state) => ({ ...state, night: !state.night });
+
+export const RESUME_AFTER_MS = 48 * 60 * 60 * 1000;
+
+/** Is the game still at its starting values? (nothing to resume) */
+export function isFreshGame(state) {
+  const fresh = (s) => s.life === START_LIFE && s.mat === 0 && s.ing === 0 && s.soul === 0 && s.up === 0;
+  return state.seats.every(fresh) && !state.night && state.turn <= 1 && state.first === null;
+}
+
+/** Opening the app: ask "continue or new game?" when the one saved game was last played over 48 hours ago. */
+export function needsResume(state, now) {
+  return state.savedAt > 0 && now - state.savedAt > RESUME_AFTER_MS && !isFreshGame(state);
+}
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {

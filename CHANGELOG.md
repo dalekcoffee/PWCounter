@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.18
+- Who goes first, two players: "Roll or flip" is split into Roll (left of Not now) and Flip (right of Not now), so one tap goes straight to making a call. Roll, Flip and Not now are about 10% bigger.
+
 ## 0.3.17
 - Who goes first: whoever wins the roll or flip can Pass, giving the choice of going first or second to the other player (once; it cannot be passed back). One player: "Pass: let them choose", or "They pass: I choose" when your opponent won and passed.
 - Who goes first, two players: while one player chooses, the other side shows a card saying "Player 1 is choosing…" / "Player 2 is choosing…" instead of the High / Low buttons.

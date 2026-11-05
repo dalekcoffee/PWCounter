@@ -463,7 +463,6 @@ function f2Throw() {
 f2Ov.addEventListener('click', (e) => {
   const pick = e.target.closest('[data-pick]');
   if (pick && f2.step !== 'throw' && f2.step !== 'result') { startGame(Number(pick.dataset.pick)); return; }
-  if (e.target.closest('#f2-roll')) { f2.step = 'method'; paintF2(); return; }
   const m = e.target.closest('[data-method]');
   if (m) { f2.kind = m.dataset.method; f2.calls = null; f2.step = 'call'; paintF2(); return; }
   if (e.target.closest('[data-back]')) { f2Reset(); return; }

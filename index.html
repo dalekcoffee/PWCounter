@@ -139,6 +139,18 @@
           <span class="set-label">Keep screen on<small>While the counter is open</small></span>
           <label class="switch"><input type="checkbox" id="set-awake"><span></span></label>
         </div>
+        <h3 class="set-h">Experimental</h3>
+        <div class="set-row">
+          <span class="set-label">Track souls<small>Each turn your souls stand again and you get 2 more, up to 10. Asks who goes first.</small></span>
+          <label class="switch"><input type="checkbox" id="set-souls"><span></span></label>
+        </div>
+        <div class="set-row" id="row-soulview">
+          <span class="set-label">Show souls as<small>Cards are for one player; two players always see numbers.</small></span>
+          <div class="seg" data-setting="soulView">
+            <button type="button" data-v="number">Numbers</button><button type="button" data-v="cards">Cards</button>
+          </div>
+        </div>
+        <p class="set-note" id="soulview-note">Cards show when you switch to one player.</p>
         <button type="button" class="btn danger" id="btn-reset">Reset game</button>
         <p class="set-note">Both players start at 10 life. Material and Ingredient start at 0. Everything stays on this device and works with no signal.</p>
         <footer class="credits">
@@ -147,6 +159,20 @@
           <p>Built with Claude.</p>
           <p class="fine">An unofficial fan tool. Palworld and the Palworld OFFICIAL CARD GAME belong to Pocketpair and Bushiroad.</p>
         </footer>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-first" hidden>
+      <div class="sheet confirm first" role="dialog" aria-modal="true" aria-labelledby="first-title" aria-describedby="first-sub">
+        <h2 id="first-title">Who goes first?</h2>
+        <p id="first-sub">&nbsp;</p>
+        <div class="first-btns">
+          <button type="button" class="btn" id="first-a" data-first="0">&nbsp;</button>
+          <button type="button" class="btn" id="first-b" data-first="1">&nbsp;</button>
+          <button type="button" class="btn ghost" data-first="random">Pick at random</button>
+        </div>
+        <p class="first-out" id="first-out" aria-live="polite">&nbsp;</p>
+        <button type="button" class="btn link" data-close>Not now</button>
       </div>
     </div>
 

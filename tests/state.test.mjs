@@ -5,7 +5,7 @@ import { defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSet
 test('a new game: 10 life, no resources, day, turn 1, two players', () => {
   const s = defaultState();
   assert.equal(START_LIFE, 10);
-  assert.deepEqual(s.seats, [{ life: 10, mat: 0, ing: 0 }, { life: 10, mat: 0, ing: 0 }]);
+  assert.deepEqual(s.seats, [{ life: 10, mat: 0, ing: 0, soul: 0, up: 0 }, { life: 10, mat: 0, ing: 0, soul: 0, up: 0 }]);
   assert.equal(s.night, false);
   assert.equal(s.turn, 1);
   assert.equal(s.players, 2);
@@ -60,8 +60,8 @@ test('day/night is one shared state and a reset brings back day', () => {
 test('cleanState repairs anything read from storage', () => {
   assert.deepEqual(cleanState(null), defaultState());
   assert.deepEqual(cleanState({ v: 2 }), defaultState());
-  const s = cleanState({ v: 1, seats: [{ life: 'x', mat: 3, ing: -1 }], night: 'yes', turn: 0, active: 5, players: 7, landscape: 'up', flip: false, awake: false });
-  assert.deepEqual(s.seats, [{ life: 10, mat: 3, ing: 0 }, { life: 10, mat: 0, ing: 0 }]);
+  const s = cleanState({ v: 1, seats: [{ life: 'x', mat: 3, ing: -1 }], night: 'yes', turn: -1, active: 5, players: 7, landscape: 'up', flip: false, awake: false });
+  assert.deepEqual(s.seats, [{ life: 10, mat: 3, ing: 0, soul: 0, up: 0 }, { life: 10, mat: 0, ing: 0, soul: 0, up: 0 }]);
   assert.equal(s.night, false);
   assert.equal(s.turn, 1);
   assert.equal(s.active, 0);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+- Experimental: track souls (Settings › Experimental). Asks who goes first (or picks at random); the player going second starts with 1 soul; at the start of each turn that player's souls stand again and 2 more come, never above 10 (official Comprehensive Rules 6.1.2.1, 6.2.1.5, 7.2.1, 7.4.2.1). Tap the halves to rest (pay) or stand a soul; "− of N +" changes how many there are.
+- One player with souls: "Start turn" begins each of your turns; souls can be shown as numbers or as cards you tap to rest or stand.
+- Every tile: the number sits level with the − and + buttons, with the icon and word above it; the words Material and Ingredient always show.
+
 ## 1.0.5
 - Settings: credits (inspired by Palify, made by Dalek, built with Claude).
 - Material and Ingredient icons redrawn to match the card game: a brown log and a green fruit with a leaf.

@@ -5,6 +5,8 @@ Static PWA served by GitHub Pages at pwcounter.dalek.coffee. Vanilla ES modules,
 - `js/state.js`, `js/calc.js`, `js/random.js` are pure and tested (`npm test`, node:test). `js/app.js` is the DOM.
 - Style follows PalVault (dark palette, Figtree / Newsreader / JetBrains Mono). Day and night must stay obviously different on the board.
 - Counter tiles: the whole left half is the minus button, the whole right half the plus button, with a visible divider and −/+ chips in ONE uniform colour (never a colour per sign). Counters never go below 0.
+- Souls (experimental, `state.souls`): rules in state.js follow the official Comprehensive Rules (cited in its header); numbers in two-player view, cards allowed for one player only.
+- Tiles: the number sits on the tile's centre line, level with the −/+ buttons; icon and word above it. Never hide the Material / Ingredient words.
 - Overlays are divs inside `#stage` (never a native dialog element, which would not turn with the landscape setting).
 - Every file the app needs must be in `sw.js` SHELL (tested). Version lives in js/version.js, package.json, sw.js VERSION and CHANGELOG.md (tested equal); bump on every change.
 - Original design only: never copy another site's markup, art or branding.

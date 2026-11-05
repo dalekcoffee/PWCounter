@@ -1,0 +1,133 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  defaultState, cleanState, setSetting, chooseFirst, endTurn, beginTurn, restSoul, addSoul, toggleSoul,
+  needsFirst, resetGame, step, SOUL_MAX,
+} from '../js/state.js';
+
+const on = (players = 2) => setSetting(setSetting(defaultState(), 'players', players), 'souls', true);
+const souls = (s) => s.seats.map((x) => [x.soul, x.up]);
+
+test('souls are off by default and need no set-up then', () => {
+  const s = defaultState();
+  assert.equal(s.souls, false);
+  assert.equal(needsFirst(s), false);
+  assert.deepEqual(souls(s), [[0, 0], [0, 0]]);
+});
+
+test('switching souls on asks who goes first', () => {
+  assert.equal(needsFirst(on()), true);
+});
+
+test('two players: first player gets 2 on turn 1, second starts with 1 (rules 6.2.1.5, 7.4.2.1)', () => {
+  const s = chooseFirst(on(), 1); // the top player goes first
+  assert.equal(s.first, 1);
+  assert.equal(s.active, 1);
+  assert.equal(s.turn, 1);
+  assert.deepEqual(souls(s), [[1, 1], [2, 2]]);
+});
+
+test('ending a turn: the next player stands every soul and gains 2', () => {
+  let s = chooseFirst(on(), 0); // bottom first: [2,2] vs [1,1]
+  s = restSoul(s, 0, -2); // bottom pays 2
+  assert.deepEqual(souls(s), [[2, 0], [1, 1]]);
+  s = endTurn(s); // top's turn: 1 + 2 = 3, all standing
+  assert.deepEqual([s.active, s.turn], [1, 1]);
+  assert.deepEqual(souls(s), [[2, 0], [3, 3]]);
+  s = endTurn(s); // bottom again: stands, 2 + 2 = 4; a new round
+  assert.deepEqual([s.active, s.turn], [0, 2]);
+  assert.deepEqual(souls(s), [[4, 4], [3, 3]]);
+});
+
+test('a full round is counted from whoever went first', () => {
+  let s = chooseFirst(on(), 1);
+  s = endTurn(s);
+  assert.deepEqual([s.active, s.turn], [0, 1]);
+  s = endTurn(s);
+  assert.deepEqual([s.active, s.turn], [1, 2]);
+});
+
+test('never more than 10 souls', () => {
+  let s = chooseFirst(on(), 0);
+  for (let i = 0; i < 20; i++) s = endTurn(s);
+  assert.deepEqual(souls(s), [[SOUL_MAX, SOUL_MAX], [SOUL_MAX, SOUL_MAX]]);
+  assert.deepEqual(beginTurn(s, 0).seats[0], s.seats[0]);
+});
+
+test('one player going first: 2 souls now; each "start my turn" stands them and adds 2', () => {
+  let s = chooseFirst(on(1), 0);
+  assert.deepEqual(s.seats[0].soul, 2);
+  assert.equal(s.turn, 1);
+  s = restSoul(s, 0, -1);
+  s = endTurn(s);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up, s.turn], [4, 4, 2]);
+});
+
+test('one player going second: 1 soul now, 3 when the first turn starts', () => {
+  let s = chooseFirst(on(1), 1);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up, s.turn], [1, 1, 0]);
+  s = endTurn(s);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up, s.turn], [3, 3, 1]);
+});
+
+test('paying and standing souls stay within 0..total', () => {
+  let s = chooseFirst(on(), 0);
+  s = restSoul(s, 0, -5);
+  assert.equal(s.seats[0].up, 0);
+  assert.equal(restSoul(s, 0, -1), s);
+  s = restSoul(s, 0, 9);
+  assert.equal(s.seats[0].up, 2);
+});
+
+test('adding souls adds standing ones; removing takes rested ones first; 0..10', () => {
+  let s = chooseFirst(on(), 0); // [2,2]
+  s = restSoul(s, 0, -1); // 2 souls, 1 standing
+  s = addSoul(s, 0, 1);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up], [3, 2]);
+  s = addSoul(s, 0, -1);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up], [2, 2]);
+  s = addSoul(s, 0, 50);
+  assert.equal(s.seats[0].soul, 10);
+  s = addSoul(s, 0, -50);
+  assert.deepEqual([s.seats[0].soul, s.seats[0].up], [0, 0]);
+});
+
+test('cards view: tapping a standing soul rests one, a rested one stands one', () => {
+  let s = chooseFirst(on(1), 0);
+  s = endTurn(s); // 4 standing
+  s = toggleSoul(s, 0, 0);
+  assert.equal(s.seats[0].up, 3);
+  s = toggleSoul(s, 0, 3); // index 3 is now rested
+  assert.equal(s.seats[0].up, 4);
+  assert.equal(toggleSoul(s, 0, 7), s, 'an empty slot does nothing');
+});
+
+test('choosing who goes first keeps life and resources; a reset asks again', () => {
+  let s = step(step(on(), 0, 'life', -3), 1, 'mat', 2);
+  s = chooseFirst(s, 0);
+  assert.equal(s.seats[0].life, 7);
+  assert.equal(s.seats[1].mat, 2);
+  s = resetGame(s);
+  assert.equal(needsFirst(s), true);
+  assert.deepEqual(souls(s), [[0, 0], [0, 0]]);
+});
+
+test('without souls, end turn changes no souls', () => {
+  const s = endTurn(defaultState());
+  assert.deepEqual(souls(s), [[0, 0], [0, 0]]);
+});
+
+test('changing the number of players asks who goes first again', () => {
+  const s = setSetting(chooseFirst(on(), 0), 'players', 1);
+  assert.equal(needsFirst(s), true);
+});
+
+test('cleanState keeps souls within limits', () => {
+  const s = cleanState({ v: 1, seats: [{ soul: 12, up: 3 }, { soul: 4, up: 9 }], souls: true, soulView: 'cards', first: 1, turn: 0 });
+  assert.deepEqual(souls(s), [[0, 0], [4, 0]]);
+  assert.equal(s.souls, true);
+  assert.equal(s.soulView, 'cards');
+  assert.equal(s.first, 1);
+  assert.equal(cleanState({ v: 1, soulView: 'x', first: 3 }).soulView, 'number');
+  assert.equal(cleanState({ v: 1, first: 3 }).first, null);
+});

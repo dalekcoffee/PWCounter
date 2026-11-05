@@ -9,6 +9,7 @@ A life counter for the Palworld card game, built to sit on the table between two
 - **Dice and coin**.
 - **Settings**: one or two players, landscape by setting (the board turns, the phone does not have to), face to face, keep the screen on, and Reset game (asks first).
 - Credits in Settings: inspired by [Palify](https://palify.org/tools/counter), made by [Dalek](https://dalek.coffee), built with Claude.
+- **Souls (experimental)**: turn on in Settings. Asks who goes first; the second player starts with 1 soul; each turn that player's souls stand and 2 more come (max 10), as in the official rules. One player can show them as cards.
 - Saved in this browser only: no login, no server, nothing sent anywhere. Installable (Add to Home Screen) and works offline.
 
 ## Run it locally

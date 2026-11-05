@@ -239,15 +239,14 @@ svg { display: block; }
 /* icon colours (drawn for this app) */
 .i-heart { fill: #ef5a63; stroke: #6e0d1c; stroke-width: 3; stroke-linejoin: round; }
 .i-shine { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: .7; }
-.i-log { fill: #a8692f; stroke: #4e2c10; stroke-width: 3; }
-.i-ring { fill: #e8c48a; stroke: #4e2c10; stroke-width: 3; }
-.i-rings { fill: none; stroke: #b98448; stroke-width: 2; }
-.i-core { fill: #a8692f; }
-.i-grain { stroke: #7a4518; stroke-width: 2.4; stroke-linecap: round; opacity: .7; }
-.i-leaf { fill: #2fb84a; stroke: #0f4d1f; stroke-width: 2.6; stroke-linejoin: round; }
-.i-stem { fill: none; stroke: #5b3a1a; stroke-width: 3; stroke-linecap: round; }
-.i-fruit { fill: #22a83e; stroke: #0f4d1f; stroke-width: 3; stroke-linejoin: round; }
-.i-shine2 { fill: #e8ffe6; opacity: .55; }
+/* Material and Ingredient: flat, one colour, white details, white outline (paint-order puts the outline behind the fill) */
+.i-log, .i-end, .i-fruit, .i-leaf { stroke: #fff; stroke-width: 3.2; stroke-linejoin: round; paint-order: stroke; }
+.i-log, .i-end { fill: #7b4a12; }
+.i-rings { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
+.i-grain { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.i-fruit, .i-leaf { fill: #1eab3f; }
+.i-stem { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.i-shine2 { fill: #fff; opacity: .9; }
 .i-wisp { fill: #8f6ee6; stroke: #2f1f6b; stroke-width: 3; stroke-linejoin: round; }
 .i-wisp-in { fill: #d9ccff; }
 

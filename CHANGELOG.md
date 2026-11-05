@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.11
+- Material and Ingredient icons redrawn in the card game's flat sticker style (one colour, white details and outline), and the log is now as big as the fruit.
+
 ## 0.1.10
 - The turn button fills the middle of the bar and its words scale to fit, so "Start game / Who goes first?" is always centred and never touches the edge. The word "Day" on the day/night button shows only on wide screens.
 

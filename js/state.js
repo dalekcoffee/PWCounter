@@ -18,6 +18,7 @@ export const LANDSCAPE = ['off', 'left', 'right'];
 //   cardsTap      cards only; tap a card to rest or stand it
 //   cardsSides    cards only; tap left to rest one, right to stand one
 export const SOUL_STYLES = ['numbers', 'numbersCards', 'cardsTap', 'cardsSides'];
+export const SOUL_STYLE_DEFAULT = 'numbersCards';
 export const SOUL_MAX = 10;
 export const SOUL_GAIN = 2;
 export const SECOND_START = 1;
@@ -40,8 +41,8 @@ export function defaultState() {
     flip: true,
     awake: true,
     autoFull: true, // installed app: go full screen on the first tap
-    souls: false, // experimental
-    soulStyle: 'numbers', // experimental: one of SOUL_STYLES (styles with cards need one player; two players see numbers)
+    souls: false,
+    soulStyle: SOUL_STYLE_DEFAULT, // one of SOUL_STYLES (styles with cards need one player; two players see numbers)
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
@@ -57,11 +58,12 @@ export function cleanName(raw) {
   return [...t].slice(0, NAME_MAX).join('').trim();
 }
 
-/** The soul style; a game saved before 0.1.5 (soulView + soulTap) keeps what it looked like. */
+/** The soul style (default: numbers on cards); a game saved before 0.1.5 (soulView + soulTap) keeps what it looked like. */
 export function cleanSoulStyle(raw) {
   if (SOUL_STYLES.includes(raw?.soulStyle)) return raw.soulStyle;
   if (raw?.soulView === 'cards') return raw.soulTap === 'halves' ? 'cardsSides' : 'cardsTap';
-  return 'numbers';
+  if (raw?.soulView === 'number') return 'numbers';
+  return SOUL_STYLE_DEFAULT;
 }
 
 /** What the soul tile shows and how it is tapped. Cards need the one-player layout; otherwise numbers. */

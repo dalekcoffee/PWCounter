@@ -185,11 +185,20 @@
           <span class="set-label">Keep screen on<small>While the counter is open</small></span>
           <label class="switch"><input type="checkbox" id="set-awake"><span></span></label>
         </div>
-        <h3 class="set-h">Experimental</h3>
         <div class="set-row">
           <span class="set-label">Track souls<small>Each turn your souls stand again and you get 2 more, up to 10. Asks who goes first.</small></span>
           <label class="switch"><input type="checkbox" id="set-souls"><span></span></label>
         </div>
+        <div class="set-row stack" id="row-soulstyle">
+          <span class="set-label">Soul style<small>Every style keeps its own − and + for adding or removing souls when a card says so. Styles with cards need one player; with two players souls show as numbers.</small></span>
+          <div class="seg stack" data-setting="soulStyle" role="group" aria-label="Soul style">
+            <button type="button" data-v="numbersCards"><b>Numbers on cards</b><small>The count, with the cards shown behind it. Tap left to rest a soul, right to stand one.</small></button>
+            <button type="button" data-v="numbers"><b>Numbers</b><small>The count. Tap left to rest a soul, right to stand one.</small></button>
+            <button type="button" data-v="cardsTap"><b>Cards, tap a card</b><small>No number. Tap a card to rest or stand it.</small></button>
+            <button type="button" data-v="cardsSides"><b>Cards, tap a side</b><small>No number. Tap left to rest a soul, right to stand one.</small></button>
+          </div>
+        </div>
+        <h3 class="set-h">Experimental</h3>
         <div class="set-row">
           <span class="set-label">Icons only<small>Hides the words Life, Material and Ingredient and makes the icons bigger.</small></span>
           <label class="switch"><input type="checkbox" id="set-icons"><span></span></label>
@@ -197,15 +206,6 @@
         <div class="set-row">
           <span class="set-label">Play with a friend (online)<small>Experimental. Needs both phones online.</small></span>
           <label class="switch"><input type="checkbox" id="set-rooms"><span></span></label>
-        </div>
-        <div class="set-row stack" id="row-soulstyle">
-          <span class="set-label">Soul style<small>Every style keeps its own − and + for adding or removing souls when a card says so. Styles with cards need one player; with two players souls show as numbers.</small></span>
-          <div class="seg stack" data-setting="soulStyle" role="group" aria-label="Soul style">
-            <button type="button" data-v="numbers"><b>Numbers</b><small>The count. Tap left to rest a soul, right to stand one.</small></button>
-            <button type="button" data-v="numbersCards"><b>Numbers on cards</b><small>The same, with the cards shown behind the count.</small></button>
-            <button type="button" data-v="cardsTap"><b>Cards, tap a card</b><small>No number. Tap a card to rest or stand it.</small></button>
-            <button type="button" data-v="cardsSides"><b>Cards, tap a side</b><small>No number. Tap left to rest a soul, right to stand one.</small></button>
-          </div>
         </div>
         <p class="set-note">Both players start at 10 life. Material and Ingredient start at 0. Everything stays on this device and works with no signal.</p>
         <footer class="credits">

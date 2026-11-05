@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.7
+- Souls are no longer experimental: "Track souls" sits with the other settings, and the soul styles show only while it is on.
+- The default soul style is Numbers on cards (listed first). A style you already picked is kept.
+
 ## 0.2.6
 - Dice land flat and square to the viewer, so only the rolled face shows; the numbers under them moved down so a die never covers them.
 

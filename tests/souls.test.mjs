@@ -127,9 +127,9 @@ test('cleanState keeps souls within limits', () => {
   assert.deepEqual(souls(s), [[0, 0], [4, 0]]);
   assert.equal(s.souls, true);
   assert.equal(s.soulStyle, 'cardsTap');
-  assert.equal(cleanState({ v: 1, soulStyle: 'x' }).soulStyle, 'numbers');
+  assert.equal(cleanState({ v: 1, soulStyle: 'x' }).soulStyle, 'numbersCards');
   assert.equal(s.first, 1);
-  assert.equal(cleanState({ v: 1, first: 3 }).soulStyle, 'numbers');
+  assert.equal(cleanState({ v: 1, first: 3 }).soulStyle, 'numbersCards');
   assert.equal(cleanState({ v: 1, first: 3 }).first, null);
 });
 
@@ -156,5 +156,6 @@ test('a game saved before soul styles keeps its look', () => {
   assert.equal(cleanSoulStyle({ soulView: 'number' }), 'numbers');
   assert.equal(cleanSoulStyle({ soulView: 'cards', soulTap: 'card' }), 'cardsTap');
   assert.equal(cleanSoulStyle({ soulView: 'cards', soulTap: 'halves' }), 'cardsSides');
-  assert.equal(cleanSoulStyle({}), 'numbers');
+  assert.equal(cleanSoulStyle({}), 'numbersCards');
+  assert.equal(cleanSoulStyle({ soulStyle: 'numbers' }), 'numbers'); // a chosen style is kept
 });

@@ -8,6 +8,7 @@ A life counter for the Palworld card game, built to sit on the table between two
 - **Calculator**: × and ÷ before + and −, with +100 / +300 / +500 / +1000 / −500 / −1000 shortcuts.
 - **Dice and coin**.
 - **Settings**: one or two players, landscape by setting (the board turns, the phone does not have to), face to face, keep the screen on, and Reset game (asks first).
+- Credits in Settings: inspired by [Palify](https://palify.org/tools/counter), made by [Dalek](https://dalek.coffee), built with Claude.
 - Saved in this browser only: no login, no server, nothing sent anywhere. Installable (Add to Home Screen) and works offline.
 
 ## Run it locally

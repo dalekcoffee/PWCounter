@@ -33,8 +33,8 @@ function commit(next) {
 const LABEL = { life: 'Life', mat: 'Material', ing: 'Ingredient' };
 const ICONS = {
   life: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-heart" d="M32 56C24 49 7 38 7 22 7 13 13.5 7 21 7c5 0 8.6 2.6 11 6.4C34.4 9.6 38 7 43 7c7.5 0 14 6 14 15 0 16-17 27-25 34Z"/><path class="i-shine" d="M15 21c0-4.5 3-7.5 7-7.5"/></svg>',
-  mat: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect class="i-log" x="10" y="22" width="40" height="22" rx="11"/><ellipse class="i-ring" cx="47" cy="33" rx="7" ry="11"/><ellipse class="i-core" cx="47" cy="33" rx="3" ry="5"/><path class="i-grain" d="M17 29h18M20 37h14"/></svg>',
-  ing: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-leaf" d="M33 19c3-8 11-12 21-11-2 10-9 14-19 13Z"/><path class="i-stem" d="M31 24c0-5 1-8 3-11"/><circle class="i-fruit" cx="31" cy="39" r="17"/><ellipse class="i-shine2" cx="24" cy="32" rx="4.5" ry="3" transform="rotate(-30 24 32)"/></svg>',
+  mat: '<svg viewBox="0 0 64 64" aria-hidden="true"><g transform="rotate(-18 32 34)"><rect class="i-log" x="14" y="22" width="42" height="24" rx="12"/><path class="i-grain" d="M24 28h22M28 40h20"/><ellipse class="i-ring" cx="16" cy="34" rx="8" ry="12"/><ellipse class="i-rings" cx="16" cy="34" rx="4.5" ry="7"/><ellipse class="i-core" cx="16" cy="34" rx="1.6" ry="2.6"/></g></svg>',
+  ing: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-stem" d="M34 20c1-4 3-7 6-9"/><path class="i-leaf" d="M39 15c4-6 11-8 18-6-2 8-9 11-17 9Z"/><path class="i-fruit" d="M31 21c-4-2-9-3-13 0-7 4-9 13-6 21 3 9 10 15 17 15 3 0 4-1 6-1s3 1 6 1c7 0 13-7 15-16 2-9-2-17-9-20-5-2-9 0-12 2-1 0-3-1-4-2Z"/><ellipse class="i-shine2" cx="21" cy="31" rx="4.5" ry="7" transform="rotate(25 21 31)"/></svg>',
 };
 
 function tile(key) {

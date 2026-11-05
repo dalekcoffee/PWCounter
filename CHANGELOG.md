@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5
+- Settings: credits (inspired by Palify, made by Dalek, built with Claude).
+- Material and Ingredient icons redrawn to match the card game: a brown log and a green fruit with a leaf.
+
 ## 1.0.4
 - One player: life and the resources are in proportion: a smaller life tile, taller Material and Ingredient tiles with bigger numbers, icons and buttons (on a narrow tile the icon alone names the counter).
 

@@ -208,6 +208,18 @@ svg { display: block; }
 .qa dt { color: var(--text); font-weight: 600; margin-top: 8px; }
 .qa dd { margin: 4px 0 0; }
 .qa a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid rgba(163, 207, 216, .4); }
+.qa dt { margin-top: 14px; }
+.qa-note { margin: 0 0 4px; font-size: 12.5px; color: var(--text-3); }
+.qa-list, .qa-links { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.qa-list li { position: relative; padding-left: 26px; line-height: 1.45; }
+.qa-list li b { color: var(--text); font-weight: 600; }
+/* a word mark, not colour alone: ✓ allowed, ? depends, ✕ not allowed */
+.qa-list li::before { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 700 11px/1 var(--font-ui); }
+.qa-list li.ok::before { content: '✓'; background: rgba(164, 212, 186, .2); color: var(--sage); }
+.qa-list li.maybe::before { content: '?'; background: rgba(227, 200, 147, .2); color: var(--gold); }
+.qa-list li.no::before { content: '✕'; background: rgba(216, 162, 171, .2); color: var(--rose); }
+.qa-src { margin: 6px 0 0; font: 500 11.5px/1.4 var(--font-mono); color: var(--text-3); }
+.qa-links li { line-height: 1.45; }
 .delta {
   position: absolute; bottom: 8px; left: 50%; translate: -50% 0; z-index: 3;
   padding: 5px 15px; border-radius: 999px; font: 700 21px/1.2 var(--font-mono); white-space: nowrap;

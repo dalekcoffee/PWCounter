@@ -6,6 +6,8 @@ import {
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
+import { initRoom } from './room-ui.js';
+import { codeFromHash } from './room-proto.js';
 
 const KEY = 'pwc.state';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,12 +24,14 @@ function save(s) {
 
 let state = load();
 
-function commit(next) {
+function commit(next, remote = false) {
+  next = roomUi.settle(next); // in a room nobody is asked who goes first
   if (next === state) return;
   const prev = state;
   state = next;
   save(state);
   render(prev);
+  roomUi.changed(prev, state, remote);
 }
 
 // ---------- seats ----------
@@ -38,6 +42,12 @@ const ICONS = {
   soul: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-wisp" d="M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z"/><path class="i-wisp-in" d="M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z"/></svg>',
   ing: '<svg viewBox="0 0 64 64" aria-hidden="true"><path class="i-stem" d="M34 20c1-4 3-7 6-9"/><path class="i-leaf" d="M39 15c4-6 11-8 18-6-2 8-9 11-17 9Z"/><path class="i-fruit" d="M31 21c-4-2-9-3-13 0-7 4-9 13-6 21 3 9 10 15 17 15 3 0 4-1 6-1s3 1 6 1c7 0 13-7 15-16 2-9-2-17-9-20-5-2-9 0-12 2-1 0-3-1-4-2Z"/><ellipse class="i-shine2" cx="21" cy="31" rx="4.5" ry="7" transform="rotate(25 21 31)"/></svg>',
 };
+
+// online play: the room sheet, the opponent drawer (js/room-ui.js); declared here, used by commit / render
+const roomUi = initRoom({
+  $, $$, stage, icons: ICONS, getState: () => state, commit: (n, r) => commit(n, r), render: () => render(state),
+  openOverlay: (id) => openOverlay(id), closeOverlay: () => closeOverlay(),
+});
 
 function tile(key) {
   const el = document.createElement('div');
@@ -132,18 +142,20 @@ stage.addEventListener('click', (e) => {
 function render(prev) {
   const s = state;
   stage.dataset.time = s.night ? 'night' : 'day';
-  stage.dataset.players = String(s.players);
+  const inRoom = roomUi.active(); // in a room your seat is the one-player layout, whatever the players setting says
+  const players = inRoom ? 1 : s.players;
+  stage.dataset.players = String(players);
   stage.dataset.land = s.landscape;
-  stage.dataset.flip = s.players === 2 && s.flip ? 'on' : 'off';
+  stage.dataset.flip = players === 2 && s.flip ? 'on' : 'off';
   stage.dataset.souls = s.souls ? 'on' : 'off';
   stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
-  $('#btn-room').hidden = !s.rooms || s.players === 2; // online play replaces the shared-phone view, so it is offered from one player
-  stage.dataset.soulview = s.souls && s.players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
-  $('[data-seat="1"]').hidden = s.players === 1;
+  $('#btn-room').hidden = !s.rooms || (s.players === 2 && !inRoom); // online play replaces the shared-phone view, so it is offered from one player
+  stage.dataset.soulview = s.souls && players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
+  $('[data-seat="1"]').hidden = players === 1;
   for (const seatEl of $$('.seat')) {
     const i = Number(seatEl.dataset.seat);
     const seat = s.seats[i];
-    seatEl.classList.toggle('active', s.players === 2 && s.active === i);
+    seatEl.classList.toggle('active', (players === 2 || inRoom) && s.active === i);
     for (const key of COUNTERS) {
       const n = $(`.t-${key} .num`, seatEl);
       n.textContent = String(seat[key]);
@@ -163,7 +175,7 @@ function render(prev) {
       c.disabled = n >= seat.soul;
     });
   }
-  const oneSouls = s.players === 1 && s.souls;
+  const oneSouls = players === 1 && s.souls && !inRoom;
   $('.et-word').textContent = oneSouls ? 'Start turn' : 'End Turn';
   $('#turn-label').textContent = oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`;
   $('#btn-end').setAttribute('aria-label', oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
@@ -177,12 +189,14 @@ function render(prev) {
     stage.classList.add('flash');
   }
   paintSettings();
+  roomUi.paint();
   if (!prev || prev.awake !== s.awake) syncWake();
 }
 
 // ---------- bar ----------
 $('#btn-time').addEventListener('click', () => commit(toggleNight(state)));
 $('#btn-end').addEventListener('click', () => {
+  if (roomUi.active()) { commit(roomUi.endTurn(state)); return; }
   if (needsFirst(state)) { openOverlay('ov-first'); return; }
   commit(endTurn(state));
 });
@@ -255,6 +269,7 @@ function openOverlay(id) {
 function closeOverlay(quiet) {
   if (!openId) return;
   $(`#${openId}`).hidden = true;
+  if (openId === 'ov-room') roomUi.closed();
   openId = null;
   if (!quiet) lastFocus?.focus?.({ preventScroll: true });
   if (!quiet) maybeAskFirst();
@@ -266,6 +281,7 @@ for (const ov of $$('.overlay')) {
 }
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && openId) { e.preventDefault(); closeOverlay(); return; }
+  if (e.key === 'Escape' && !openId && roomUi.escape()) { e.preventDefault(); return; }
   if (openId === 'ov-calc') calcKey(e);
 });
 
@@ -359,7 +375,7 @@ $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'icon
 $('#set-rooms').addEventListener('change', (e) => commit(setSetting(state, 'rooms', e.target.checked)));
 $('#set-name').addEventListener('input', (e) => commit(setSetting(state, 'name', e.target.value)));
 $('#set-name').addEventListener('change', (e) => { e.target.value = cleanName(e.target.value); });
-$('#btn-room').addEventListener('click', () => openOverlay('ov-room'));
+$('#btn-room').addEventListener('click', () => roomUi.openSheet());
 $('#set-souls').addEventListener('change', (e) => {
   const next = setSetting(state, 'souls', e.target.checked);
   if (needsFirst(next)) askFirst = true;
@@ -367,7 +383,7 @@ $('#set-souls').addEventListener('change', (e) => {
 });
 $('#btn-reset').addEventListener('click', () => openOverlay('ov-confirm'));
 $('#btn-reset-yes').addEventListener('click', () => {
-  commit(resetGame(state));
+  commit(roomUi.afterReset(resetGame(state)));
   askFirst = needsFirst(state);
   closeOverlay();
 });
@@ -403,17 +419,41 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
+// ---------- #join=DDDD (from a QR code or a link) ----------
+let pendingJoin = codeFromHash(location.hash);
+if (pendingJoin) history.replaceState(null, '', location.pathname + location.search);
+function runPendingJoin() {
+  const code = pendingJoin;
+  pendingJoin = null;
+  if (!code) return;
+  if (state.rooms) { openOverlay('ov-room'); roomUi.join(code); return; }
+  $('#join-ask-code').textContent = code;
+  $('#btn-join-on').onclick = () => { commit(setSetting(state, 'rooms', true)); openOverlay('ov-room'); roomUi.join(code); };
+  openOverlay('ov-joinask');
+}
+addEventListener('hashchange', () => {
+  const c = codeFromHash(location.hash);
+  if (!c) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  pendingJoin = c;
+  if (openId !== 'ov-resume') runPendingJoin();
+});
+
 render(null);
+if (state.rooms) roomUi.resume();
 if (needsResume(state, Date.now())) {
   const days = Math.floor((Date.now() - state.savedAt) / 86400000);
   $('#resume-when').textContent = `Last played ${days >= 2 ? `${days} days` : '2 days'} ago.`;
   openOverlay('ov-resume');
+} else if (pendingJoin) {
+  runPendingJoin();
 } else {
   maybeAskFirst();
 }
-$('#btn-resume').addEventListener('click', () => { commit({ ...state }); save(state); closeOverlay(); });
+$('#btn-resume').addEventListener('click', () => { commit({ ...state }); save(state); closeOverlay(true); if (pendingJoin) runPendingJoin(); else maybeAskFirst(); });
 $('#btn-new').addEventListener('click', () => {
   commit(resetGame(state));
   askFirst = needsFirst(state);
-  closeOverlay();
+  closeOverlay(true);
+  if (pendingJoin) runPendingJoin(); else maybeAskFirst();
 });

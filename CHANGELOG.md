@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0
+- Experimental, off by default: play with a friend online. One phone shows a 4-digit code (and a QR code), the other types or scans it. Each phone keeps its own counters; your friend's Life, Material, Ingredient and Souls show read only in a drawer you pull down from the top. Day/night and End Turn are shared.
+- Needs the small room relay (worker/room) to be deployed and its address put in js/room-config.js; until then the sheet says it isn't set up.
+
 ## 0.0.3
 - Opens in one-player mode on a first visit.
 - Only one game is ever saved. Opening the app more than 48 hours after it was last played asks: Continue, or New game.

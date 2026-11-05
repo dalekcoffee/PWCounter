@@ -11,3 +11,8 @@ Static PWA served by GitHub Pages at pwcounter.dalek.coffee. Vanilla ES modules,
 - Every file the app needs must be in `sw.js` SHELL (tested). Version lives in js/version.js, package.json, sw.js VERSION and CHANGELOG.md (tested equal); bump on every change.
 - Original design only: never copy another site's markup, art or branding.
 - Commit identity: `dalekcoffee <78516780+dalekcoffee@users.noreply.github.com>`.
+
+## Online rooms (experimental, 0.1.0)
+- Pure rules: `js/room-proto.js` (codes, messages, turn passing), `js/room-game.js` (mapping shared state / my seat), `js/drawer.js`, `js/qr.js`; connection `js/room.js` (transport factory, backoff, sessionStorage resume); DOM `js/room-ui.js`. Relay in `worker/room/` stores nothing; one Durable Object per code, roles host/guest (`?role=&sid=`), a second host gets 4002 (the client draws a new code, max 5), a second guest 4001, the same `sid` replaces its own stale socket.
+- Each phone owns its seat (seat 0 = me); the opponent is held in memory only, never in localStorage. Shared: night, active (0 me / 1 them), turn, last writer wins by rev, host wins ties.
+- Room mode forces the one-player layout (`stage[data-room=on]`); the opponent drawer is a div in `#stage` (stage coordinates, so landscape works). `?fakeRoom=1` on localhost uses a BroadcastChannel transport for tests.

@@ -30,6 +30,16 @@
 
     <section class="seat" data-seat="1" aria-label="Opponent"></section>
 
+    <!-- Room mode: the opponent's counters, read only, in a drawer from the top edge -->
+    <aside class="opp" id="opp" data-open="off" aria-label="Your friend's counters" hidden>
+      <div class="opp-body" id="opp-body"></div>
+      <button type="button" class="opp-handle" id="opp-handle" aria-expanded="false" aria-controls="opp-body">
+        <span class="opp-name" id="opp-name">Opponent</span>
+        <span class="opp-life" id="opp-life" hidden><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56C24 49 7 38 7 22 7 13 13.5 7 21 7c5 0 8.6 2.6 11 6.4C34.4 9.6 38 7 43 7c7.5 0 14 6 14 15 0 16-17 27-25 34Z"/></svg><b>10</b></span>
+        <span class="opp-grip" aria-hidden="true"></span>
+      </button>
+    </aside>
+
     <nav class="bar" aria-label="Game controls">
       <div class="bar-side">
         <button class="ibtn" id="btn-full" type="button" aria-label="Full screen" title="Full screen">
@@ -156,7 +166,7 @@
           <label class="switch"><input type="checkbox" id="set-icons"><span></span></label>
         </div>
         <div class="set-row">
-          <span class="set-label">Play with a friend (online)<small>Not ready yet: still being tested. Needs both phones online.</small></span>
+          <span class="set-label">Play with a friend (online)<small>Experimental. Needs both phones online.</small></span>
           <label class="switch"><input type="checkbox" id="set-rooms"><span></span></label>
         </div>
         <div class="set-row" id="row-soulview">
@@ -211,10 +221,45 @@
     </div>
 
     <div class="overlay" id="ov-room" hidden>
-      <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="room-title">
-        <h2 id="room-title">Play with a friend</h2>
-        <p>Joining a friend's phone with a code is still being built. It will need both phones online and a small room server that isn't set up yet.</p>
-        <button type="button" class="btn" data-close>OK</button>
+      <div class="sheet room" role="dialog" aria-modal="true" aria-labelledby="room-title">
+        <header class="sheet-head">
+          <div><h2 id="room-title">Play with a friend</h2></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <p class="room-note" id="room-note" role="status" hidden></p>
+        <div id="rv-off" hidden>
+          <p class="room-text">Playing with a friend isn't set up on this server yet.</p>
+          <button type="button" class="btn" data-close>OK</button>
+        </div>
+        <div id="rv-pick" class="room-pick" hidden>
+          <button type="button" class="room-choice" id="btn-room-host"><b>Show my code</b><span>Your friend types it or scans it</span></button>
+          <button type="button" class="room-choice" id="btn-room-join"><b>Join a friend</b><span>Type their 4-digit code</span></button>
+        </div>
+        <div id="rv-join" hidden>
+          <label class="room-label" for="join-code">Your friend's code</label>
+          <input class="txt room-input" id="join-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000" aria-describedby="scan-hint">
+          <button type="button" class="btn room-scan" id="btn-scan" hidden>Scan QR code</button>
+          <video class="room-video" id="scan-video" playsinline muted hidden></video>
+          <p class="room-hint" id="scan-hint" hidden>On iPhone, scan the code with the Camera app, or type it.</p>
+          <button type="button" class="btn link" id="btn-join-back">Back</button>
+        </div>
+        <div id="rv-live" class="room-live" hidden>
+          <div class="room-codebox"><span class="room-label">Room code</span><b class="room-code" id="rv-code">0000</b></div>
+          <div class="room-qr" id="rv-qrwrap" hidden><div id="rv-qr" aria-hidden="false"></div></div>
+          <p class="room-status" id="rv-status" aria-live="polite">&nbsp;</p>
+          <button type="button" class="btn danger" id="btn-room-leave">Leave room</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-joinask" hidden>
+      <div class="sheet confirm" role="dialog" aria-modal="true" aria-labelledby="ja-title">
+        <h2 id="ja-title">Join <span id="join-ask-code">0000</span>?</h2>
+        <p>Playing with a friend is an experimental feature.</p>
+        <div class="cf-btns">
+          <button type="button" class="btn" data-close>Not now</button>
+          <button type="button" class="btn primary" id="btn-join-on">Turn it on and join</button>
+        </div>
       </div>
     </div>
 

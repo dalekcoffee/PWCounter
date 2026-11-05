@@ -38,7 +38,8 @@ export const STATUS_TEXT = {
   waiting: 'Waiting for your friend…',
   connected: 'Connected',
   reconnecting: 'Reconnecting…',
-  full: 'That room already has two players.',
+  full: 'That game already has two players.',
+  busy: "Couldn't get a free code, try again.",
 };
 /** One line for the status: "Connected to NAME" once the friend's hello is in. */
 export function statusText(room) {

@@ -150,9 +150,16 @@ function stopHold() {
   hold = null;
 }
 
+// A tap counts once. Some browsers (older Android) send the click after a tap with detail 0, like a keyboard click,
+// and the keyboard path below then counted the tap a second time (0.3.11). Pointer presses are remembered, and a
+// click soon after one is not counted; a second pointerdown on the same button within 40 ms is the same tap.
+let pressAt = 0, pressHit = null;
 stage.addEventListener('pointerdown', (e) => {
   const hit = e.target.closest('.hit');
   if (!hit || e.button > 0) return;
+  const now = Date.now();
+  if (hit === pressHit && now - pressAt < 40) { e.preventDefault(); return; }
+  pressAt = now; pressHit = hit;
   const tileEl = hit.closest('.tile');
   const seat = Number(hit.closest('.seat').dataset.seat);
   const key = tileEl.dataset.key;
@@ -164,10 +171,10 @@ stage.addEventListener('pointerdown', (e) => {
 });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'blur']) window.addEventListener(ev, stopHold);
 stage.addEventListener('contextmenu', (e) => { if (e.target.closest('.hit')) e.preventDefault(); });
-// keyboard activation (detail 0); pointer taps are handled above
+// keyboard activation (detail 0, and no finger or mouse press just before); pointer taps are handled above
 stage.addEventListener('click', (e) => {
   const hit = e.target.closest('.hit');
-  if (!hit || e.detail !== 0) return;
+  if (!hit || e.detail !== 0 || Date.now() - pressAt < 1000) return;
   bump(Number(hit.closest('.seat').dataset.seat), hit.closest('.tile').dataset.key, Number(hit.dataset.d), hit.closest('.tile'));
 });
 

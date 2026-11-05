@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.11
+- Fixed: on some devices (older Android browsers) one tap on a counter changed it by 2. The tap was counted on touch and again by the keyboard path, because those browsers mark a tap's click like a keyboard click. A click right after a finger or mouse press is no longer counted; Enter / Space on a focused button still work.
+
 ## 0.3.10
 - Game over: the confetti and the rain fade out toward the top of each side (the middle of the board with two players) instead of stopping at a hard line.
 

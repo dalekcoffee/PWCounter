@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.6
+- Dice land flat and square to the viewer, so only the rolled face shows; the numbers under them moved down so a die never covers them.
+
 ## 0.2.5
 - Ingredient: the stalk is green with a darker-green outline, like the card game's fruit.
 

@@ -209,13 +209,14 @@ export function createDice(canvases, random = Math.random) {
   } catch { return null; }
   if (views.some((v) => !v)) return null;
   let raf = 0;
-  const rests = [restQ(1, 0.2), restQ(1, -0.15)];
+  const FLAT = [0, 0]; // at rest the die lies square to the viewer: only the rolled face shows
+  const rests = [restQ(1, 0, FLAT), restQ(1, 0, FLAT)];
   const drawAll = (qs) => views.forEach((v, i) => v.draw(qs[i]));
   return {
     get ok() { return !views.some((v) => v.lost); },
     show(n1, n2) {
       cancelAnimationFrame(raf);
-      rests[0] = restQ(n1, (random() - 0.5) * 0.7); rests[1] = restQ(n2, (random() - 0.5) * 0.7, [-0.32, -0.24]);
+      rests[0] = restQ(n1, 0, FLAT); rests[1] = restQ(n2, 0, FLAT);
       drawAll(rests);
     },
     roll(n1, n2, ms, done) {

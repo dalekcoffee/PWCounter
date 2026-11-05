@@ -31,3 +31,6 @@ test('pip table matches the faces', () => {
   FACE_ORDER.forEach((f, k) => assert.equal(t.slice(k * 9, k * 9 + 9).reduce((a, b) => a + b, 0), f));
   assert.deepEqual(PIP_CELLS[1], [5]);
 });
+test('a flat die at rest shows only its face, square on', () => {
+  for (let n = 1; n <= 6; n++) assert.ok(close(rotate(qMat(restQ(n, 0, [0, 0])), FACE_AXIS[n]), [0, 0, 1], 1e-12));
+});

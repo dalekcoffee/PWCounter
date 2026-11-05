@@ -8,6 +8,7 @@ test('version is the same everywhere', () => {
   const v = /APP_VERSION = '([^']+)'/.exec(read('js/version.js'))[1];
   assert.equal(JSON.parse(read('package.json')).version, v);
   assert.match(read('sw.js'), new RegExp(`const VERSION = '${v.replace(/\./g, '\\.')}'`));
+  assert.ok(read('index.html').includes(`<meta name="pwc-version" content="${v}">`), 'index.html carries the version (sw.js checks it)');
   assert.match(read('CHANGELOG.md'), new RegExp(`## ${v.replace(/\./g, '\\.')}`));
 });
 

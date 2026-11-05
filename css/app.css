@@ -252,6 +252,8 @@ svg { display: block; }
 .delta.neg { color: #34121a; background: var(--rose); }
 .delta.show { opacity: 1; transform: none; }
 .t-life .delta { bottom: 38px; font-size: 26px; padding: 6px 18px; }
+/* two players: the life tile is shorter, so the badge goes to the corner on the + side, clear of the number (both seats) */
+.stage[data-players='2'] .t-life .delta { top: 10px; bottom: auto; left: auto; right: 14px; translate: none; font-size: 22px; padding: 4px 14px; }
 @container (max-height: 130px) { .delta { font-size: 17px; padding: 3px 11px; bottom: 5px; } }
 
 /* icon colours (drawn for this app) */

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.4
+- Fixed: after an update, the dice / coin buttons and settings could stop working. The offline copy could end up with the page from one version and the scripts from another; it now downloads each version whole, checks the files match, and never mixes them.
+- Two players: the life change badge ("−1") sits in the tile's corner on the + side, so it no longer covers the life number (it did on the top player's side).
+
 ## 0.3.3
 - Two players, dice and coin: the dice stay in the middle and both players see each die's number and the total (or heads / tails), the top player's copy facing them, each with their own Done and Roll again.
 - Two players: Done and Roll again wait 3 seconds after the result (a bar fills), so a stray tap cannot end the throw before both players have seen it.

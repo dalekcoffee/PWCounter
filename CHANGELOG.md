@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+- Landscape, one player, souls as cards: the souls row is taller and the cards bigger.
+- The turn button (End Turn / Start turn) is bigger and easier to tap, wider in landscape.
+
 ## 0.1.2
 - The installed app opens full screen (Android; iPhone shows it without browser bars).
 - Q&A: every rule number is a link to that page of its source.

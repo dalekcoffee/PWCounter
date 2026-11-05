@@ -148,7 +148,13 @@ svg { display: block; }
 .stage[data-souls='on'][data-soulview='cards'] .seat-in { grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1fr); }
 .stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-areas: 'life res'; }
 .stage[data-land='left'][data-souls='on'] .seat-in, .stage[data-land='right'][data-souls='on'] .seat-in { grid-template-areas: 'life res' 'life soul'; grid-template-rows: minmax(0, 2fr) minmax(0, 1fr); }
-.stage[data-land='left'][data-soulview='cards'] .seat-in, .stage[data-land='right'][data-soulview='cards'] .seat-in { grid-template-areas: 'life res' 'soul soul'; grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr); }
+.stage[data-land='left'][data-soulview='cards'] .seat-in, .stage[data-land='right'][data-soulview='cards'] .seat-in { grid-template-areas: 'life res' 'soul soul'; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+/* landscape cards: a slim header and cards that use the row's full height */
+.stage[data-land='left'][data-soulview='cards'] .t-soul, .stage[data-land='right'][data-soulview='cards'] .t-soul { padding: 6px 12px 8px; }
+.stage[data-land='left'] .soul-cards, .stage[data-land='right'] .soul-cards { gap: 4px; }
+.stage[data-land='left'] .sc-head, .stage[data-land='right'] .sc-head { min-height: 22px; }
+.stage[data-land='left'] .sc-row, .stage[data-land='right'] .sc-row { gap: 6px; }
+.stage[data-land='left'][data-soulview='cards'] .soul-adj, .stage[data-land='right'][data-soulview='cards'] .soul-adj { top: 4px; }
 
 /* ---------- a counter tile: left half takes one off, right half adds one ---------- */
 .tile {
@@ -308,17 +314,22 @@ svg { display: block; }
 .stage[data-time='night'] .daynight .ico-sun { display: none; }
 .stage[data-time='night'] .daynight .ico-moon { display: block; fill: currentColor; }
 .endturn {
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 18px; min-height: 48px; border-radius: 999px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 10px 22px; min-height: 60px; border-radius: 999px;
   background: color-mix(in srgb, var(--acc) 16%, rgba(13, 19, 38, .75)); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .endturn:active { transform: scale(.97); }
-.et-word { font: 700 15px/1.1 var(--font-ui); }
-.et-turn { font: 600 10px/1 var(--font-mono); letter-spacing: .08em; color: var(--text-2); white-space: nowrap; }
+.stage[data-land='left'] .endturn, .stage[data-land='right'] .endturn { min-width: 168px; min-height: 60px; padding: 10px 26px; }
+.stage[data-land='left'] .et-word, .stage[data-land='right'] .et-word { font-size: 18px; }
+/* a rested card is turned sideways: in the landscape row it must fit its slot's width (card width is 63/88 of its height) */
+.stage[data-land='left'] .sc-card[data-state='rest'], .stage[data-land='right'] .sc-card[data-state='rest'] { transform: rotate(90deg) scale(.66); }
+.et-word { font: 700 17px/1.1 var(--font-ui); }
+.et-turn { font: 600 11px/1 var(--font-mono); letter-spacing: .08em; color: var(--text-2); white-space: nowrap; }
 @container stage (max-width: 400px) {
   .dn-word { display: none; }
   .daynight { padding: 0; width: 44px; justify-content: center; }
-  .endturn { padding: 8px 12px; }
+  .endturn { padding: 10px 12px; }
+  .et-word { font-size: 16px; }
   .ibtn { width: 40px; height: 40px; }
   .bar-side { gap: 4px; }
 }

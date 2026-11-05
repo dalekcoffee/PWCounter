@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- When who goes first is settled (a tap, a roll or a flip), each player's half of the screen says "Begin" with "You go first" or "You go second" under it, facing that player. One player: one callout in the middle. It stays 4 seconds, with the board dimmed behind it.
+
 ## 0.3.0
 - Who goes first, two players on one screen: a big button on each player's side ("Player 1 goes first" at the bottom, "Player 2 goes first" at the top, facing that player). In the middle, "Roll or flip": roll a die (high 4–6 / low 1–3) or flip a coin; either player calls on their side, the other side lights up with the other call, and whoever's call comes up goes first.
 - The game begins with a big "Begin" over the board (one and two players), facing the player who goes first. The turn button rests (greyed, a bar fills) for the first 10 seconds so nobody ends turn 1 by accident.

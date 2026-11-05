@@ -304,14 +304,19 @@ function startGame(seat) {
   announceBegin();
 }
 const TURN_LOCK_MS = 10000;
+const BEGIN_MS = 4000; // how long "Begin" stays
 let lockUntil = 0, lockTimer = 0, beginTimer = 0;
 function announceBegin() {
   const el = $('#begin');
-  setText($('#begin-sub'), state.players === 2 ? `${SEAT_NAME[state.first]} goes first` : state.first === 0 ? 'You go first' : 'You go second');
+  for (const side of $$('.bg-side', el)) { // each player reads their own: you go first / you go second
+    const goesFirst = state.first === Number(side.dataset.seat);
+    setData(side, 'first', goesFirst ? 'yes' : 'no');
+    setText($('span', side), goesFirst ? 'You go first' : 'You go second');
+  }
   el.hidden = false;
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
   clearTimeout(beginTimer);
-  beginTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); }, reduceMotion() ? 1500 : 2200);
+  beginTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); }, BEGIN_MS);
   lockUntil = Date.now() + TURN_LOCK_MS;
   clearTimeout(lockTimer);
   lockTimer = setTimeout(() => render(), TURN_LOCK_MS + 30);

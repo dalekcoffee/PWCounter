@@ -313,7 +313,10 @@
     </div>
 
     <!-- the game begins: a big word over the whole board -->
-    <div class="begin" id="begin" aria-live="assertive" hidden><b>Begin</b><span id="begin-sub"></span></div>
+    <div class="begin" id="begin" aria-live="assertive" hidden>
+      <div class="bg-side top" data-seat="1"><b>Begin</b><span></span></div>
+      <div class="bg-side bottom" data-seat="0"><b>Begin</b><span></span></div>
+    </div>
 
     <div class="overlay" id="ov-first" hidden>
       <div class="sheet confirm first" role="dialog" aria-modal="true" aria-labelledby="first-title" aria-describedby="first-sub">

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+- Two players, Numbers on cards: the souls behind the count are soul flames instead of small cards, bigger, ten in a row on a wide screen (lit = standing, dim = rested, dashed = empty).
+- Two players: the sun and moon sit at the middle of the board and the sky is mirrored about the middle, so it looks the same from both sides.
+- The top player is labelled "Player 2" (as in who goes first). Only the calculator, dice and coin turn to the player whose turn it is; settings, reset and rooms stay with Player 1.
+
 ## 0.3.1
 - When who goes first is settled (a tap, a roll or a flip), each player's half of the screen says "Begin" with "You go first" or "You go second" under it, facing that player. One player: one callout in the middle. It stays 4 seconds, with the board dimmed behind it.
 

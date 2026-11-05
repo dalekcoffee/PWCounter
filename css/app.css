@@ -80,6 +80,20 @@ svg { display: block; }
     radial-gradient(90% 60% at 80% 100%, rgba(80, 70, 160, .22), transparent 70%),
     linear-gradient(180deg, #070b17, #060916 62%, #0a0f24);
 }
+/* two players: the sky is the same for both. The sun and moon sit at the middle (sun right, moon left), the day sky is
+   lightest in the middle and the night glow is by the moon, so neither player has the "top" of the sky. */
+.stage[data-players='2'] .sun { top: 50%; right: -70px; margin-top: -110px; }
+.stage[data-players='2'] .moon { top: 50%; left: 14px; margin-top: -60px; }
+.stage[data-players='2'] .sky::before {
+  background:
+    radial-gradient(34% 30% at 96% 50%, rgba(255, 252, 235, .5), transparent 70%),
+    linear-gradient(180deg, #0d3f8f 0%, #2a83d4 40%, #3d97dd 50%, #2a83d4 60%, #0d3f8f 100%);
+}
+.stage[data-players='2'] .sky::after {
+  background:
+    radial-gradient(40% 30% at 8% 50%, rgba(190, 200, 255, .16), transparent 70%),
+    linear-gradient(180deg, #070b17, #0a0f24 50%, #070b17);
+}
 .stage[data-time='night'] .sky::before { opacity: 0; }
 .stage[data-time='night'] .sky::after { opacity: 1; }
 .sky i { z-index: 1; }
@@ -314,6 +328,17 @@ svg { display: block; }
 .stage[data-soulbg='on'] .sc-head, .stage[data-soulbg='on'] .sc-hit, .stage[data-soulbg='on'] .sc-pm { display: none; }
 .stage[data-soulbg='on'] .sc-body { margin: 0; }
 .stage[data-soulbg='on'] .t-soul .num { text-shadow: 0 2px 14px rgba(3, 6, 18, .85); }
+/* two players, Numbers on cards: the souls behind the count are soul flames, bigger than cards would be
+   (standing = lit, rested = dim and smaller, empty = a dashed outline); ten in a row where the tile is wide enough */
+.stage[data-players='2'][data-soulbg='on'] .soul-cards { inset: 8px 58px 34px; opacity: .5; }
+.stage[data-players='2'][data-soulbg='on'] .sc-row { gap: 2px 4px; }
+@container (min-width: 520px) { .stage[data-players='2'][data-soulbg='on'] .sc-row { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+.stage[data-players='2'][data-soulbg='on'] .sc-card {
+  aspect-ratio: 1; height: 100%; width: auto; border: 0; border-radius: 0; transform: none; filter: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 2 58 58%22%3E%3Cpath d=%22M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z%22 fill=%22%238f6ee6%22 stroke=%22%232f1f6b%22 stroke-width=%223.2%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z%22 fill=%22%23e4dbff%22/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='rest'] { opacity: .4; transform: scale(.82); filter: saturate(.35); }
+.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='empty'] { background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 2 58 58%22%3E%3Cpath d=%22M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z%22 fill=%22none%22 stroke=%22%23e8ecfa%22 stroke-width=%222.4%22 stroke-dasharray=%224 3%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") center / contain no-repeat; opacity: .35; }
 /* the soul style picker: one choice per row, with a line of help */
 .set-row.stack { flex-direction: column; align-items: stretch; }
 .seg.stack { display: grid; gap: 4px; }
@@ -334,7 +359,7 @@ svg { display: block; }
 
 /* ---------- the bar between the seats ---------- */
 .bar { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px; min-width: 0; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
-.stage[data-face='top'] .bar, .stage[data-face='top'] .overlay { transform: rotate(180deg); }
+.stage[data-face='top'] .bar, .stage[data-face='top'] :is(#ov-calc, #ov-dice, #ov-throw) { transform: rotate(180deg); } /* settings, reset and rooms stay with Player 1 */
 .stage[data-players='1']:not([data-souls='on']):not([data-room='on']) .endturn { visibility: hidden; } /* one player: no turns to track (its space keeps the bar balanced); with souls it starts your turn */
 .bar-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .bar-side.end { justify-content: flex-end; }

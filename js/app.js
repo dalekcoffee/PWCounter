@@ -199,7 +199,7 @@ function render(prev) {
       setData(n, 'len', String(Math.max(2, String(seat[key]).length)));
     }
     const whose = $('.whose', seatEl);
-    setText(whose, i === 1 ? 'Opponent' : (s.name || 'Username not set · ⚙ Settings'));
+    setText(whose, i === 1 ? 'Player 2' : (s.name || 'Username not set · ⚙ Settings'));
     whose.classList.toggle('unset', i === 0 && !s.name);
     const st = $('.t-soul', seatEl);
     setHidden(st, !s.souls);

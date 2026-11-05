@@ -36,6 +36,7 @@ export function defaultState() {
     awake: true,
     souls: false, // experimental
     soulView: 'number', // experimental, one player only: 'number' | 'cards'
+    iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
   };
 }
 
@@ -68,6 +69,7 @@ export function cleanState(raw) {
     awake: raw.awake !== false,
     souls: raw.souls === true,
     soulView: SOUL_VIEWS.includes(raw.soulView) ? raw.soulView : 'number',
+    iconsOnly: raw.iconsOnly === true,
   };
 }
 

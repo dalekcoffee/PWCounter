@@ -136,6 +136,7 @@ function render(prev) {
   stage.dataset.land = s.landscape;
   stage.dataset.flip = s.players === 2 && s.flip ? 'on' : 'off';
   stage.dataset.souls = s.souls ? 'on' : 'off';
+  stage.dataset.icons = s.iconsOnly ? 'only' : 'words';
   stage.dataset.soulview = s.souls && s.players === 1 && s.soulView === 'cards' ? 'cards' : 'number';
   $('[data-seat="1"]').hidden = s.players === 1;
   for (const seatEl of $$('.seat')) {
@@ -317,6 +318,7 @@ $('#btn-coin').addEventListener('click', () => {
 
 // ---------- settings ----------
 $('#app-ver').textContent = `Version ${APP_VERSION}`;
+$('#credits-ver').textContent = `PW Counter ${APP_VERSION}`;
 $('#btn-set').addEventListener('click', () => openOverlay('ov-set'));
 function paintSettings() {
   for (const seg of $$('.seg')) {
@@ -326,6 +328,7 @@ function paintSettings() {
   $('#set-flip').checked = state.flip;
   $('#set-awake').checked = state.awake;
   $('#set-souls').checked = state.souls;
+  $('#set-icons').checked = state.iconsOnly;
   $('#row-flip').hidden = state.players === 1;
   $('#row-soulview').hidden = !state.souls;
   $('#soulview-note').hidden = !(state.souls && state.players === 2 && state.soulView === 'cards');
@@ -342,6 +345,7 @@ for (const seg of $$('.seg')) {
 }
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
+$('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
 $('#set-souls').addEventListener('change', (e) => {
   const next = setSetting(state, 'souls', e.target.checked);
   if (needsFirst(next)) askFirst = true;

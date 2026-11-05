@@ -34,7 +34,7 @@ svg { display: block; }
   --acc-ink: #2a1f08;
   --num: #fff6e2;
   position: fixed; inset: 0; overflow: hidden; isolation: isolate;
-  display: grid; gap: 10px;
+  display: grid; gap: 14px;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
   grid-template-areas: 'top' 'bar' 'bottom';
@@ -122,9 +122,10 @@ svg { display: block; }
 @keyframes drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-160px, -50px, 0); } }
 
 /* ---------- seats ---------- */
-.seat { min-height: 0; position: relative; border-radius: calc(var(--radius) + 6px); padding: 6px; transition: box-shadow .3s, background .3s; }
+.seat { min-height: 0; position: relative; border-radius: calc(var(--radius) + 8px); padding: 8px; transition: box-shadow .35s, background .35s; }
 .stage[data-flip='on'] .seat[data-seat='1'] { transform: rotate(180deg); }
-.seat.active { background: color-mix(in srgb, var(--acc) 9%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 28px color-mix(in srgb, var(--acc) 22%, transparent); }
+/* whose turn: a soft filled panel behind that player's tiles, no outline */
+.seat.active { background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 26%, transparent), color-mix(in srgb, var(--acc) 12%, transparent)); box-shadow: 0 12px 40px color-mix(in srgb, var(--acc) 20%, transparent); }
 .seat-in {
   height: 100%; display: grid; gap: 8px;
   grid-template-columns: minmax(0, 1fr);
@@ -137,8 +138,8 @@ svg { display: block; }
 .res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
 
 /* landscape: life on the left, the two resources stacked on the right */
-.stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
-.stage[data-land='left'] .res, .stage[data-land='right'] .res { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+.stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-rows: minmax(0, 1fr); }
+.stage[data-land='left'] .res, .stage[data-land='right'] .res { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); }
 /* where each tile sits: life on top, the resources, then souls (when tracked) */
 .t-life { grid-area: life; } .res { grid-area: res; } .t-soul { grid-area: soul; }
 .seat-in { grid-template-areas: 'life' 'res'; }
@@ -189,6 +190,12 @@ svg { display: block; }
 .ico svg { width: 100%; height: 100%; }
 .t-mat .pm, .t-ing .pm { width: clamp(30px, 26cqh, 40px); height: clamp(30px, 26cqh, 40px); font-size: clamp(18px, 15cqh, 24px); }
 .t-life .ico { width: min(16cqh, 54px); height: min(16cqh, 54px); }
+.stage[data-icons='only'] .lbl { display: none; }
+.stage[data-icons='only'] .head { flex-direction: column; padding-bottom: 6px; }
+.stage[data-icons='only'] .ico { width: min(30cqh, 64px); height: min(30cqh, 64px); }
+.stage[data-icons='only'] .t-life .ico { width: min(26cqh, 84px); height: min(26cqh, 84px); }
+@container (max-height: 180px) { .stage[data-icons='only'] .head .ico { width: min(24cqh, 44px); height: min(24cqh, 44px); } .stage[data-icons='only'] .head { padding-bottom: 4px; } }
+.stage[data-icons='only'] .sc-head .lbl { display: none; }
 .t-soul .core { grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.3fr); }
 .t-soul .num { font-size: min(34cqh, 40cqw); }
 .t-life .num { font-size: min(44cqh, 40cqw); }
@@ -371,6 +378,7 @@ svg { display: block; }
 .credits a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid rgba(163, 207, 216, .4); }
 .credits a:active, .credits a:hover { color: #c8eef5; border-bottom-color: rgba(200, 238, 245, .8); }
 .credits .fine { font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+.credits .ver { font: 600 11.5px/1.4 var(--font-mono); color: var(--text-2); letter-spacing: .04em; }
 
 /* confirm */
 .sheet.confirm { width: min(400px, 100%); text-align: center; }

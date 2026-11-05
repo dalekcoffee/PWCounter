@@ -1,33 +1,12 @@
 # Changelog
 
-## 1.1.0
-- Experimental: track souls (Settings › Experimental). Asks who goes first (or picks at random); the player going second starts with 1 soul; at the start of each turn that player's souls stand again and 2 more come, never above 10 (official Comprehensive Rules 6.1.2.1, 6.2.1.5, 7.2.1, 7.4.2.1). Tap the halves to rest (pay) or stand a soul; "− of N +" changes how many there are.
-- One player with souls: "Start turn" begins each of your turns; souls can be shown as numbers or as cards you tap to rest or stand.
-- Every tile: the number sits level with the − and + buttons, with the icon and word above it; the words Material and Ingredient always show.
-
-## 1.0.5
-- Settings: credits (inspired by Palify, made by Dalek, built with Claude).
-- Material and Ingredient icons redrawn to match the card game: a brown log and a green fruit with a leaf.
-
-## 1.0.4
-- One player: life and the resources are in proportion: a smaller life tile, taller Material and Ingredient tiles with bigger numbers, icons and buttons (on a narrow tile the icon alone names the counter).
-
-## 1.0.3
-- Removed the Day / Night badge from the life tiles: the board itself and the Day / Night button in the middle show it.
-
-## 1.0.2
-- Day: a clear blue sky with a white sun (no orange horizon) and deeper, crisper tiles.
-- The + and − buttons share one colour (white by day, lavender by night).
-
-## 1.0.1
-- Life now sits above Material and Ingredient on both sides (and before them in landscape).
-- One player: End Turn and the turn count are hidden.
-
-## 1.0.0
-- First version: life (starts at 10), Material and Ingredient (start at 0) for one or two players, tap the left half to take one off and the right half to add one (hold to repeat).
-- Shared day / night for the table, with a day sky and a night sky on the board.
-- End Turn with a turn count and the active player marked.
-- Calculator (× and ÷ before + and −) with +100 / +300 / +500 / +1000 / −500 / −1000 shortcuts.
-- Dice and coin.
-- Settings: players, landscape by setting (left / right), face to face, keep the screen on, reset with a confirm.
-- Saved in this browser; installable and offline (PWA).
+## 0.0.1
+First test release.
+- Life (starts at 10), Material and Ingredient (start at 0) for one or two players. The whole left half of a tile takes one off, the whole right half adds one (hold to repeat); a dashed line marks the middle. Counters never go below 0.
+- Two players face to face (the opponent's side is turned toward them); the player whose turn it is sits on a soft filled panel.
+- Shared day / night: a clear blue day sky with a sun, a dark night sky with stars and a moon.
+- End Turn with a turn count; one player has no turn tracking unless souls are on.
+- Calculator (× and ÷ before + and −) with +100 / +300 / +500 / +1000 / −500 / −1000 shortcuts; dice and coin.
+- Settings: players, landscape by setting (left / right) without turning the phone, face to face, keep the screen on, reset with a confirm; credits and the version.
+- Experimental: track souls (official rules: the second player starts with 1, each turn all stand and 2 more come, max 10; one player can show them as cards), and icons only.
+- Saved in this browser; installable and works offline.

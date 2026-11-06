@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.19
+- Day / night: one tap makes it night for this turn; when the turn ends it turns back to day by itself. A quick double tap locks night on: it stays night through turns until someone taps it off, and the button shows a gold padlock (and a gold ring). A tap while it is night makes it day and unlocks it. In a room the lock is shared with the other phone.
+
 ## 0.3.18
 - Who goes first, two players: "Roll or flip" is split into Roll (left of Not now) and Flip (right of Not now), so one tap goes straight to making a call. Roll, Flip and Not now are about 10% bigger.
 

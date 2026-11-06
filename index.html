@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.3.18"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.3.19"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=0.3.18">
+  <link rel="stylesheet" href="css/app.css?v=0.3.19">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/calc.js">
@@ -71,6 +71,7 @@
           <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.4 5.4l1.6 1.6M17 17l1.6 1.6M5.4 18.6 7 17M17 7l1.6-1.6"/></svg>
           <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
           <span class="dn-word">Day</span>
+          <span class="dn-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span>
         </button>
         <button class="ibtn" id="btn-room" type="button" aria-label="Play with a friend" title="Play with a friend" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="9" r="3"/><circle cx="16.5" cy="9" r="3"/><path d="M3.5 19c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M13 15.2c1-.5 2.2-.7 3.5-.7 2.4 0 4.4 1.5 5 4.5"/></svg>

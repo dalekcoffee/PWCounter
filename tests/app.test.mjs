@@ -53,3 +53,15 @@ test('every module the page preloads is in the offline shell, and the QR encoder
   assert.ok(!pre.includes('js/qr.js') && !pre.includes('js/vendor/qrcodegen.js'));
   assert.ok(sw.includes("'js/qr.js'") && sw.includes("'js/vendor/qrcodegen.js'")); // still there offline
 });
+
+test('every script parses (a syntax error in app.js stops the whole page and no other test would notice)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { readdirSync } = await import('node:fs');
+  const dir = new URL('../js/', import.meta.url);
+  const files = readdirSync(dir).filter((f) => f.endsWith('.js')).map((f) => new URL(f, dir).pathname);
+  assert.ok(files.length > 10);
+  for (const f of files) {
+    const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+    assert.equal(r.status, 0, `${f}: ${r.stderr}`);
+  }
+});

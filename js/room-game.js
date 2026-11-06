@@ -3,8 +3,8 @@ import { needsFirst } from './state.js';
 import { roomSetup, roomActiveAfterReset, myTurnStarts } from './room-proto.js';
 
 /** What the two phones share: day/night, whose turn (0 me | 1 the other phone), the turn number. */
-export const sharedOf = (s) => ({ night: s.night, active: s.active, turn: s.turn });
-export const sharedDiffers = (a, b) => a.night !== b.night || a.active !== b.active || a.turn !== b.turn;
+export const sharedOf = (s) => ({ night: s.night, nightLock: !!s.nightLock, active: s.active, turn: s.turn });
+export const sharedDiffers = (a, b) => a.night !== b.night || !!a.nightLock !== !!b.nightLock || a.active !== b.active || a.turn !== b.turn;
 
 /** What the other phone is told about me. */
 export const selfOf = (s) => ({ name: s.name, seat: s.seats[0], souls: s.souls });
@@ -27,8 +27,9 @@ export const settleRoom = (state, role) => (needsFirst(state) ? roomSetup(state,
 
 /** The other phone's day/night / turn arrives. When the turn comes to me, my souls stand and 2 come (if tracked). */
 export function applyShared(state, sh) {
-  if (state.night === sh.night && state.active === sh.active && state.turn === sh.turn) return state;
-  let next = { ...state, night: sh.night, active: sh.active, turn: sh.turn };
+  const lock = sh.night === true && sh.nightLock === true; // a phone before 0.3.19 sends no lock: unlocked
+  if (state.night === sh.night && !!state.nightLock === lock && state.active === sh.active && state.turn === sh.turn) return state;
+  let next = { ...state, night: sh.night, nightLock: lock, active: sh.active, turn: sh.turn };
   if (state.active === 1 && sh.active === 0) next = myTurnStarts(next);
   return next;
 }

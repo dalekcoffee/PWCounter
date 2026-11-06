@@ -1,5 +1,6 @@
 // "Play with a friend": the room sheet, the scanner, the opponent drawer. The rules are pure (room-game.js, room-proto.js, drawer.js).
 import { ROOM_URL } from './room-config.js';
+import { nightAfterTurn } from './state.js';
 import { fakeAllowed, fakeTransport } from './room-fake.js';
 import { createRoom, webSocketTransport, readSession, readWatch } from './room.js';
 import { rememberedRoom, rejoinLine, ROOM_KEY } from './room-memory.js';
@@ -100,7 +101,7 @@ export function initRoom(ctx) {
     /** next state before it is stored: a room never asks who goes first */
     settle: (s) => (playing() ? settleRoom(s, R.role) : s),
     afterReset: (s) => (playing() ? afterRoomReset(s, R.role) : s),
-    endTurn: (s) => passTurn(s, R.role),
+    endTurn: (s) => nightAfterTurn(passTurn(s, R.role)), // unlocked night ends with the turn (0.3.19)
     changed(prev, next, remote) {
       if (!playing()) return;
       if (!next.rooms) { leave(); return; }

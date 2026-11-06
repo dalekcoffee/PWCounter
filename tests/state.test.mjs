@@ -126,3 +126,21 @@ test('tablet mode is off, left or right; off by default; a 0.3.14 "on" reads as 
   assert.equal(setSetting(defaultState(), 'tablet', 'left').tablet, 'left');
   assert.equal(setSetting(defaultState(), 'tablet', 'right').tablet, 'right');
 });
+
+test('day / night: a tap is night for this turn, a double tap locks it, a tap while locked makes it day', async () => {
+  const { tapNight, nightAfterTurn } = await import('../js/state.js');
+  let s = defaultState();
+  s = tapNight(s, false);
+  assert.deepEqual([s.night, s.nightLock], [true, false]);
+  assert.equal(endTurn(s).night, false); // unlocked night ends with the turn
+  const locked = tapNight(s, true);
+  assert.deepEqual([locked.night, locked.nightLock], [true, true]);
+  assert.equal(endTurn(locked).night, true); // locked stays through turns
+  assert.equal(endTurn(setSetting(locked, 'players', 2)).night, true);
+  const off = tapNight(locked, false);
+  assert.deepEqual([off.night, off.nightLock], [false, false]);
+  const day = defaultState();
+  assert.equal(nightAfterTurn(day), day); // day stays day, untouched
+  assert.equal(resetGame(locked).nightLock, false);
+  assert.equal(cleanState({ ...locked, night: false }).nightLock, false); // no lock without night
+});

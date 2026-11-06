@@ -1,7 +1,7 @@
 // PW Counter: the page. Rules live in state.js / calc.js / random.js (pure, tested).
 import { APP_VERSION } from './version.js';
 import {
-  defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSetting, COUNTERS,
+  defaultState, cleanState, step, endTurn, tapNight, NIGHT_DOUBLE_MS, resetGame, setSetting, COUNTERS,
   SOUL_MAX, soulDisplay, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul, needsResume, cleanName,
 } from './state.js';
 import * as calc from './calc.js';
@@ -237,8 +237,11 @@ function render(prev) {
   setText($('#turn-label'), setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`);
   setAttr($('#btn-end'), 'aria-label', setup ? 'Start game: choose who goes first.' : oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
   const tb = $('#btn-time');
+  const nightLocked = !!(s.night && s.nightLock);
+  setData(stage, 'nightlock', nightLocked ? 'on' : 'off');
   setAttr(tb, 'aria-pressed', String(s.night));
-  setAttr(tb, 'aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');
+  setAttr(tb, 'aria-label', nightLocked ? 'Night, locked: it stays night until you tap it off.' : s.night ? 'Night until the turn ends. Double tap to lock it, tap to make it day.' : 'It is day. Tap for night this turn, double tap to lock night on.');
+  setAttr(tb, 'title', nightLocked ? 'Night locked' : s.night ? 'Night (this turn)' : 'Day');
   setText($('.dn-word', tb), s.night ? 'Night' : 'Day');
   if (lastNight !== null && lastNight !== night) {
     stage.classList.remove('flash');
@@ -256,7 +259,16 @@ function render(prev) {
 }
 
 // ---------- bar ----------
-$('#btn-time').addEventListener('click', () => commit(toggleNight(state)));
+// day / night (0.3.19): a tap = night for this turn (or back to day), a quick second tap locks night on
+let nightTapAt = 0, nightTapOn = false;
+$('#btn-time').addEventListener('click', () => {
+  const now = Date.now();
+  const double = nightTapOn && now - nightTapAt < NIGHT_DOUBLE_MS;
+  const next = tapNight(state, double);
+  nightTapOn = !state.night && next.night; // this tap turned night on: a second one soon after locks it
+  nightTapAt = now;
+  commit(next);
+});
 $('#btn-end').addEventListener('click', () => {
   if (roomUi.active()) { commit(roomUi.endTurn(state)); return; }
   if (needsFirst(state)) { openFirst(); return; }

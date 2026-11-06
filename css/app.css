@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.3.18"; }
+:root { --pwc-v: "0.3.19"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -435,6 +435,15 @@ svg { display: block; }
 }
 .stage[data-time='night'] .daynight .ico-sun { display: none; }
 .stage[data-time='night'] .daynight .ico-moon { display: block; fill: currentColor; }
+/* night locked (0.3.19): a gold padlock badge on the button and a gold ring, so both players can see it stays night */
+.daynight { position: relative; }
+.dn-lock { display: none; }
+.stage[data-nightlock='on'] .dn-lock {
+  display: grid; place-items: center; position: absolute; top: -8px; right: -8px; width: 25px; height: 25px; border-radius: 50%;
+  background: var(--gold); color: #2a1f08; box-shadow: 0 0 0 2px #1b1e44, 0 2px 6px rgba(0, 0, 0, .45);
+}
+.stage[data-nightlock='on'] .dn-lock svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.stage[data-nightlock='on'] .daynight { border-color: var(--gold); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--gold) 70%, transparent), 0 0 18px rgba(130, 130, 230, .3); }
 .endturn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 10px 22px; min-height: 60px; border-radius: 999px;
   background: color-mix(in srgb, var(--acc) 16%, rgba(13, 19, 38, .9)); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent);

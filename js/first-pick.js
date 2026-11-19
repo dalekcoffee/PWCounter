@@ -1,6 +1,7 @@
 // Who goes first with two players on one screen (pure, tested). Player 1 sits at the bottom (seat 0), Player 2 at the
 // top (seat 1). Either a player taps their own big button, or they settle it with a die (high / low) or a coin
-// (heads / tails): one player calls, the other gets the other call, and whoever's call comes up goes first.
+// (heads / tails): one player calls, the other gets the other call, and whoever's call comes up wins the toss and
+// chooses to go first or second.
 
 export const SEAT_NAME = ['Player 1', 'Player 2'];
 export const CALLS = { die: ['high', 'low'], coin: ['heads', 'tails'] };
@@ -28,7 +29,7 @@ export function outcomeOf(kind, value) {
   return null;
 }
 
-/** The seat whose call came up (it goes first), or null. */
+/** The seat whose call came up (it wins the toss and chooses), or null. */
 export function winnerOf(calls, outcome) {
   if (!calls || !outcome) return null;
   if (calls[0] === outcome) return 0;
@@ -36,10 +37,28 @@ export function winnerOf(calls, outcome) {
   return null;
 }
 
-/** The words after the throw, e.g. "Rolled 5: high. Player 2 goes first." */
+/** The words after the throw, e.g. "Rolled 5: high. Player 2 wins." */
 export function resultLine(kind, value, winner) {
   const what = kind === 'die' ? `Rolled ${value}: ${outcomeOf(kind, value)}.` : `${CALL_WORD[value]}.`;
-  return `${what} ${SEAT_NAME[winner]} goes first.`;
+  return `${what} ${SEAT_NAME[winner]} wins.`;
+}
+
+/** One player (the opponent across the table has no seat on this screen): "Rolled 5: high. You win." */
+export function soloResultLine(kind, value, winner) {
+  const what = kind === 'die' ? `Rolled ${value}: ${outcomeOf(kind, value)}.` : `${CALL_WORD[value]}.`;
+  return `${what} ${winner === 0 ? 'You win.' : 'Your opponent wins.'}`;
+}
+
+/** The toss winner may pass the choice to the other player, once: -> the new chooser and whether it was passed. */
+export function passChoice(chooser, passed) {
+  if (passed || (chooser !== 0 && chooser !== 1)) return { chooser, passed };
+  return { chooser: 1 - chooser, passed: true };
+}
+
+/** The toss winner's choice: 'first' or 'second' -> the seat that goes first, or null. */
+export function firstSeat(winner, order) {
+  if ((winner !== 0 && winner !== 1) || (order !== 'first' && order !== 'second')) return null;
+  return order === 'first' ? winner : 1 - winner;
 }
 
 /** A turn's length as m:ss (h:mm:ss from an hour). */

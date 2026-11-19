@@ -8,6 +8,10 @@ test('version is the same everywhere', () => {
   const v = /APP_VERSION = '([^']+)'/.exec(read('js/version.js'))[1];
   assert.equal(JSON.parse(read('package.json')).version, v);
   assert.match(read('sw.js'), new RegExp(`const VERSION = '${v.replace(/\./g, '\\.')}'`));
+  assert.ok(read('index.html').includes(`<meta name="pwc-version" content="${v}">`), 'index.html carries the version (sw.js checks it)');
+  assert.ok(read('index.html').includes(`href="css/app.css?v=${v}"`), 'the page asks for this version of the stylesheet');
+  assert.ok(read('css/app.css').includes(`--pwc-v: "${v}"`), 'the stylesheet carries the version (index.html checks it)');
+  assert.match(read('sw.js'), /const STAMPED = \[[^\]]*'index.html'[^\]]*'js\/version.js'[^\]]*'css\/app.css'/, 'the service worker checks the page, the scripts and the stylesheet');
   assert.match(read('CHANGELOG.md'), new RegExp(`## ${v.replace(/\./g, '\\.')}`));
 });
 
@@ -48,4 +52,16 @@ test('every module the page preloads is in the offline shell, and the QR encoder
   for (const f of pre) assert.ok(sw.includes(`'${f}'`), f);
   assert.ok(!pre.includes('js/qr.js') && !pre.includes('js/vendor/qrcodegen.js'));
   assert.ok(sw.includes("'js/qr.js'") && sw.includes("'js/vendor/qrcodegen.js'")); // still there offline
+});
+
+test('every script parses (a syntax error in app.js stops the whole page and no other test would notice)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { readdirSync } = await import('node:fs');
+  const dir = new URL('../js/', import.meta.url);
+  const files = readdirSync(dir).filter((f) => f.endsWith('.js')).map((f) => new URL(f, dir).pathname);
+  assert.ok(files.length > 10);
+  for (const f of files) {
+    const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+    assert.equal(r.status, 0, `${f}: ${r.stderr}`);
+  }
 });

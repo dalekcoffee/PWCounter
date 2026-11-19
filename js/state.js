@@ -27,6 +27,8 @@ export const SECOND_START = 1;
 // soul = souls in the soul area, up = how many of them are standing (0..soul)
 export const freshSeat = () => ({ life: START_LIFE, mat: 0, ing: 0, soul: 0, up: 0 });
 
+export const TABLET = ['off', 'left', 'right'];
+
 export function defaultState() {
   return {
     v: 1,
@@ -34,6 +36,7 @@ export function defaultState() {
     seats: [freshSeat(), freshSeat()],
     pals: freshPals(), // Pal trackers (experimental): [seat][slot] = { atk, dmg, str, card }
     night: false,
+    nightLock: false, // 0.3.19: night locked on (a double tap); unlocked night turns back to day when the turn ends
     turn: 1,
     active: 0,
     turnAt: 0, // two players: when the current turn began (ms), for the turn clock; 0 = not started
@@ -49,6 +52,7 @@ export function defaultState() {
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
+    tablet: 'off', // experimental: two players side by side on a tablet on a stand: 'off' | 'left' | 'right' (0.3.15; the side Player 1 is on)
     palTrack: false, // experimental: five Pal slots per player with attack boost, damage and strike
     cardLookup: false, // experimental: search cards (Palify's public API) and pick the card in a Pal slot
     savedAt: 0, // when this (the one saved) game was last saved, ms
@@ -105,9 +109,10 @@ export function cleanState(raw) {
     seats: [cleanSeat(seats[0]), cleanSeat(seats[1])],
     pals: cleanPals(raw.pals),
     night: raw.night === true,
+    nightLock: raw.night === true && raw.nightLock === true,
     turn: int(raw.turn, 0, 9999, 1),
     active: raw.active === 1 ? 1 : 0,
-    first: raw.first === 0 || raw.first === 1 ? raw.first : null,
+    first: raw.first === 0 || raw.first === 1 ? raw.first : legacyFirst(raw),
     turnAt: Number.isFinite(raw.turnAt) && raw.turnAt > 0 ? Math.floor(raw.turnAt) : 0,
     players: raw.players === 2 ? 2 : 1,
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
@@ -119,10 +124,19 @@ export function cleanState(raw) {
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
     rooms: raw.rooms === true,
+    tablet: TABLET.includes(raw.tablet) ? raw.tablet : raw.tablet === true ? 'right' : 'off', // 0.3.14 saved true = right
     palTrack: raw.palTrack === true,
     cardLookup: raw.cardLookup === true,
     savedAt: Number.isFinite(raw.savedAt) && raw.savedAt > 0 ? Math.floor(raw.savedAt) : 0,
   };
+}
+
+/** A two-player game without souls saved before 0.3.5 never recorded who went first. If it is under way, the player
+ *  whose turn it is stands in for that (asking now would start a new game over it); a game at its start is asked. */
+function legacyFirst(raw) {
+  if (raw.players !== 2 || raw.souls === true || !Array.isArray(raw.seats)) return null;
+  const started = (Number(raw.turn) || 1) > 1 || raw.seats.some((x) => x && (x.life !== START_LIFE || x.mat > 0 || x.ing > 0));
+  return started ? (raw.active === 1 ? 1 : 0) : null;
 }
 
 const clamp = (n, [lo, hi]) => Math.min(hi, Math.max(lo, n));
@@ -144,8 +158,8 @@ export function beginTurn(state, seat) {
   return withSeat(state, seat, { soul, up: soul });
 }
 
-/** Does the game still need to know who goes first? (only while souls are tracked) */
-export const needsFirst = (state) => state.souls && state.first === null;
+/** Does the game still need to know who goes first? Two players: always (0.3.5). One player: only while souls are tracked. */
+export const needsFirst = (state) => (state.souls || state.players === 2) && state.first === null;
 
 /**
  * Who goes first. Two players: `seat` is the seat going first (0 bottom, 1 top).
@@ -155,8 +169,10 @@ export const needsFirst = (state) => state.souls && state.first === null;
  */
 export function chooseFirst(state, seat) {
   if (seat !== 0 && seat !== 1) return state;
-  // only the souls and the turn start over: life and resources stay (souls can be switched on mid-game)
-  let s = { ...state, first: seat, seats: state.seats.map((x) => ({ ...x, soul: 0, up: 0 })) };
+  // choosing who goes first starts the game (0.3.12): every counter back to its start, day, turn 1
+  const fresh = { ...resetGame(state), first: seat };
+  if (!state.souls) return { ...fresh, active: state.players === 2 ? seat : 0 }; // turns only
+  let s = fresh;
   if (s.players === 1) {
     if (seat === 0) return { ...beginTurn(s, 0), turn: 1, active: 0 };
     return { ...withSeat(s, 0, { soul: SECOND_START, up: SECOND_START }), turn: 0, active: 0 };
@@ -172,13 +188,13 @@ export function chooseFirst(state, seat) {
 export function endTurn(state) {
   if (state.palTrack) state = clearDamage(state); // damage on Pals is removed at the end of every turn
   if (state.players === 1) {
-    const next = { ...state, active: 0, turn: Math.min(9999, state.turn + 1) };
+    const next = nightAfterTurn({ ...state, active: 0, turn: Math.min(9999, state.turn + 1) });
     return state.souls ? beginTurn(next, 0) : next;
   }
   const active = state.active === 0 ? 1 : 0;
-  const first = state.souls && state.first !== null ? state.first : 0;
+  const first = state.first !== null ? state.first : 0;
   const turn = active === first ? Math.min(9999, state.turn + 1) : state.turn;
-  const next = { ...state, active, turn };
+  const next = nightAfterTurn({ ...state, active, turn });
   return state.souls ? beginTurn(next, active) : next;
 }
 
@@ -208,7 +224,21 @@ export function toggleSoul(state, seat, i) {
   return restSoul(state, seat, i < s.up ? -1 : 1);
 }
 
-export const toggleNight = (state) => ({ ...state, night: !state.night });
+export const toggleNight = (state) => ({ ...state, night: !state.night, nightLock: false });
+
+/** Two taps on the day / night button this close together (ms) are a double tap. */
+export const NIGHT_DOUBLE_MS = 400;
+/**
+ * The day / night button (0.3.19). A tap: day -> night (only for this turn), night -> day (and unlocked).
+ * A double tap right after turning night on locks it: it stays night until someone taps it off.
+ */
+export function tapNight(state, double) {
+  if (double && state.night && !state.nightLock) return { ...state, nightLock: true };
+  if (state.night) return { ...state, night: false, nightLock: false };
+  return { ...state, night: true, nightLock: false };
+}
+/** The end of a turn: night that is not locked turns back to day. */
+export const nightAfterTurn = (state) => (state.night && !state.nightLock ? { ...state, night: false } : state);
 
 export const RESUME_AFTER_MS = 48 * 60 * 60 * 1000;
 
@@ -225,7 +255,7 @@ export function needsResume(state, now) {
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {
-  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), night: false, turn: 1, active: 0, first: null, turnAt: 0 };
+  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), night: false, nightLock: false, turn: 1, active: 0, first: null, turnAt: 0 };
 }
 
 /** Change a setting, cleaned. Changing players or switching souls on starts the soul set-up again. */

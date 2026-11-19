@@ -3,6 +3,62 @@
 ## 0.4.0
 - Pal trackers (experimental, Settings → Experimental): five Pal slots under each player's counters, left to right in the same order as the Pals on the table. Each slot shows its attack boost, damage and extra strike in their own colours (zeros fade). Tap a slot for quick buttons (+100 / +200 / +500 / +1000 and the same down, strike − / +), "Left play" empties it. End Turn removes all damage; boosts and strike stay. Works with one and two players; a top player's slot opens facing them.
 - Card lookup (experimental): a search button in the bar finds any card by name, code or words from its effect, and shows it big with its text underneath (tap the picture to fill the screen). With Pal trackers on, each slot can be given its card, so everyone knows which Pal is which. Card data comes live from Palify's free public API (palify.org), saved on the device for a day; nothing about cards is stored in the app itself.
+## 0.3.19
+- Day / night: one tap makes it night for this turn; when the turn ends it turns back to day by itself. A quick double tap locks night on: it stays night through turns until someone taps it off, and the button shows a gold padlock (and a gold ring). A tap while it is night makes it day and unlocks it. In a room the lock is shared with the other phone.
+
+## 0.3.18
+- Who goes first, two players: "Roll or flip" is split into Roll (left of Not now) and Flip (right of Not now), so one tap goes straight to making a call. Roll, Flip and Not now are about 10% bigger.
+
+## 0.3.17
+- Who goes first: whoever wins the roll or flip can Pass, giving the choice of going first or second to the other player (once; it cannot be passed back). One player: "Pass: let them choose", or "They pass: I choose" when your opponent won and passed.
+- Who goes first, two players: while one player chooses, the other side shows a card saying "Player 1 is choosing…" / "Player 2 is choosing…" instead of the High / Low buttons.
+
+## 0.3.16
+- Tablet mode: the board only turns itself while the screen is portrait (orientation lock on). If the browser has already turned to landscape, the board is no longer turned a second time (that put everything sideways); the two players just sit side by side. Left / Right still put Player 1 on that side.
+
+## 0.3.15
+- Tablet mode is now Off / Left / Right. Left: the board turns left and Player 1 is on the left. Right: it turns right and Player 1 is on the right (the 0.3.14 tablet mode). Either way Player 1 is at the tablet's bottom edge. Off (the default) is the usual layout, unchanged.
+
+## 0.3.14
+- Experimental: Tablet mode (Settings, Experimental, with two players). For a tablet on a stand: the board is turned to the right and the two players sit side by side, both facing the same way. Player 1 is on the right (the tablet's bottom edge), Player 2 on the left; the bar runs along the bottom. Who goes first, Begin and Game over are split left / right to match. Face to face is not used in this mode.
+
+## 0.3.13
+- Who goes first: the roll or flip now uses the big throw, the same 3D die (one die) or coin as the dice button. The result shows for a moment, then the who-goes-first screen comes back for the winner to choose first or second.
+- Who goes first: Roll a die / Flip a coin (and Roll or flip with two players) are a little bigger and stand out a little more.
+
+## 0.3.12
+- Choosing who goes first now always starts a fresh game: life back to 10, Material and Ingredient to 0, day, turn 1 (and the souls dealt as before). Before, it kept the old counters, so a game could start with a life of 0.
+- A two-player game without souls that was saved mid-game before 0.3.5 (which never recorded who went first) is no longer interrupted with "who goes first?" on opening; it carries on with whoever's turn it was.
+
+## 0.3.11
+- Fixed: on some devices (older Android browsers) one tap on a counter changed it by 2. The tap was counted on touch and again by the keyboard path, because those browsers mark a tap's click like a keyboard click. A click right after a finger or mouse press is no longer counted; Enter / Space on a focused button still work.
+
+## 0.3.10
+- Game over: the confetti and the rain fade out toward the top of each side (the middle of the board with two players) instead of stopping at a hard line.
+
+## 0.3.9
+- Game over: confetti falls on the winner's side and rain on the loser's, for the 5 seconds of "Game over" (none with reduced motion). The "−1" badge no longer shows over it.
+
+## 0.3.8
+- Life changes colour: near white at 10, turning red as it falls toward 0, turning green as it climbs toward 20, and staying green above 20.
+- Game over: when a life reaches 0, "Game over" shows over the board for 5 seconds, like "Begin": "You win" on the winner's side and "You lose" on the loser's (one player: "You lose").
+
+## 0.3.7
+- Souls: the small "− of 5 +" buttons (add or remove a soul) have their own strip along the bottom of the soul tile, under a line, and are bigger. The big rest / stand halves stop above the strip, so a tap that misses a small button no longer rests or stands a soul. With two players the soul tile is a little taller (the life tile a little shorter) to make room.
+
+## 0.3.6
+- Fixed: on some devices the who-goes-first screen showed every button at once (Go first / Go second on both sides, I go second, the one-player heading). The page had arrived with an old stylesheet from the previous version's offline copy. The page now asks for its own version of the stylesheet and checks that the page, stylesheet and scripts match; if they do not, it forgets the old offline copy and reloads once. The offline copy also refuses a new version whose stylesheet is not that version.
+
+## 0.3.5
+- Two players without Track souls: a new game or a reset asks who goes first again (tap, roll or flip), so End Turn, the turn panel, the face-to-face turning and the turn clock start from the right player. Before, only games with souls asked, and the turn just started with Player 1. One player without souls still has no turns to track.
+
+## 0.3.4
+- Fixed: after an update, the dice / coin buttons and settings could stop working. The offline copy could end up with the page from one version and the scripts from another; it now downloads each version whole, checks the files match, and never mixes them.
+- Who goes first: whoever wins the roll or flip now chooses to go first or second (Go first / Go second on their side).
+- Two players, Numbers on cards: back to cards instead of soul flames: small cards, two rows of five bunched in the middle; standing souls show a flame, rested ones lie face down, empty slots are dashed.
+- Whose turn: the panel behind the active player is brighter, with a thicker ring and a wider glow (day and night).
+- One player, who goes first: the same big screen as two players, with only your side: big "I go first" / "I go second" buttons, and "Roll a die" / "Flip a coin" right below. Make your call (high / low or heads / tails), your opponent gets the other; if you win you choose first or second, if they win you tap what they chose. "Pick at random" is gone.
+- Two players: the life change badge ("−1") sits in the tile's corner on the + side, so it no longer covers the life number (it did on the top player's side).
 
 ## 0.3.3
 - Two players, dice and coin: the dice stay in the middle and both players see each die's number and the total (or heads / tails), the top player's copy facing them, each with their own Done and Roll again.

@@ -27,7 +27,10 @@ test('applyShared changes only shared values; same values = same object', () => 
   const s = defaultState();
   assert.equal(applyShared(s, sharedOf(s)), s);
   const n = applyShared(s, { night: true, active: 1, turn: 4 });
-  assert.deepEqual(sharedOf(n), { night: true, active: 1, turn: 4 });
+  assert.deepEqual(sharedOf(n), { night: true, nightLock: false, active: 1, turn: 4 });
+  const l = applyShared(n, { night: true, nightLock: true, active: 1, turn: 4 }); // the lock is shared too (0.3.19)
+  assert.equal(l.nightLock, true);
+  assert.ok(sharedDiffers(sharedOf(n), sharedOf(l)));
   assert.ok(sharedDiffers(sharedOf(s), sharedOf(n)));
   assert.deepEqual(n.seats, s.seats);
   assert.equal(leaveRoomState(n).active, 0);

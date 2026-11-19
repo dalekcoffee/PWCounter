@@ -1,4 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
+/* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
+:root { --pwc-v: "0.4.0"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -32,7 +34,7 @@ svg { display: block; }
   --pm: rgba(255, 255, 255, .92); --pm-edge: rgba(255, 255, 255, .42); --pm-fill: rgba(255, 255, 255, .1);
   --acc: var(--gold);
   --acc-ink: #2a1f08;
-  --num: #fff6e2;
+  --num: #fff6e2; /* js/life.js knows this colour too (the life number at 10) */
   position: fixed; inset: 0; overflow: hidden; isolation: isolate;
   display: grid; gap: 14px;
   grid-template-columns: minmax(0, 1fr);
@@ -48,7 +50,7 @@ svg { display: block; }
   --pm: #dcdcfb; --pm-edge: rgba(169, 171, 238, .5); --pm-fill: rgba(169, 171, 238, .12);
   --acc: var(--accent);
   --acc-ink: #161a33;
-  --num: #e8ecfa;
+  --num: #e8ecfa; /* js/life.js knows this colour too */
 }
 .stage[data-players='1'] { grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'bottom' 'bar'; }
 .seat[data-seat='1'] { grid-area: top; }
@@ -61,6 +63,32 @@ svg { display: block; }
 }
 .stage[data-land='right'] { top: 0; left: 100vw; transform: rotate(90deg); }
 .stage[data-land='left'] { top: 100vh; top: 100dvh; left: 0; transform: rotate(-90deg); }
+
+/* Tablet mode (experimental, two players): the two seats side by side, both upright. Left: Player 1 on the left,
+   Right: Player 1 on the right. With the screen portrait (orientation lock on) the board turns itself, like Landscape
+   Left / Right, so Player 1 sits on the tablet's bottom edge; when the browser is already landscape it is not turned
+   again (0.3.16: turning it twice put everything sideways). */
+.stage:is([data-tablet='left'], [data-tablet='right']) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 18px;
+}
+.stage[data-tablet='right'] { grid-template-areas: 'top bottom' 'bar bar'; }
+.stage[data-tablet='left'] { grid-template-areas: 'bottom top' 'bar bar'; }
+@media (orientation: portrait) {
+  .stage:is([data-tablet='left'], [data-tablet='right']) { inset: auto; width: 100vh; height: 100vw; width: 100dvh; transform-origin: 0 0; }
+  .stage[data-tablet='right'] { top: 0; left: 100vw; transform: rotate(90deg); }
+  .stage[data-tablet='left'] { top: 100vh; top: 100dvh; left: 0; transform: rotate(-90deg); }
+}
+.stage:not([data-tablet='off']) .bar { justify-self: center; width: min(620px, 100%); }
+/* who goes first, Begin and Game over: Player 2's half on the left, Player 1's on the right */
+.stage:not([data-tablet='off']) .overlay.first2 { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.stage:not([data-tablet='off']) .begin { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+/* turned left, Player 1 (the bottom side in these screens) comes first, on the left */
+.stage[data-tablet='left'] :is(.f2-side.bottom, .bg-side.bottom) { order: -1; }
+.stage[data-tablet='left'] .f2-mid { order: 0; }
+.stage[data-tablet='left'] .f2-side.top { order: 1; }
+.stage:not([data-tablet='off']) .bg-side b { font-size: clamp(44px, 9vmin, 104px); } /* half the width each: the big words fit their half */
+.stage:not([data-tablet='off']) .over .bg-side b { font-size: clamp(40px, 7.5vmin, 88px); }
 
 /* ---------- sky ---------- */
 .sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
@@ -142,8 +170,8 @@ svg { display: block; }
 .seat { min-height: 0; position: relative; isolation: isolate; border-radius: calc(var(--radius) + 8px); padding: 8px; }
 .stage[data-flip='on'] .seat[data-seat='1'] { transform: rotate(180deg); }
 /* whose turn: a soft filled panel behind that player's tiles, no outline */
-/* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame) */
-.seat::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 40%, transparent), color-mix(in srgb, var(--acc) 22%, transparent)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--acc) 70%, transparent), 0 0 32px color-mix(in srgb, var(--acc) 40%, transparent), 0 12px 40px color-mix(in srgb, var(--acc) 25%, transparent); }
+/* the panel is its own layer that fades in (a fading blurred shadow repainted the whole seat every frame); 0.3.4: brighter, a thicker ring and a wider glow */
+.seat::before { content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: calc(var(--radius) + 10px); pointer-events: none; opacity: 0; transition: opacity .35s; will-change: opacity; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 52%, transparent), color-mix(in srgb, var(--acc) 30%, transparent)); box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--acc) 95%, transparent), 0 0 44px color-mix(in srgb, var(--acc) 60%, transparent), 0 12px 48px color-mix(in srgb, var(--acc) 35%, transparent); }
 .seat.active::before { opacity: 1; }
 .seat-in {
   height: 100%; display: grid; gap: 8px;
@@ -162,7 +190,7 @@ svg { display: block; }
 /* where each tile sits: life on top, the resources, then souls (when tracked) */
 .t-life { grid-area: life; } .res { grid-area: res; } .t-soul { grid-area: soul; }
 .seat-in { grid-template-areas: 'life' 'res'; }
-.stage[data-souls='on'] .seat-in { grid-template-areas: 'life' 'res' 'soul'; grid-template-rows: minmax(0, 1fr) clamp(88px, 11cqh, 120px) clamp(104px, 12cqh, 124px); }
+.stage[data-souls='on'] .seat-in { grid-template-areas: 'life' 'res' 'soul'; grid-template-rows: minmax(0, 1fr) clamp(84px, 10cqh, 116px) clamp(138px, 15cqh, 164px); } /* 0.3.7: souls taller, for the − of N + strip */
 .stage[data-souls='on'][data-players='1'] .seat-in { grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .8fr); }
 .stage[data-souls='on'][data-players='1'][data-soulbg='on'] .seat-in, .stage[data-souls='on'][data-soulview='cards'] .seat-in { grid-template-rows: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1fr); }
 .stage[data-land='left'] .seat-in, .stage[data-land='right'] .seat-in { grid-template-areas: 'life res'; }
@@ -252,6 +280,8 @@ svg { display: block; }
 .delta.neg { color: #34121a; background: var(--rose); }
 .delta.show { opacity: 1; transform: none; }
 .t-life .delta { bottom: 38px; font-size: 26px; padding: 6px 18px; }
+/* two players: the life tile is shorter, so the badge goes to the corner on the + side, clear of the number (both seats) */
+.stage[data-players='2'] .t-life .delta { top: 10px; bottom: auto; left: auto; right: 14px; translate: none; font-size: 22px; padding: 4px 14px; }
 @container (max-height: 130px) { .delta { font-size: 17px; padding: 3px 11px; bottom: 5px; } }
 
 /* icon colours (drawn for this app) */
@@ -285,6 +315,21 @@ svg { display: block; }
 .soul-adj b { color: var(--text); }
 .soul-adj { gap: 8px; }
 .soul-adj button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--pm-edge); background: var(--pm-fill); color: var(--pm); font: 700 15px/1 var(--font-ui); padding: 0; }
+/* 0.3.7: "− of 5 +" has its own strip along the bottom of the soul tile, under a line, with bigger buttons;
+   the big rest / stand halves stop above it, so a tap that misses a small button does nothing */
+.t-soul { --adj-h: 44px; }
+.stage[data-players='2'] .t-soul { --adj-h: 40px; }
+.stage[data-players='2']:not([data-soulview='cards']) .soul-adj button { height: 30px; }
+.stage:not([data-soulview='cards']) .t-soul { padding-bottom: var(--adj-h); }
+.stage:not([data-soulview='cards']) .t-soul > .hit { bottom: var(--adj-h); }
+.stage:not([data-soulview='cards']) .t-soul::after { bottom: calc(var(--adj-h) + 6px); }
+.stage:not([data-soulview='cards']) .soul-adj {
+  left: 0; right: 0; bottom: 0; translate: none; height: var(--adj-h); justify-content: center; gap: 10px;
+  border-top: 1px solid var(--border); background: rgba(3, 6, 18, .28); font-size: 13px;
+}
+.stage:not([data-soulview='cards']) .soul-adj button { width: 54px; height: 32px; border-radius: 10px; font-size: 20px; }
+.stage:not([data-soulview='cards']) .soul-adj button:active { background: var(--tile-press); }
+.stage:not([data-soulview='cards']) .soul-adj .of { min-width: 4.5em; text-align: center; }
 .soul-cards { display: none; }
 /* cards view (one player): the souls as cards, tap to rest or stand */
 .stage[data-soulview='cards'] .t-soul > .hit, .stage[data-soulview='cards'] .t-soul > .pm, .stage[data-soulview='cards'] .t-soul .core { display: none; }
@@ -324,21 +369,29 @@ svg { display: block; }
 /* cards-only styles show no number */
 .stage[data-soulview='cards'] .sc-count { display: none; }
 /* "Numbers on cards": the cards drawn faintly behind the count; not tappable, the halves do the work */
-.stage[data-soulbg='on'] .soul-cards { display: flex; position: absolute; inset: 12px 64px 40px; z-index: 1; opacity: .3; pointer-events: none; }
+.stage[data-soulbg='on'] .soul-cards { display: flex; position: absolute; inset: 12px 64px calc(var(--adj-h) + 6px); z-index: 1; opacity: .3; pointer-events: none; }
 .stage[data-soulbg='on'] .sc-head, .stage[data-soulbg='on'] .sc-hit, .stage[data-soulbg='on'] .sc-pm { display: none; }
 .stage[data-soulbg='on'] .sc-body { margin: 0; }
 .stage[data-soulbg='on'] .t-soul .num { text-shadow: 0 2px 14px rgba(3, 6, 18, .85); }
-/* two players, Numbers on cards: the souls behind the count are soul flames, bigger than cards would be
-   (standing = lit, rested = dim and smaller, empty = a dashed outline); ten in a row where the tile is wide enough */
-.stage[data-players='2'][data-soulbg='on'] .soul-cards { inset: 8px 58px 34px; opacity: .5; }
-.stage[data-players='2'][data-soulbg='on'] .sc-row { gap: 2px 4px; }
-@container (min-width: 520px) { .stage[data-players='2'][data-soulbg='on'] .sc-row { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+/* two players, Numbers on cards: small soul cards behind the count, two rows of five bunched in the middle
+   (standing = a card face with a soul flame, rested = face down, empty = a dashed outline) */
+.stage[data-players='2'][data-soulbg='on'] .soul-cards { inset: 4px 48px calc(var(--adj-h) + 4px); opacity: .55; }
+.stage[data-players='2'][data-soulbg='on'] .sc-row { grid-template-columns: repeat(5, 38px); justify-content: center; gap: 4px 6px; }
 .stage[data-players='2'][data-soulbg='on'] .sc-card {
-  aspect-ratio: 1; height: 100%; width: auto; border: 0; border-radius: 0; transform: none; filter: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 2 58 58%22%3E%3Cpath d=%22M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z%22 fill=%22%238f6ee6%22 stroke=%22%232f1f6b%22 stroke-width=%223.2%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M32 30c1 5 8 7 8 14 0 5-4 8-8 8s-8-3-8-8c0-4 3-6 4-9 2 2 2 4 2 6 2-3 3-7 2-11Z%22 fill=%22%23e4dbff%22/%3E%3C/svg%3E") center / contain no-repeat;
+  aspect-ratio: 63 / 88; height: 100%; width: auto; max-width: 100%; border-radius: 4px; transform: none; filter: none;
+  border: 1.5px solid #cbbcff;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 2 58 58%22%3E%3Cpath d=%22M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z%22 fill=%22%23e4dbff%22/%3E%3C/svg%3E") center / 52% no-repeat, radial-gradient(circle at 50% 45%, rgba(143, 110, 230, .7), transparent 65%), linear-gradient(180deg, #4a3591, #221650);
+  box-shadow: inset 0 0 0 2px #2a1d60, inset 0 0 0 3px rgba(217, 204, 255, .35);
 }
-.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='rest'] { opacity: .4; transform: scale(.82); filter: saturate(.35); }
-.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='empty'] { background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 2 58 58%22%3E%3Cpath d=%22M33 6c2 9 14 13 16 26 2 12-6 24-17 24S13 48 14 37c1-8 7-11 8-18 4 4 4 9 3 12 5-4 9-13 8-25Z%22 fill=%22none%22 stroke=%22%23e8ecfa%22 stroke-width=%222.4%22 stroke-dasharray=%224 3%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") center / contain no-repeat; opacity: .35; }
+.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='rest'] {
+  transform: none; filter: none; opacity: .7; border-color: rgba(203, 188, 255, .4);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, .06) 0 3px, transparent 3px 7px), linear-gradient(180deg, #2b2150, #17112f);
+  box-shadow: inset 0 0 0 2px #17112f, inset 0 0 0 3px rgba(217, 204, 255, .15);
+}
+.stage[data-players='2'][data-soulbg='on'] .sc-card[data-state='empty'] { background: transparent; box-shadow: none; border: 1.5px dashed rgba(232, 236, 250, .35); }
+/* who goes first, in the big throw (0.3.13): one die, no Done / Roll again, the words a little smaller (they are longer) */
+#ov-throw[data-first] .d2-slot + .d2-slot, #ov-throw[data-first] #tm-b, #ov-throw[data-first] .throw-btns { display: none; }
+#ov-throw[data-first] .throw-out { font-size: clamp(24px, 6vmin, 40px); }
 /* the soul style picker: one choice per row, with a line of help */
 .set-row.stack { flex-direction: column; align-items: stretch; }
 .seg.stack { display: grid; gap: 4px; }
@@ -382,6 +435,15 @@ svg { display: block; }
 }
 .stage[data-time='night'] .daynight .ico-sun { display: none; }
 .stage[data-time='night'] .daynight .ico-moon { display: block; fill: currentColor; }
+/* night locked (0.3.19): a gold padlock badge on the button and a gold ring, so both players can see it stays night */
+.daynight { position: relative; }
+.dn-lock { display: none; }
+.stage[data-nightlock='on'] .dn-lock {
+  display: grid; place-items: center; position: absolute; top: -8px; right: -8px; width: 25px; height: 25px; border-radius: 50%;
+  background: var(--gold); color: #2a1f08; box-shadow: 0 0 0 2px #1b1e44, 0 2px 6px rgba(0, 0, 0, .45);
+}
+.stage[data-nightlock='on'] .dn-lock svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.stage[data-nightlock='on'] .daynight { border-color: var(--gold); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--gold) 70%, transparent), 0 0 18px rgba(130, 130, 230, .3); }
 .endturn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 10px 22px; min-height: 60px; border-radius: 999px;
   background: color-mix(in srgb, var(--acc) 16%, rgba(13, 19, 38, .9)); border: 1px solid color-mix(in srgb, var(--acc) 60%, transparent);
@@ -539,8 +601,30 @@ svg { display: block; }
 .f2-call[aria-pressed='true'] { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); opacity: 1; }
 .f2-call[aria-pressed='true'] small { color: var(--acc-ink); }
 .f2-call:disabled:not([aria-pressed='true']) { opacity: .3; }
-#ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-big { display: none; }
+.f2-picks { display: grid; gap: 10px; min-height: 0; }
+.f2-big.solo, .f2-head { display: none; }
+#ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-picks { display: none; }
 #ov-first2:is([data-step='call'], [data-step='throw'], [data-step='result']) .f2-calls { display: grid; }
+/* the toss winner chooses: their calls make way for Go first / Go second */
+.f2-choose { display: none; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; }
+/* Pass: a slimmer button under the two choices (0.3.17) */
+.f2-pass {
+  grid-column: 1 / -1; min-height: 48px; padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(13, 19, 38, .9); color: var(--text);
+  border: 1.5px dashed color-mix(in srgb, var(--text) 40%, transparent); font: 600 16px/1.2 var(--font-ui);
+}
+.f2-pass:active { background: color-mix(in srgb, var(--acc) 25%, var(--bg, #0b1020)); }
+/* the side that is not choosing: a card that says who is (instead of the old High / Low) */
+.f2-wait {
+  display: none; place-content: center; min-height: 0; padding: 14px; text-align: center; border-radius: var(--radius);
+  background: rgba(8, 17, 42, .7); border: 2px dashed color-mix(in srgb, var(--text) 22%, transparent);
+}
+.f2-wait b { font: 600 clamp(26px, 6vmin, 48px)/1.15 var(--font-head); color: var(--text-2); }
+#ov-first2[data-step='result'] .f2-side:not(.won) .f2-calls { display: none; }
+#ov-first2[data-step='result'] .f2-side:not(.won) .f2-wait { display: grid; }
+.stage[data-players='1'] .f2-wait { display: none !important; }
+#ov-first2[data-step='result'] .f2-side.won .f2-calls { display: none; }
+#ov-first2[data-step='result'] .f2-side.won .f2-choose { display: grid; }
+.f2-choose .f2-call { border-color: var(--gold); }
 .f2-say { margin: 0; min-height: 1.35em; text-align: center; font: 600 clamp(15px, 3.4vmin, 22px)/1.35 var(--font-ui); color: var(--text); }
 .f2-side.won .f2-say { color: var(--gold); }
 .f2-mid { display: grid; place-items: center; min-height: 72px; }
@@ -549,14 +633,37 @@ svg { display: block; }
 #ov-first2[data-step='call'] .f2-m:not([data-for~='call']), #ov-first2[data-step='throw'] .f2-m:not([data-for~='throw']),
 #ov-first2[data-step='result'] .f2-m:not([data-for~='result']) { display: none; }
 .f2-roll {
-  display: inline-flex; align-items: center; gap: 10px; height: 64px; padding: 0 24px 0 18px; border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--acc) 60%, transparent); background: rgba(13, 19, 38, .9); color: var(--text); font: 700 16px/1 var(--font-ui);
+  display: inline-flex; align-items: center; gap: 10px; height: 84px; padding: 0 26px 0 20px; border-radius: 999px; flex: 0 1 auto; min-width: 0;
+  border: 2px solid color-mix(in srgb, var(--acc) 75%, transparent); background: rgba(13, 19, 38, .9); color: var(--text); font: 700 21px/1 var(--font-ui);
 }
-.f2-roll svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.f2-roll svg { flex: none; width: 38px; height: 38px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .f2-hint { color: var(--text-2); font: 600 14px/1.2 var(--font-ui); }
 .f2-die { --d: 84px; }
-.f2-m .btn { min-height: 52px; padding: 0 22px; font-size: 16px; }
+.f2-m .btn { min-height: 62px; padding: 0 26px; font-size: 18px; }
+.f2-m [data-method] { border-width: 2px; border-color: color-mix(in srgb, var(--acc) 60%, transparent); }
+/* two players, the first screen: Roll | Not now | Flip in one row (0.3.18); Not now about 10% bigger too */
+.f2-m[data-for='pick'] { flex-wrap: nowrap; gap: 10px; }
+.f2-m .btn.f2-notnow { min-height: 68px; padding: 0 16px; font-size: 20px; flex: none; background: rgba(13, 19, 38, .96); } /* solid: the bar behind does not show through */
 #ov-first2[data-kind='coin'] .f2-die, #ov-first2[data-kind='die'] .f2-coin { display: none; }
+/* one player: the same screen with only your side, a heading, the die / coin buttons right away and big buttons */
+.stage[data-players='1'] .overlay.first2 { grid-template-rows: auto minmax(0, 1fr) auto; }
+.stage[data-players='1'] .f2-side.top { display: none; }
+.stage[data-players='1'] .f2-head { display: block; grid-row: 1; text-align: center; padding: 8px 8px 0; }
+.f2-head h2 { margin: 0; font: 600 clamp(30px, 8vmin, 44px)/1.1 var(--font-head); color: var(--gold); }
+.f2-head p { margin: 8px auto 0; max-width: 34em; color: var(--text-2); font-size: 14px; line-height: 1.4; }
+.stage[data-players='1'] .f2-side.bottom { grid-row: 2; }
+.stage[data-players='1'] .f2-mid { grid-row: 3; padding-bottom: 6px; }
+.stage[data-players='1'] .f2-picks { grid-template-rows: 1fr 1fr; }
+.stage[data-players='1'] .f2-big.solo { display: block; }
+.stage[data-players='1'] .f2-m .btn { min-height: 64px; padding: 0 26px; font-size: 19px; }
+.stage[data-players='1'] .f2-m [data-method] { min-height: 78px; font-size: 21px; }
+.stage[data-players='1'] #ov-first2[data-step='pick'] .f2-m[data-for='method'] { display: flex; }
+.stage[data-players='1'] #ov-first2[data-step='pick'] :is(.f2-m[data-for='pick'] .f2-roll, .f2-m[data-for='method'] [data-back]) { display: none; }
+.stage[data-players='1'] #ov-first2[data-step='pick'] .f2-mid { display: grid; gap: 6px; justify-items: stretch; }
+.stage[data-players='1'] #ov-first2[data-step='pick'] .f2-m[data-for='method'] { order: -1; flex-wrap: nowrap; }
+.stage[data-players='1'] #ov-first2[data-step='pick'] .f2-m[data-for='method'] .btn { flex: 1; }
+.stage[data-players='1'] #ov-first2[data-step='result'] .f2-side.bottom .f2-calls { display: none; }
+.stage[data-players='1'] #ov-first2[data-step='result'] .f2-side.bottom .f2-choose { display: grid; }
 .f2-coin { padding: 14px 26px; border-radius: 999px; background: radial-gradient(circle at 35% 30%, #fff1c2, #e3c069 55%, #b88a2e); color: #3a2706; font: 700 22px/1 var(--font-head); min-width: 120px; text-align: center; }
 
 /* ---------- the game begins ----------
@@ -574,7 +681,26 @@ svg { display: block; }
 .bg-side b { font: 600 clamp(64px, 17vmin, 150px)/1 var(--font-head); color: var(--gold); letter-spacing: .02em; text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 60px rgba(227, 200, 147, .35); }
 .bg-side span { font: 700 clamp(22px, 6vmin, 44px)/1.15 var(--font-ui); color: var(--text); text-shadow: 0 2px 18px rgba(3, 6, 18, .95), 0 0 2px rgba(3, 6, 18, .9); }
 .bg-side[data-first='yes'] span { color: var(--gold); }
-.begin.go .bg-side > * { animation: beginIn 4s cubic-bezier(.2, .8, .2, 1) forwards; }
+.begin.go .bg-side > :not(.fx) { animation: beginIn 4s cubic-bezier(.2, .8, .2, 1) forwards; }
+/* game over: the same callout, 5 s; the winner's line in green, the loser's in red */
+.over .bg-side { position: relative; overflow: hidden; }
+.over .bg-side > :not(.fx) { position: relative; z-index: 1; }
+.fx { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: 0; }
+/* each side fades in from its top edge (the middle of the board with two players), so the two effects never meet at a hard line */
+.fx { -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .35) 12%, #000 34%); mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .35) 12%, #000 34%); }
+.over.go .fx { animation: fxShow 5s linear forwards; }
+@keyframes fxShow { 0% { opacity: 0; } 6% { opacity: 1; } 84% { opacity: 1; } 100% { opacity: 0; } }
+.fx i { position: absolute; top: -24px; display: block; will-change: transform; }
+.fx .confetti { width: 8px; height: 13px; border-radius: 2px; animation: confetti linear both; }
+@keyframes confetti { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(var(--dx), var(--fall), 0) rotate(var(--rot)); } }
+.fx .drop { width: 2px; height: 22px; border-radius: 1px; background: linear-gradient(180deg, rgba(160, 190, 255, 0), rgba(170, 200, 255, .95)); animation: rain linear infinite both; }
+@keyframes rain { from { transform: translate3d(0, 0, 0) rotate(12deg); } to { transform: translate3d(calc(var(--fall) * -.2), var(--fall), 0) rotate(12deg); } }
+.over .bg-side[data-result='lose'] .fx { background: linear-gradient(180deg, rgba(20, 30, 60, .35), rgba(20, 30, 60, .1)); }
+.over.go::before { animation-duration: 5s; }
+.over.go .bg-side > :not(.fx) { animation-duration: 5s; }
+.over .bg-side b { font-size: clamp(50px, 14vmin, 130px); color: var(--text); text-shadow: 0 6px 40px rgba(3, 6, 18, .9), 0 0 50px rgba(255, 255, 255, .2); }
+.over .bg-side[data-result='win'] span { color: #5be37d; }
+.over .bg-side[data-result='lose'] span { color: #ff6b6b; }
 @keyframes beginIn { 0% { opacity: 0; transform: scale(.6); } 9% { opacity: 1; transform: scale(1.06); } 14% { transform: scale(1); } 88% { opacity: 1; } 100% { opacity: 0; transform: scale(1.03); } }
 
 /* the first 10 seconds of a game the turn button rests (greyed, a bar fills), so nobody ends turn 1 by accident */

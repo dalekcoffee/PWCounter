@@ -1,20 +1,22 @@
 // PW Counter: the page. Rules live in state.js / calc.js / random.js (pure, tested).
 import { APP_VERSION } from './version.js';
 import {
-  defaultState, cleanState, step, endTurn, toggleNight, resetGame, setSetting, COUNTERS,
+  defaultState, cleanState, step, endTurn, tapNight, NIGHT_DOUBLE_MS, resetGame, setSetting, COUNTERS,
   SOUL_MAX, soulDisplay, needsFirst, chooseFirst, restSoul, addSoul, toggleSoul, needsResume, cleanName,
 } from './state.js';
 import * as calc from './calc.js';
 import { rollDie, flipCoin } from './random.js';
 import { coinTarget } from './dice-anim.js';
 import { createDice } from './die3d.js';
-import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, clockText } from './first-pick.js';
+import { SEAT_NAME, CALLS, CALL_WORD, CALL_HINT, callsFor, outcomeOf, winnerOf, resultLine, soloResultLine, firstSeat, passChoice, clockText } from './first-pick.js';
 import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
+import { lifeTone, justLost, overWords } from './life.js';
 import { PAL_SLOTS, palStep, palCard, palClear, palNum } from './pals.js';
 import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine } from './cards.js';
 
+document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
 const KEY = 'pwc.state';
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -52,6 +54,7 @@ function commit(next, remote = false) {
   saveSoon();
   render(prev);
   roomUi.changed(prev, state, remote);
+  if (!remote && !roomUi.watching()) { const lost = justLost(prev, state, roomUi.active() ? 1 : state.players); if (lost.length) announceOver(lost[0]); }
 }
 
 // ---------- seats ----------
@@ -150,7 +153,7 @@ function bump(seat, key, d, tileEl) {
 
 /** The "+2" / "−3" badge on a tile: taps within 5 s add up, then it fades. */
 function showDelta(tileEl, d) {
-  if (!d) return;
+  if (!d || !$('#over').hidden) return; // no badge over "Game over"
   const info = deltas.get(tileEl) || { sum: 0, timer: 0 };
   info.sum += d;
   clearTimeout(info.timer);
@@ -170,9 +173,16 @@ function stopHold() {
   hold = null;
 }
 
+// A tap counts once. Some browsers (older Android) send the click after a tap with detail 0, like a keyboard click,
+// and the keyboard path below then counted the tap a second time (0.3.11). Pointer presses are remembered, and a
+// click soon after one is not counted; a second pointerdown on the same button within 40 ms is the same tap.
+let pressAt = 0, pressHit = null;
 stage.addEventListener('pointerdown', (e) => {
   const hit = e.target.closest('.hit');
   if (!hit || e.button > 0) return;
+  const now = Date.now();
+  if (hit === pressHit && now - pressAt < 40) { e.preventDefault(); return; }
+  pressAt = now; pressHit = hit;
   const tileEl = hit.closest('.tile');
   const seat = Number(hit.closest('.seat').dataset.seat);
   const key = tileEl.dataset.key;
@@ -184,10 +194,10 @@ stage.addEventListener('pointerdown', (e) => {
 });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'blur']) window.addEventListener(ev, stopHold);
 stage.addEventListener('contextmenu', (e) => { if (e.target.closest('.hit')) e.preventDefault(); });
-// keyboard activation (detail 0); pointer taps are handled above
+// keyboard activation (detail 0, and no finger or mouse press just before); pointer taps are handled above
 stage.addEventListener('click', (e) => {
   const hit = e.target.closest('.hit');
-  if (!hit || e.detail !== 0) return;
+  if (!hit || e.detail !== 0 || Date.now() - pressAt < 1000) return;
   bump(Number(hit.closest('.seat').dataset.seat), hit.closest('.tile').dataset.key, Number(hit.dataset.d), hit.closest('.tile'));
 });
 
@@ -200,10 +210,14 @@ function render(prev) {
   const inRoom = roomUi.active(); // in a room your seat is the one-player layout, whatever the players setting says
   const players = inRoom ? 1 : s.players;
   setData(stage, 'players', String(players));
-  setData(stage, 'land', players === 2 ? 'off' : s.landscape); // two players on one screen: no landscape
-  setData(stage, 'flip', players === 2 && s.flip ? 'on' : 'off');
+  // tablet mode (experimental): two players side by side, the board turned right, nobody upside down
+  const tablet = players === 2 && s.tablet !== 'off';
+  setData(stage, 'tablet', tablet ? s.tablet : 'off');
+  setData(stage, 'land', players === 2 ? 'off' : s.landscape); // two players on one screen: no landscape setting
+  const flip = players === 2 && s.flip && !tablet;
+  setData(stage, 'flip', flip ? 'on' : 'off');
   // face to face: the bar and the pop-ups turn to the top player on their turn, so they can read them
-  setData(stage, 'face', players === 2 && s.flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
+  setData(stage, 'face', flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
   setData(stage, 'souls', s.souls ? 'on' : 'off');
   setData(stage, 'icons', s.iconsOnly ? 'only' : 'words');
   setData(stage, 'pals', s.palTrack ? 'on' : 'off');
@@ -223,6 +237,10 @@ function render(prev) {
       setText(n, String(seat[key]));
       setData(n, 'len', String(Math.max(2, String(seat[key]).length)));
     }
+    // life: near white at 10, redder toward 0, greener toward 20 (and green above)
+    const tone = lifeTone(seat.life, night);
+    const ln = $('.t-life .num', seatEl);
+    if (ln.dataset.tone !== tone) { ln.dataset.tone = tone; ln.style.color = tone; }
     if (s.palTrack) paintPalRow(seatEl, i);
     const whose = $('.whose', seatEl);
     setText(whose, i === 1 ? 'Player 2' : (s.name || 'Username not set · ⚙ Settings'));
@@ -239,14 +257,17 @@ function render(prev) {
     });
   }
   const oneSouls = players === 1 && s.souls && !inRoom;
-  const setup = needsFirst(s) && !inRoom; // souls on, who goes first not chosen yet
+  const setup = needsFirst(s) && !inRoom; // who goes first not chosen yet (two players, or one player with souls)
   setText($('.et-word'), setup ? 'Start game' : oneSouls ? 'Start turn' : 'End Turn');
   $('#btn-end').classList.toggle('long', setup);
   setText($('#turn-label'), setup ? 'Who goes first?' : oneSouls && s.turn === 0 ? 'Going second' : `Turn ${s.turn}`);
   setAttr($('#btn-end'), 'aria-label', setup ? 'Start game: choose who goes first.' : oneSouls ? 'Start my turn: my souls stand and I get 2 more.' : s.players === 2 ? `End turn. Turn ${s.turn}, ${s.active === 0 ? 'your' : "the opponent's"} turn.` : `End turn. Turn ${s.turn}.`);
   const tb = $('#btn-time');
+  const nightLocked = !!(s.night && s.nightLock);
+  setData(stage, 'nightlock', nightLocked ? 'on' : 'off');
   setAttr(tb, 'aria-pressed', String(s.night));
-  setAttr(tb, 'aria-label', s.night ? 'It is night. Tap to make it day.' : 'It is day. Tap to make it night.');
+  setAttr(tb, 'aria-label', nightLocked ? 'Night, locked: it stays night until you tap it off.' : s.night ? 'Night until the turn ends. Double tap to lock it, tap to make it day.' : 'It is day. Tap for night this turn, double tap to lock night on.');
+  setAttr(tb, 'title', nightLocked ? 'Night locked' : s.night ? 'Night (this turn)' : 'Day');
   setText($('.dn-word', tb), s.night ? 'Night' : 'Day');
   if (lastNight !== null && lastNight !== night) {
     stage.classList.remove('flash');
@@ -265,7 +286,16 @@ function render(prev) {
 }
 
 // ---------- bar ----------
-$('#btn-time').addEventListener('click', () => commit(toggleNight(state)));
+// day / night (0.3.19): a tap = night for this turn (or back to day), a quick second tap locks night on
+let nightTapAt = 0, nightTapOn = false;
+$('#btn-time').addEventListener('click', () => {
+  const now = Date.now();
+  const double = nightTapOn && now - nightTapAt < NIGHT_DOUBLE_MS;
+  const next = tapNight(state, double);
+  nightTapOn = !state.night && next.night; // this tap turned night on: a second one soon after locks it
+  nightTapAt = now;
+  commit(next);
+});
 $('#btn-end').addEventListener('click', () => {
   if (roomUi.active()) { commit(roomUi.endTurn(state)); return; }
   if (needsFirst(state)) { openFirst(); return; }
@@ -294,7 +324,6 @@ function paintFirst() {
   $('#first-sub').textContent = two
     ? 'The player going second starts with 1 soul. The player going first gets 2 souls now.'
     : 'Going first: 2 souls now. Going second: 1 soul now, and 2 more when you start your first turn.';
-  $('#first-out').textContent = '\u00a0';
 }
 function maybeAskFirst() {
   if (askFirst && needsFirst(state) && !openId) { askFirst = false; openFirst(); }
@@ -302,24 +331,12 @@ function maybeAskFirst() {
 $('#ov-first').addEventListener('click', (e) => {
   const b = e.target.closest('[data-first]');
   if (!b) return;
-  let seat = b.dataset.first;
-  if (seat === 'random') {
-    seat = flipCoin() === 'heads' ? 0 : 1;
-    const two = state.players === 2;
-    $('#first-out').textContent = two ? (seat === 0 ? 'Bottom player goes first' : 'Top player goes first') : (seat === 0 ? 'You go first' : 'You go second');
-    $$('#ov-first button').forEach((x) => { x.disabled = true; });
-    setTimeout(() => {
-      $$('#ov-first button').forEach((x) => { x.disabled = false; });
-      startGame(seat);
-    }, 1100);
-    return;
-  }
-  startGame(Number(seat));
+  startGame(Number(b.dataset.first));
 });
 
-/** One player: the sheet. Two players on one screen: a big button on each side. */
+/** On one screen (one or two players): the big who-goes-first screen. In a room: the sheet. */
 function openFirst() {
-  if (state.players === 2 && !roomUi.active()) { f2Reset(); openOverlay('ov-first2'); return; }
+  if (!roomUi.active()) { f2Reset(); openOverlay('ov-first2'); return; }
   paintFirst();
   openOverlay('ov-first');
 }
@@ -350,6 +367,56 @@ function announceBegin() {
   render();
 }
 
+/** A life reached 0: "Game over" over the board for 5 s, You win / You lose on each player's side. */
+const OVER_MS = 5000;
+let overTimer = 0;
+function announceOver(loser) {
+  const begin = $('#begin');
+  clearTimeout(beginTimer); begin.hidden = true; begin.classList.remove('go');
+  for (const d of $$('.delta.show')) d.classList.remove('show'); // no change badges behind the words
+  const el = $('#over');
+  for (const side of $$('.bg-side', el)) {
+    const words = overWords(Number(side.dataset.seat), loser);
+    setData(side, 'result', words === 'You win' ? 'win' : 'lose');
+    setText($('span', side), words);
+  }
+  el.hidden = false;
+  for (const side of $$('.bg-side', el)) fillFx($('.fx', side), side.dataset.result); // after unhiding: it needs the side's height
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  clearTimeout(overTimer);
+  overTimer = setTimeout(() => { el.hidden = true; el.classList.remove('go'); for (const fx of $$('.fx', el)) fx.textContent = ''; }, OVER_MS);
+}
+/** Confetti (win) or rain (lose) on one side: plain divs, moved by transform only, gone with the callout. */
+const CONFETTI = ['#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#c77dff', '#ffffff'];
+function fillFx(fx, result) {
+  fx.textContent = '';
+  if (reduceMotion() || getComputedStyle(fx.parentElement).display === 'none') return;
+  const fall = fx.offsetHeight + 40;
+  const win = result === 'win';
+  const bits = [];
+  for (let i = 0; i < (win ? 46 : 70); i++) {
+    const r = Math.random, d = document.createElement('i');
+    d.className = win ? 'confetti' : 'drop';
+    const s = d.style;
+    s.left = `${(r() * 104 - 2).toFixed(1)}%`;
+    s.setProperty('--fall', `${fall}px`);
+    if (win) {
+      s.background = CONFETTI[i % CONFETTI.length];
+      s.setProperty('--dx', `${Math.round(r() * 80 - 40)}px`);
+      s.setProperty('--rot', `${Math.round(r() * 900 - 450)}deg`);
+      s.animationDuration = `${(2.4 + r() * 1.4).toFixed(2)}s`;
+      s.animationDelay = `${(r() * 1.3).toFixed(2)}s`;
+      if (i % 3 === 0) { s.width = '7px'; s.height = '7px'; s.borderRadius = '50%'; }
+    } else {
+      s.animationDuration = `${(0.6 + r() * 0.45).toFixed(2)}s`;
+      s.animationDelay = `${(r() * 1.2).toFixed(2)}s`;
+      s.opacity = (0.35 + r() * 0.4).toFixed(2);
+    }
+    bits.push(d);
+  }
+  fx.append(...bits);
+}
+
 // two players: how long the current turn has been going, on the turn button
 let clockTimer = 0;
 function paintClock() {
@@ -369,16 +436,31 @@ const f2Ov = $('#ov-first2');
 const f2 = { step: 'pick', kind: null, calls: null, value: null, winner: null, timer: 0 };
 function f2Reset() {
   clearTimeout(f2.timer);
-  Object.assign(f2, { step: 'pick', kind: null, calls: null, value: null, winner: null, timer: 0 });
+  Object.assign(f2, { step: 'pick', kind: null, calls: null, value: null, winner: null, chooser: null, passed: false, timer: 0 });
   paintF2();
 }
 function paintF2() {
+  const solo = state.players === 1;
   setData(f2Ov, 'step', f2.step);
   setData(f2Ov, 'kind', f2.kind || '');
+  setText($('.f2-picks [data-pick="0"]', f2Ov), solo ? 'I go first' : 'Player 1 goes first');
+  setText($('.f2-hint', f2Ov), solo ? 'Your opponent gets the other call' : 'Either player picks one');
+  // the choice after the toss: whoever won (or was passed the choice) chooses; one player: yours, or your opponent's
+  const chooser = f2.chooser ?? f2.winner;
+  const theirs = solo && chooser === 1;
+  for (const p of $$('.f2-pass', f2Ov)) {
+    setHidden(p, f2.passed);
+    setText(p, solo ? (chooser === 0 ? 'Pass: let them choose' : 'They pass: I choose') : `Pass: ${SEAT_NAME[1 - Number(p.closest('.f2-side').dataset.seat)]} chooses`);
+  }
+  const [cf, cs] = $$('.f2-side.bottom .f2-choose .f2-call', f2Ov);
+  const sl = state.souls; // without souls the buttons say nothing about souls
+  $$('.f2-side.top .f2-choose small', f2Ov).forEach((x, i) => setText(x, !sl ? '' : i === 0 ? '2 souls now' : '1 soul now'));
+  setText($('b', cf), theirs ? 'They go first' : 'Go first'); setText($('small', cf), !sl ? '' : theirs ? 'you get 1 soul now' : '2 souls now');
+  setText($('b', cs), theirs ? 'They go second' : 'Go second'); setText($('small', cs), !sl ? '' : theirs ? 'you get 2 souls now' : '1 soul now');
   for (const side of $$('.f2-side', f2Ov)) {
     const seat = Number(side.dataset.seat);
     if (f2.kind) {
-      $$('.f2-call', side).forEach((b, i) => {
+      $$('.f2-calls .f2-call', side).forEach((b, i) => {
         const c = CALLS[f2.kind][i];
         b.dataset.call = c;
         setText($('b', b), CALL_WORD[c]);
@@ -387,11 +469,15 @@ function paintF2() {
         setProp(b, 'disabled', !!f2.calls);
       });
     }
-    const say = f2.step === 'call' || f2.step === 'throw'
-      ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
-      : f2.step === 'result' ? resultLine(f2.kind, f2.value, f2.winner) : '';
+    const say = solo
+      ? (f2.step === 'call' || f2.step === 'throw' ? (f2.calls ? `Your call: ${CALL_WORD[f2.calls[0]]}` : 'Make your call')
+        : f2.step === 'result' ? `${soloResultLine(f2.kind, f2.value, f2.winner)} ${chooser === 0 ? (f2.passed ? 'They passed. Choose:' : 'Choose:') : (f2.passed ? 'You passed. What did they choose?' : 'What did they choose?')}` : '')
+      : f2.step === 'call' || f2.step === 'throw'
+        ? (f2.calls ? `${SEAT_NAME[seat]}: ${CALL_WORD[f2.calls[seat]]}` : `${SEAT_NAME[seat]}, pick one`)
+        : f2.step === 'result' ? (seat === chooser ? `${resultLine(f2.kind, f2.value, f2.winner)} ${f2.passed ? `${SEAT_NAME[1 - seat]} passed. You choose:` : 'You choose:'}` : resultLine(f2.kind, f2.value, f2.winner)) : '';
     setText($('.f2-say', side), say);
-    side.classList.toggle('won', f2.step === 'result' && f2.winner === seat);
+    setText($('.f2-wait b', side), f2.step === 'result' && chooser !== null ? `${SEAT_NAME[chooser]} is choosing…` : '');
+    side.classList.toggle('won', f2.step === 'result' && chooser === seat); // 'won': this side chooses
   }
 }
 function f2Throw() {
@@ -402,29 +488,30 @@ function f2Throw() {
     if (kind === 'die') paintFace(die, value); else setText(coinEl, CALL_WORD[value]);
     f2.value = value;
     f2.winner = winnerOf(f2.calls, outcomeOf(kind, value));
+    f2.chooser = f2.winner; f2.passed = false;
     f2.step = 'result';
-    paintF2();
-    f2.timer = setTimeout(() => startGame(f2.winner), 2800);
+    paintF2(); // the winner chooses to go first or second (no timer)
   };
   f2.step = 'throw';
   paintF2();
-  if (reduceMotion()) { land(); return; }
-  let t = 0, gap = 50;
-  const flick = () => {
-    if (kind === 'die') paintFace(die, rollDie(6)); else setText(coinEl, flipCoin() === 'heads' ? 'Heads' : 'Tails');
-    t += gap; gap = Math.min(180, gap * 1.2);
-    f2.timer = setTimeout(t < 1000 ? flick : land, gap);
-  };
-  flick();
+  // the same big throw as the dice button (3D die / coin), one die; then back here, where the winner chooses
+  const winner = winnerOf(f2.calls, outcomeOf(kind, value));
+  const words = state.players === 1 ? soloResultLine(kind, value, winner) : resultLine(kind, value, winner);
+  throwForFirst(kind, value, words, () => { land(); openOverlay('ov-first2'); });
 }
 f2Ov.addEventListener('click', (e) => {
   const pick = e.target.closest('[data-pick]');
   if (pick && f2.step !== 'throw' && f2.step !== 'result') { startGame(Number(pick.dataset.pick)); return; }
-  if (e.target.closest('#f2-roll')) { f2.step = 'method'; paintF2(); return; }
   const m = e.target.closest('[data-method]');
   if (m) { f2.kind = m.dataset.method; f2.calls = null; f2.step = 'call'; paintF2(); return; }
   if (e.target.closest('[data-back]')) { f2Reset(); return; }
-  const c = e.target.closest('.f2-call');
+  const o = e.target.closest('[data-order]');
+  const chooser = f2.chooser ?? f2.winner;
+  if (o && f2.step === 'result' && (state.players === 1 || Number(o.closest('.f2-side').dataset.seat) === chooser)) {
+    if (o.dataset.order === 'pass') { Object.assign(f2, passChoice(chooser, f2.passed)); paintF2(); return; }
+    startGame(firstSeat(chooser, o.dataset.order)); return;
+  }
+  const c = e.target.closest('.f2-calls .f2-call');
   if (c && f2.step === 'call' && !f2.calls) {
     f2.calls = callsFor(f2.kind, Number(c.closest('.f2-side').dataset.seat), c.dataset.call);
     paintF2(); // the other side lights up with the other call
@@ -469,6 +556,7 @@ function closeOverlay(quiet) {
   if (openId === 'ov-sync' && quiet !== 'force' && quiet !== true) return; // the counters must be agreed on (or the room left)
   if (openId === 'ov-first2') clearTimeout(f2.timer);
   if (openId === 'ov-throw' && quiet !== true && Date.now() < throwUntil) return; // two players: not before both have seen it
+  if (openId === 'ov-throw' && quiet !== true && firstThrowDone) return; // who goes first: it goes back by itself
   $(`#${openId}`).hidden = true;
   stage.classList.remove('ov-open');
   if (openId === 'ov-room') roomUi.closed();
@@ -565,6 +653,26 @@ function lockThrow(ms) { // Infinity while rolling
     rows.forEach((x) => x.classList.remove('cool'));
   }, ms);
 }
+// Who goes first borrows the big throw: one die (or the coin) with a value already decided, no Done / Roll again;
+// the result stays FIRST_SHOW_MS, then `firstThrowDone` takes the game back to the who-goes-first screen.
+const FIRST_SHOW_MS = 1800;
+let firstThrowDone = null;
+function throwForFirst(k, value, words, after) {
+  kind = k;
+  const ov = $('#ov-throw');
+  ov.dataset.kind = k;
+  ov.dataset.first = 'on';
+  ov.setAttribute('data-sticky', '');
+  openOverlay('ov-throw'); // replaces the who-goes-first screen while it rolls
+  firstThrowDone = () => setTimeout(() => {
+    firstThrowDone = null;
+    delete ov.dataset.first;
+    ov.removeAttribute('data-sticky');
+    closeOverlay(true);
+    after();
+  }, FIRST_SHOW_MS);
+  if (k === 'die') rollNow(value, words); else flipNow(value, words);
+}
 function play(scene, ms, start, words, land) {
   if (busy) return; // taps during a roll are ignored
   busy = true;
@@ -576,6 +684,7 @@ function play(scene, ms, start, words, land) {
     busy = false;
     lockThrow(THROW_COOL_MS);
     $('#ov-throw').classList.remove('going');
+    firstThrowDone?.();
   };
   if (reduceMotion()) { start(0); land?.(); done(); return; }
   void scene.offsetWidth;
@@ -596,9 +705,10 @@ function dice3d() {
   }
   return dice3;
 }
-function rollNow() {
+function rollNow(forced, forcedWords) {
   if (busy) return;
-  const n1 = rollDie(6), n2 = rollDie(6); // decided here; the dice only show them
+  // decided here; the dice only show them (who goes first passes its one die in, and the second die is hidden)
+  const n1 = Number.isInteger(forced) ? forced : rollDie(6), n2 = Number.isInteger(forced) ? forced : rollDie(6);
   const a = $('#d2a'), b2 = $('#d2b');
   const label = (el, n) => { el.textContent = n ? String(n) : '\u00a0'; el.classList.toggle('show', !!n); };
   label($('#d2a-n'), 0); label($('#d2b-n'), 0);
@@ -618,12 +728,12 @@ function rollNow() {
     };
     flick();
     setTimeout(finish, ms - 40);
-  }, `Total ${n1 + n2}`, finish);
+  }, forcedWords || `Total ${n1 + n2}`, finish);
 }
-function flipNow() {
-  const c = flipCoin();
+function flipNow(forced, forcedWords) {
+  const c = forced === 'heads' || forced === 'tails' ? forced : flipCoin();
   coinAt = coinTarget(coinAt, c, 6);
-  play($('#coin-scene'), 1500, (ms) => setCoin(coinAt, ms), c === 'heads' ? 'Heads' : 'Tails');
+  play($('#coin-scene'), 1500, (ms) => setCoin(coinAt, ms), forcedWords || (c === 'heads' ? 'Heads' : 'Tails'));
 }
 function throwBig(k) {
   kind = k;
@@ -637,7 +747,7 @@ $('#btn-roll').addEventListener('click', () => throwBig('die'));
 $('#btn-coin').addEventListener('click', () => throwBig('coin'));
 for (const b of [$('#btn-again'), $('#tm-again')]) b.addEventListener('click', () => { if (Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 // a tap on the big die / coin throws again too
-$('.throw-stage').addEventListener('click', () => { if (!busy && Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
+$('.throw-stage').addEventListener('click', () => { if (!busy && !firstThrowDone && Date.now() >= throwUntil) (kind === 'die' ? rollNow : flipNow)(); });
 
 // ---------- settings ----------
 $('#app-ver').textContent = `Version ${APP_VERSION}`;
@@ -657,7 +767,8 @@ function paintSettings() {
   $('#set-pals').checked = state.palTrack;
   $('#set-cards').checked = state.cardLookup;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
-  setHidden($('#row-flip'), state.players === 1);
+  setHidden($('#row-flip'), state.players === 1 || state.tablet !== 'off'); // side by side nobody needs turning
+  setHidden($('#row-tablet'), state.players === 1);
   setHidden($('#row-land'), state.players === 2);
   setHidden($('#row-soulstyle'), !state.souls);
 }
@@ -669,6 +780,7 @@ for (const seg of $$('.seg')) {
     const next = setSetting(state, key, key === 'players' ? Number(b.dataset.v) : b.dataset.v);
     if (needsFirst(next) && !needsFirst(state)) askFirst = true;
     commit(next);
+    paintSettings();
   });
 }
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));

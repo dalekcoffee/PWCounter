@@ -58,8 +58,8 @@ export function helloMsg({ name, seat, souls, role }) {
   return JSON.stringify({ t: 'hello', v: 1, role: cleanRole(role), name: cleanName(name), seat: { life: seat.life, mat: seat.mat, ing: seat.ing, soul: seat.soul, up: seat.up }, souls: souls === true });
 }
 /** `active` is 0 (me) | 1 (you / the other phone), from the SENDER's side of the table. */
-export function sharedMsg({ night, active, turn, rev, role }) {
-  return JSON.stringify({ t: 'shared', role: cleanRole(role), night: night === true, active: active === 1 ? 'you' : 'me', turn, rev });
+export function sharedMsg({ night, nightLock, active, turn, rev, role }) {
+  return JSON.stringify({ t: 'shared', role: cleanRole(role), night: night === true, nightLock: night === true && nightLock === true, active: active === 1 ? 'you' : 'me', turn, rev });
 }
 
 const cleanShared = (sh) => (sh && typeof sh === 'object' && typeof sh.night === 'boolean' && (sh.active === 'me' || sh.active === 'you') && int(sh.turn, 0, 9999)
@@ -96,7 +96,7 @@ export function parseMessage(text) {
     if (!int(m.turn, 0, 9999) || !int(m.rev, 0, 1e9)) return null;
     if (m.role !== undefined && m.role !== null && !cleanRole(m.role)) return null;
     // the sender's "me" is the other phone, i.e. 1 here (a viewer reads `from` + `senderActive` instead)
-    return { t: 'shared', from: cleanRole(m.role), senderActive: m.active === 'me', night: m.night, active: m.active === 'me' ? 1 : 0, turn: m.turn, rev: m.rev };
+    return { t: 'shared', from: cleanRole(m.role), senderActive: m.active === 'me', night: m.night, nightLock: m.night === true && m.nightLock === true, active: m.active === 'me' ? 1 : 0, turn: m.turn, rev: m.rev };
   }
   if (m.t === 'check') {
     const mine = cleanPeerSeat(m.mine);
@@ -135,7 +135,8 @@ export function myTurnStarts(state) {
 }
 /** Room mode asks nobody who goes first: the host does. Souls: the second player starts with 1 soul (6.2.1.5). */
 export function roomSetup(state, role) {
-  if (!state.souls || state.first !== null) return state;
+  if (state.first !== null) return state;
+  if (!state.souls) return { ...state, first: role === 'host' ? 0 : 1 }; // no souls to deal, but who goes first is known
   const s = { ...state, turn: 1 };
   if (role === 'host') return { ...beginTurn({ ...s, first: 0 }, 0), active: 0 };
   return { ...s, first: 1, active: 1, seats: s.seats.map((x, i) => (i === 0 ? { ...x, soul: 1, up: 1 } : { ...x, soul: 0, up: 0 })) };

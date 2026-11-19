@@ -13,6 +13,8 @@ import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 import { lifeTone, justLost, overWords } from './life.js';
+import { PAL_SLOTS, palStep, palCard, palClear, palNum } from './pals.js';
+import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine } from './cards.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
 const KEY = 'pwc.state';
@@ -107,6 +109,27 @@ function tile(key) {
   return el;
 }
 
+// Pal trackers (experimental): five slots under the counters, left to right as the Pals sit on the table
+const PAL_ICON = {
+  atk: '<svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-atk" d="M4 4l13 13M20 4L7 17M15 19l4-4M5 15l4 4"/></svg>',
+  dmg: '<svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-dmg" d="M7 21 13 3M12 21l6-16M17 21l4-11"/></svg>',
+  str: '<svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-str" d="M12 1.5l2.4 6.1 6.3-2.1-3.6 5.6L22.5 13l-6.5 1.2 1.6 6.4-5.6-3.3-5.6 3.3 1.6-6.4L1.5 13l5.4-1.9-3.6-5.6 6.3 2.1Z"/></svg>',
+};
+function palRow() {
+  const row = document.createElement('div');
+  row.className = 'pal-row';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'Pals in play, left to right');
+  row.innerHTML = Array.from({ length: PAL_SLOTS }, (_, i) => `
+    <button type="button" class="pal" data-i="${i}">
+      <span class="pal-h"><span class="pal-n">${i + 1}</span><span class="pal-name"></span></span>
+      <span class="pal-s atk">${PAL_ICON.atk}<b></b></span>
+      <span class="pal-s dmg">${PAL_ICON.dmg}<b></b></span>
+      <span class="pal-s str">${PAL_ICON.str}<b></b></span>
+    </button>`).join('');
+  return row;
+}
+
 for (const seatEl of $$('.seat')) {
   const res = document.createElement('div');
   res.className = 'res';
@@ -114,7 +137,7 @@ for (const seatEl of $$('.seat')) {
   const inner = document.createElement('div');
   inner.className = 'seat-in';
   inner.append(tile('life'), res, tile('soul'));
-  seatEl.append(inner);
+  seatEl.append(inner, palRow());
 }
 
 // ---------- tapping, with hold to repeat ----------
@@ -197,6 +220,8 @@ function render(prev) {
   setData(stage, 'face', flip && !inRoom && !needsFirst(s) && s.active === 1 ? 'top' : 'bottom');
   setData(stage, 'souls', s.souls ? 'on' : 'off');
   setData(stage, 'icons', s.iconsOnly ? 'only' : 'words');
+  setData(stage, 'pals', s.palTrack ? 'on' : 'off');
+  setHidden($('#btn-cards'), !s.cardLookup);
   setHidden($('#btn-room'), !s.rooms || (s.players === 2 && !inRoom)); // online play replaces the shared-phone view, so it is offered from one player
   const sd = soulDisplay(s.soulStyle, players === 1);
   setData(stage, 'soulview', s.souls && sd.cards && !sd.number ? 'cards' : 'number'); // the cards ARE the tile
@@ -216,6 +241,7 @@ function render(prev) {
     const tone = lifeTone(seat.life, night);
     const ln = $('.t-life .num', seatEl);
     if (ln.dataset.tone !== tone) { ln.dataset.tone = tone; ln.style.color = tone; }
+    if (s.palTrack) paintPalRow(seatEl, i);
     const whose = $('.whose', seatEl);
     setText(whose, i === 1 ? 'Player 2' : (s.name || 'Username not set · ⚙ Settings'));
     whose.classList.toggle('unset', i === 0 && !s.name);
@@ -250,6 +276,7 @@ function render(prev) {
   }
   lastNight = night;
   paintSettings();
+  if (openId === 'ov-pal') paintPal();
   roomUi.paint();
   const locked = !inRoom && Date.now() < lockUntil;
   $('#btn-end').classList.toggle('wait', locked);
@@ -533,6 +560,7 @@ function closeOverlay(quiet) {
   $(`#${openId}`).hidden = true;
   stage.classList.remove('ov-open');
   if (openId === 'ov-room') roomUi.closed();
+  if (openId === 'ov-card') $('#ov-card').classList.remove('zoom');
   openId = null;
   if (!quiet) lastFocus?.focus?.({ preventScroll: true });
   if (!quiet) maybeAskFirst();
@@ -736,6 +764,8 @@ function paintSettings() {
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
   $('#set-rooms').checked = state.rooms;
+  $('#set-pals').checked = state.palTrack;
+  $('#set-cards').checked = state.cardLookup;
   if (document.activeElement !== $('#set-name')) $('#set-name').value = state.name;
   setHidden($('#row-flip'), state.players === 1 || state.tablet !== 'off'); // side by side nobody needs turning
   setHidden($('#row-tablet'), state.players === 1);
@@ -758,6 +788,8 @@ $('#set-autofull').addEventListener('change', (e) => commit(setSetting(state, 'a
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
 $('#set-rooms').addEventListener('change', (e) => { commit(setSetting(state, 'rooms', e.target.checked)); if (!e.target.checked) roomUi.forget(); });
+$('#set-pals').addEventListener('change', (e) => commit(setSetting(state, 'palTrack', e.target.checked)));
+$('#set-cards').addEventListener('change', (e) => commit(setSetting(state, 'cardLookup', e.target.checked)));
 $('#set-name').addEventListener('input', (e) => commit(setSetting(state, 'name', e.target.value)));
 $('#set-name').addEventListener('change', (e) => { e.target.value = cleanName(e.target.value); });
 $('#btn-room').addEventListener('click', () => roomUi.openSheet());
@@ -773,6 +805,197 @@ $('#btn-reset-yes').addEventListener('click', () => {
   askFirst = needsFirst(state);
   closeOverlay();
 });
+
+// ---------- Pal trackers (experimental) ----------
+function paintPalRow(seatEl, seat) {
+  $$('.pal', seatEl).forEach((el, i) => {
+    const p = state.pals[seat][i];
+    setText($('.pal-name', el), p.card ? p.card.name : '');
+    setData(el, 'card', p.card ? 'yes' : 'no');
+    for (const k of ['atk', 'dmg', 'str']) {
+      const b = $(`.pal-s.${k} b`, el);
+      setText(b, k === 'atk' && p.atk ? `+${palNum(p.atk)}` : palNum(p[k]));
+      setData(b.parentNode, 'zero', p[k] ? 'no' : 'yes');
+    }
+    setData(el, 'empty', p.atk || p.dmg || p.str || p.card ? 'no' : 'yes');
+    setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: attack boost ${p.atk}, damage ${p.dmg}, strike ${p.str}. Tap to change.`);
+  });
+}
+
+const palAt = { seat: 0, i: 0 };
+/** The seat a pop-up opened from the bar faces: the top player on their turn (face to face), else the bottom one. */
+const barSeat = () => (stage.dataset.face === 'top' ? 1 : 0);
+function openPal(seat, i) {
+  palAt.seat = seat; palAt.i = i;
+  setData($('#ov-pal'), 'seat', String(seat));
+  paintPal();
+  openOverlay('ov-pal');
+}
+function paintPal() {
+  const { seat, i } = palAt;
+  const p = state.pals[seat][i];
+  setText($('#pal-title'), p.card ? p.card.name : `Pal ${i + 1}`);
+  setText($('#pal-sub'), `${state.players === 2 && !roomUi.active() ? `${seat === 1 ? 'Player 2' : 'Player 1'} · ` : ''}Slot ${i + 1} of ${PAL_SLOTS}, left to right`);
+  setText($('#pal-atk'), p.atk ? `+${palNum(p.atk)}` : '0');
+  setText($('#pal-dmg'), palNum(p.dmg));
+  setText($('#pal-str'), String(p.str));
+  setHidden($('#pal-cardrow'), !state.cardLookup && !p.card);
+  setText($('#pal-cardname'), p.card ? p.card.name : 'No card picked');
+  setText($('#pal-cardhint'), p.card ? `${p.card.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
+  setText($('#pal-pick'), p.card ? 'Change' : 'Pick card');
+  setHidden($('#pal-pick'), !state.cardLookup);
+  setHidden($('#pal-view'), !p.card);
+  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code));
+}
+stage.addEventListener('click', (e) => {
+  const el = e.target.closest('.pal');
+  if (!el || !el.closest('.seat')) return;
+  openPal(Number(el.closest('.seat').dataset.seat), Number(el.dataset.i));
+});
+$('#ov-pal').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-step]');
+  if (!b) return;
+  const next = palStep(state, palAt.seat, palAt.i, b.dataset.k, Number(b.dataset.step));
+  if (next === state) return;
+  commit(next);
+  try { navigator.vibrate?.(6); } catch { /* not allowed */ }
+});
+$('#pal-clear').addEventListener('click', () => { commit(palClear(state, palAt.seat, palAt.i)); closeOverlay(); });
+$('#pal-pick').addEventListener('click', () => openCards(palAt.seat, { seat: palAt.seat, i: palAt.i }));
+$('#pal-view').addEventListener('click', () => {
+  const c = state.pals[palAt.seat][palAt.i].card;
+  if (c) showCard(c.code, palAt.seat, null, { seat: palAt.seat, i: palAt.i });
+});
+
+// ---------- card lookup (experimental): Palify's public API, kept on this device for a day ----------
+const CARDS_KEY = 'pwc.cards';
+let cardList = null, cardAt = 0, cardLoad = null;
+function savedCards() {
+  try {
+    const x = JSON.parse(localStorage.getItem(CARDS_KEY));
+    return x && Array.isArray(x.cards) ? { at: Number(x.at) || 0, cards: x.cards.map(cleanApiCard).filter(Boolean) } : null;
+  } catch { return null; }
+}
+/** The card list: from memory, else this device's copy if under a day old, else Palify (an old copy if Palify cannot be reached). */
+function loadCards() {
+  if (cardList && cacheFresh({ at: cardAt, cards: cardList }, Date.now())) return Promise.resolve(cardList);
+  if (cardLoad) return cardLoad;
+  const saved = savedCards();
+  if (cacheFresh(saved, Date.now())) { cardList = saved.cards; cardAt = saved.at; return Promise.resolve(cardList); }
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 15000);
+  cardLoad = fetch(CARD_API, { signal: ctl.signal, headers: { Accept: 'application/json' } })
+    .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then((body) => {
+      const cards = cardsFromApi(body);
+      if (!cards.length) throw new Error('no cards');
+      cardList = cards; cardAt = Date.now();
+      try { localStorage.setItem(CARDS_KEY, JSON.stringify({ at: cardAt, cards })); } catch { /* full: kept in memory */ }
+      return cardList;
+    })
+    .catch((err) => {
+      if (saved?.cards.length) { cardList = saved.cards; cardAt = saved.at; return cardList; } // offline: the older copy
+      throw err;
+    })
+    .finally(() => { clearTimeout(timer); cardLoad = null; });
+  return cardLoad;
+}
+
+let pickFor = null; // { seat, i } while picking the card for a Pal slot
+let searchTimer = 0;
+function openCards(faceSeat, pick = null) {
+  pickFor = pick;
+  for (const id of ['#ov-cards', '#ov-card']) setData($(id), 'seat', String(faceSeat));
+  setText($('#cards-title'), pick ? `Card for Pal ${pick.i + 1}` : 'Card lookup');
+  setText($('#cards-sub'), pick ? 'Tap a card to put it in this slot' : 'Name, code or words from the effect');
+  openOverlay('ov-cards');
+  const q = $('#cards-q');
+  setTimeout(() => q.focus({ preventScroll: true }), 30);
+  runSearch();
+}
+function cardItem(c) {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'cards-item';
+  b.dataset.code = c.code;
+  const img = document.createElement('img');
+  img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
+  img.src = cardImage(c.code);
+  img.addEventListener('error', () => { img.style.visibility = 'hidden'; }, { once: true });
+  const txt = document.createElement('span');
+  txt.className = 'ci-text';
+  const name = document.createElement('b'); name.textContent = c.name;
+  const line = document.createElement('small'); line.textContent = `${c.code} · ${cardLine(c)}`;
+  txt.append(name, line);
+  b.append(img, txt);
+  li.append(b);
+  return li;
+}
+function runSearch() {
+  const status = $('#cards-status'), list = $('#cards-list');
+  const q = $('#cards-q').value;
+  if (!cardList) setText(status, 'Loading cards from Palify…');
+  loadCards().then((cards) => {
+    if (openId !== 'ov-cards') return;
+    const found = searchCards(cards, q);
+    const old = Date.now() - cardAt > 24 * 60 * 60 * 1000;
+    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: Palify could not be reached.)' : ''}`
+      : found.length ? `${found.length}${found.length >= 60 ? '+' : ''} found` : 'No card found');
+    list.replaceChildren(...found.map(cardItem));
+  }).catch(() => {
+    if (openId !== 'ov-cards') return;
+    setText(status, 'Could not reach Palify. Check the connection and try again.');
+    list.replaceChildren();
+  });
+}
+$('#cards-q').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 120); });
+$('#cards-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+$('#cards-list').addEventListener('click', (e) => {
+  const b = e.target.closest('.cards-item');
+  if (!b) return;
+  const c = cardList?.find((x) => x.code === b.dataset.code);
+  if (!c) return;
+  if (pickFor) { usePick(c); return; }
+  showCard(c.code, Number($('#ov-cards').dataset.seat) || 0, c, null);
+});
+function usePick(c) {
+  const at = pickFor;
+  pickFor = null;
+  commit(palCard(state, at.seat, at.i, { code: c.code, name: c.name }));
+  openPal(at.seat, at.i);
+}
+
+let viewing = null, viewFrom = null; // the card shown, and the Pal slot it was opened from (Back returns there)
+function showCard(code, faceSeat, known, fromPal) {
+  viewFrom = fromPal;
+  const fallback = state.pals.flat().find((p) => p.card?.code === code)?.card;
+  const paint = (c) => {
+    viewing = c;
+    setText($('#card-name'), c.name);
+    setText($('#card-line'), c.type !== undefined ? `${c.code} · ${cardLine(c)}` : c.code);
+    setText($('#card-effect'), c.effect || '');
+    setAttr($('#card-link'), 'href', c.slug !== undefined ? cardPage(c) : 'https://palify.org/cards');
+  };
+  for (const id of ['#ov-cards', '#ov-card']) setData($(id), 'seat', String(faceSeat));
+  const img = $('#card-img');
+  setHidden($('#card-noimg'), true);
+  img.style.visibility = '';
+  img.onerror = () => { img.style.visibility = 'hidden'; setHidden($('#card-noimg'), false); };
+  img.src = cardImage(code);
+  paint(known || { code, name: fallback?.name || code });
+  setText($('#card-back'), fromPal ? 'Back' : 'Search');
+  setHidden($('#card-use'), !pickFor);
+  openOverlay('ov-card');
+  if (!known) loadCards().then((cards) => { const c = cards.find((x) => x.code === code); if (c && openId === 'ov-card' && viewing?.code === code) paint(c); }).catch(() => {});
+}
+$('#card-art').addEventListener('click', () => $('#ov-card').classList.toggle('zoom'));
+$('#card-back').addEventListener('click', () => {
+  if (viewFrom) { const f = viewFrom; viewFrom = null; openPal(f.seat, f.i); return; }
+  openCards(Number($('#ov-card').dataset.seat) || 0, pickFor);
+});
+$('#card-use').addEventListener('click', () => { if (viewing && pickFor) usePick(viewing); });
+$('#btn-cards').addEventListener('click', () => openCards(barSeat()));
 
 // ---------- keep the screen on ----------
 let lock = null;

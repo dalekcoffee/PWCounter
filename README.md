@@ -12,6 +12,8 @@ A life counter for the Palworld card game, built to sit on the table between two
 - **Settings**: one or two players, landscape by setting (the board turns, the phone does not have to), face to face, keep the screen on, and Reset game (asks first).
 - Credits and a short Q&A in Settings: inspired by [Palify](https://palify.org/tools/counter), made by [Dalek](https://dalek.coffee), built with Claude.
 - **Souls (experimental)**: turn on in Settings. Asks who goes first; the second player starts with 1 soul; each turn that player's souls stand and 2 more come (max 10), as in the official rules. One player can show them as cards.
+- **Pal trackers (experimental)**: five slots per player (left to right as on the table) with attack boost, damage and strike; End Turn removes damage.
+- **Card lookup (experimental)**: search a card by name, code or effect words and read it big; pick the card for a Pal slot. Data from [Palify](https://palify.org)'s public API.
 - **Play with a friend (experimental)**: one phone shows a 4-digit code or QR, the other joins; you see each other's counters. Needs the optional room relay.
 - **Watch on a big screen**: open `#watch=CODE` (or choose "Watch a game") to see a room read only: both players side by side, big numbers, day or night. Up to 8 viewers.
 - Saved in this browser only: no login, no server, nothing sent anywhere. Installable (Add to Home Screen) and works offline.

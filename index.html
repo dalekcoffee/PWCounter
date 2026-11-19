@@ -38,6 +38,8 @@
   <link rel="modulepreload" href="js/room-display.js">
   <link rel="modulepreload" href="worker/room/src/rules.js">
   <link rel="modulepreload" href="js/drawer.js">
+  <link rel="modulepreload" href="js/pals.js">
+  <link rel="modulepreload" href="js/cards.js">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -79,6 +81,9 @@
         <span class="et-turn"><span id="turn-label">Turn 1</span><span class="et-clock" id="turn-clock" hidden></span></span>
       </button>
       <div class="bar-side end">
+        <button class="ibtn" id="btn-cards" type="button" aria-label="Card lookup" title="Card lookup" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3" width="11" height="15" rx="2"/><circle cx="15.5" cy="14.5" r="4"/><path d="M18.5 17.5 21 20"/></svg>
+        </button>
         <button class="ibtn" id="btn-calc" type="button" aria-label="Calculator" title="Calculator">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5M8.5 18h.01M12 18h.01"/></svg>
         </button>
@@ -178,6 +183,68 @@
       </div>
     </div>
 
+    <!-- Pal trackers (experimental): one Pal slot's attack boost, damage, strike and card -->
+    <div class="overlay pal-ov" id="ov-pal" hidden>
+      <div class="sheet pal-sheet" role="dialog" aria-modal="true" aria-labelledby="pal-title">
+        <header class="sheet-head">
+          <div><h2 id="pal-title">Pal 1</h2><p class="sub" id="pal-sub">&nbsp;</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <div class="pal-cardrow" id="pal-cardrow">
+          <button type="button" class="pal-thumb" id="pal-view" aria-label="Show this card big"><img alt="" id="pal-img" decoding="async"></button>
+          <div class="pal-cardname"><b id="pal-cardname">No card picked</b><small id="pal-cardhint">Pick the card so you know which Pal this is.</small></div>
+          <button type="button" class="btn" id="pal-pick">Pick card</button>
+        </div>
+        <section class="pal-blk atk" aria-label="Attack boost">
+          <div class="pal-top"><span class="pal-lbl"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-atk" d="M4 4l13 13M20 4L7 17M15 19l4-4M5 15l4 4"/></svg>Attack boost</span><b class="pal-val" id="pal-atk">0</b></div>
+          <div class="pal-chips"><button type="button" data-k="atk" data-step="100">+100</button><button type="button" data-k="atk" data-step="200">+200</button><button type="button" data-k="atk" data-step="500">+500</button><button type="button" data-k="atk" data-step="1000">+1,000</button><button type="button" class="neg" data-k="atk" data-step="-100">−100</button><button type="button" class="neg" data-k="atk" data-step="-200">−200</button><button type="button" class="neg" data-k="atk" data-step="-500">−500</button><button type="button" class="neg" data-k="atk" data-step="-1000">−1,000</button></div>
+        </section>
+        <section class="pal-blk dmg" aria-label="Damage">
+          <div class="pal-top"><span class="pal-lbl"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-dmg" d="M7 21 13 3M12 21l6-16M17 21l4-11"/></svg>Damage</span><b class="pal-val" id="pal-dmg">0</b></div>
+          <div class="pal-chips"><button type="button" data-k="dmg" data-step="100">+100</button><button type="button" data-k="dmg" data-step="200">+200</button><button type="button" data-k="dmg" data-step="500">+500</button><button type="button" data-k="dmg" data-step="1000">+1,000</button><button type="button" class="neg" data-k="dmg" data-step="-100">−100</button><button type="button" class="neg" data-k="dmg" data-step="-200">−200</button><button type="button" class="neg" data-k="dmg" data-step="-500">−500</button><button type="button" class="neg" data-k="dmg" data-step="-1000">−1,000</button></div>
+        </section>
+        <section class="pal-blk str" aria-label="Strike">
+          <div class="pal-top"><span class="pal-lbl"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-str" d="M12 1.5l2.4 6.1 6.3-2.1-3.6 5.6L22.5 13l-6.5 1.2 1.6 6.4-5.6-3.3-5.6 3.3 1.6-6.4L1.5 13l5.4-1.9-3.6-5.6 6.3 2.1Z"/></svg>Strike</span>
+            <span class="pal-pm"><button type="button" data-k="str" data-step="-1" aria-label="Strike minus one">−</button><b class="pal-val" id="pal-str">0</b><button type="button" data-k="str" data-step="1" aria-label="Strike plus one">+</button></span></div>
+        </section>
+        <div class="pal-foot">
+          <button type="button" class="btn danger" id="pal-clear">Left play</button>
+          <button type="button" class="btn primary" data-close>Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card lookup (experimental): search Palify's cards -->
+    <div class="overlay cards-ov" id="ov-cards" hidden>
+      <div class="sheet cards-sheet" role="dialog" aria-modal="true" aria-labelledby="cards-title">
+        <header class="sheet-head">
+          <div><h2 id="cards-title">Card lookup</h2><p class="sub" id="cards-sub">Name, code or words from the effect</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <input class="txt cards-q" id="cards-q" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search cards" aria-label="Search cards">
+        <p class="cards-status" id="cards-status" aria-live="polite">&nbsp;</p>
+        <ul class="cards-list" id="cards-list"></ul>
+        <p class="cards-credit">Data from <a href="https://palify.org" target="_blank" rel="noopener">Palify (palify.org)</a>, the Palworld OCG practice tool.</p>
+      </div>
+    </div>
+
+    <!-- Card lookup: one card, big -->
+    <div class="overlay card-ov" id="ov-card" hidden>
+      <div class="sheet card-view" role="dialog" aria-modal="true" aria-labelledby="card-name">
+        <header class="sheet-head">
+          <div><h2 id="card-name">Card</h2><p class="sub" id="card-line">&nbsp;</p></div>
+          <button class="xbtn" type="button" data-close aria-label="Close">×</button>
+        </header>
+        <button type="button" class="card-art" id="card-art" aria-label="Make the card bigger or smaller"><img alt="" id="card-img" decoding="async"><span class="card-noimg" id="card-noimg" hidden>No picture (offline?)</span></button>
+        <p class="card-effect" id="card-effect"></p>
+        <div class="card-btns">
+          <button type="button" class="btn" id="card-back">Search</button>
+          <button type="button" class="btn primary" id="card-use" hidden>Use for this Pal</button>
+        </div>
+        <p class="cards-credit">Data from <a id="card-link" href="https://palify.org" target="_blank" rel="noopener">Palify (palify.org)</a>. Card text and art © Bushiroad and Pocketpair.</p>
+      </div>
+    </div>
+
     <div class="overlay" id="ov-set" hidden>
       <div class="sheet settings" role="dialog" aria-modal="true" aria-labelledby="set-title">
         <header class="sheet-head">
@@ -234,6 +301,14 @@
         <div class="set-row">
           <span class="set-label">Play with a friend (online)<small>Experimental. Needs both phones online.</small></span>
           <label class="switch"><input type="checkbox" id="set-rooms"><span></span></label>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Pal trackers<small>Five Pal slots per player, left to right as on the table, each with attack boost, damage and strike. Tap one to change it. End Turn removes all damage.</small></span>
+          <label class="switch"><input type="checkbox" id="set-pals"><span></span></label>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Card lookup<small>Search any card and read it big. With Pal trackers on, pick the card in each slot. Needs a connection the first time each day. Card data from Palify.</small></span>
+          <label class="switch"><input type="checkbox" id="set-cards"><span></span></label>
         </div>
         <p class="set-note">Both players start at 10 life. Material and Ingredient start at 0. Everything stays on this device and works with no signal.</p>
         <footer class="credits">

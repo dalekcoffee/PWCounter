@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+- Pal trackers (experimental, Settings → Experimental): five Pal slots under each player's counters, left to right in the same order as the Pals on the table. Each slot shows its attack boost, damage and extra strike in their own colours (zeros fade). Tap a slot for quick buttons (+100 / +200 / +500 / +1000 and the same down, strike − / +), "Left play" empties it. End Turn removes all damage; boosts and strike stay. Works with one and two players; a top player's slot opens facing them.
+- Card lookup (experimental): a search button in the bar finds any card by name, code or words from its effect, and shows it big with its text underneath (tap the picture to fill the screen). With Pal trackers on, each slot can be given its card, so everyone knows which Pal is which. Card data comes live from Palify's free public API (palify.org), saved on the device for a day; nothing about cards is stored in the app itself.
+
 ## 0.3.3
 - Two players, dice and coin: the dice stay in the middle and both players see each die's number and the total (or heads / tails), the top player's copy facing them, each with their own Done and Roll again.
 - Two players: Done and Roll again wait 3 seconds after the result (a bar fills), so a stray tap cannot end the throw before both players have seen it.

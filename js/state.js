@@ -1,5 +1,6 @@
 // Pure game state: no DOM, no storage. Every function returns a NEW object.
 // Seat 0 = you (bottom), seat 1 = the opponent (top, shown only with 2 players).
+import { freshPals, cleanPals, clearDamage, palEmpty } from './pals.js';
 //
 // Souls follow the official Comprehensive Rules (v1.01, 2026-11-02), tracked as numbers (13.2):
 //   6.1.2.1  at most 10 souls each
@@ -31,6 +32,7 @@ export function defaultState() {
     v: 1,
     // the game
     seats: [freshSeat(), freshSeat()],
+    pals: freshPals(), // Pal trackers (experimental): [seat][slot] = { atk, dmg, str, card }
     night: false,
     turn: 1,
     active: 0,
@@ -47,6 +49,8 @@ export function defaultState() {
     iconsOnly: false, // experimental: icons without the words Life / Material / Ingredient, bigger
     name: '', // your username (a setting): shown on your board and to a friend in a room
     rooms: false, // experimental, off by default: play with a friend online (not ready)
+    palTrack: false, // experimental: five Pal slots per player with attack boost, damage and strike
+    cardLookup: false, // experimental: search cards (Palify's public API) and pick the card in a Pal slot
     savedAt: 0, // when this (the one saved) game was last saved, ms
   };
 }
@@ -99,6 +103,7 @@ export function cleanState(raw) {
   return {
     v: 1,
     seats: [cleanSeat(seats[0]), cleanSeat(seats[1])],
+    pals: cleanPals(raw.pals),
     night: raw.night === true,
     turn: int(raw.turn, 0, 9999, 1),
     active: raw.active === 1 ? 1 : 0,
@@ -114,6 +119,8 @@ export function cleanState(raw) {
     iconsOnly: raw.iconsOnly === true,
     name: cleanName(raw.name),
     rooms: raw.rooms === true,
+    palTrack: raw.palTrack === true,
+    cardLookup: raw.cardLookup === true,
     savedAt: Number.isFinite(raw.savedAt) && raw.savedAt > 0 ? Math.floor(raw.savedAt) : 0,
   };
 }
@@ -163,6 +170,7 @@ export function chooseFirst(state, seat) {
  * Two players: play passes; a full round (back to whoever went first) counts one turn.
  */
 export function endTurn(state) {
+  if (state.palTrack) state = clearDamage(state); // damage on Pals is removed at the end of every turn
   if (state.players === 1) {
     const next = { ...state, active: 0, turn: Math.min(9999, state.turn + 1) };
     return state.souls ? beginTurn(next, 0) : next;
@@ -207,7 +215,7 @@ export const RESUME_AFTER_MS = 48 * 60 * 60 * 1000;
 /** Is the game still at its starting values? (nothing to resume) */
 export function isFreshGame(state) {
   const fresh = (s) => s.life === START_LIFE && s.mat === 0 && s.ing === 0 && s.soul === 0 && s.up === 0;
-  return state.seats.every(fresh) && !state.night && state.turn <= 1 && state.first === null;
+  return state.seats.every(fresh) && state.pals.every((row) => row.every(palEmpty)) && !state.night && state.turn <= 1 && state.first === null;
 }
 
 /** Opening the app: ask "continue or new game?" when the one saved game was last played over 48 hours ago. */
@@ -217,7 +225,7 @@ export function needsResume(state, now) {
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {
-  return { ...state, seats: [freshSeat(), freshSeat()], night: false, turn: 1, active: 0, first: null, turnAt: 0 };
+  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), night: false, turn: 1, active: 0, first: null, turnAt: 0 };
 }
 
 /** Change a setting, cleaned. Changing players or switching souls on starts the soul set-up again. */

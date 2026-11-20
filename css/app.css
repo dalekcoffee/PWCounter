@@ -273,16 +273,16 @@ svg { display: block; }
 .qa-src { margin: 6px 0 0; font: 500 11.5px/1.4 var(--font-mono); color: var(--text-3); }
 .qa-links li { line-height: 1.45; }
 .delta {
-  position: absolute; bottom: 8px; left: 50%; translate: -50% 0; z-index: 3;
-  padding: 5px 15px; border-radius: 999px; font: 700 21px/1.2 var(--font-mono); white-space: nowrap;
+  position: absolute; top: 8px; left: 50%; translate: -50% 0; z-index: 4; /* 0.4.3: at the top of the tile (over the icon and word), clear of the tapping hand and easy to see across the table */
+  padding: 6px 18px; border-radius: 999px; font: 700 27px/1.2 var(--font-mono); white-space: nowrap; box-shadow: 0 4px 14px rgba(3, 6, 18, .45);
   color: #08251a; background: var(--sage); opacity: 0; transform: translateY(-6px); transition: opacity .4s ease-out, transform .4s;
 }
 .delta.neg { color: #34121a; background: var(--rose); }
 .delta.show { opacity: 1; transform: none; }
-.t-life .delta { bottom: 38px; font-size: 26px; padding: 6px 18px; }
-/* two players: the life tile is shorter, so the badge goes to the corner on the + side, clear of the number (both seats) */
-.stage[data-players='2'] .t-life .delta { top: 10px; bottom: auto; left: auto; right: 14px; translate: none; font-size: 22px; padding: 4px 14px; }
-@container (max-height: 130px) { .delta { font-size: 17px; padding: 3px 11px; bottom: 5px; } }
+.t-life .delta { top: 10px; font-size: 34px; padding: 7px 22px; }
+/* two players: the life tile is shorter; the badge stays on top (each seat's own top, as the top seat is turned) */
+.stage[data-players='2'] .t-life .delta { top: 6px; font-size: 28px; padding: 5px 18px; }
+@container (max-height: 130px) { .delta, .stage[data-players='2'] .t-life .delta { font-size: 21px; padding: 3px 13px; top: 4px; } }
 
 /* icon colours (drawn for this app) */
 /* All four icons: flat sticker style, one solid fill, an outline in a darker shade of the same colour (paint-order puts it behind the fill), light details */

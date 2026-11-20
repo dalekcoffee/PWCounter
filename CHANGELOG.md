@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.4
+- The +x / −x change badge on life and resources now shows at the top of the tile, bigger, so your hand does not cover it and the other player can read it too (the top player's badge sits at their own top).
 ## 0.4.3
 - Pal trackers: quick Reset buttons in a slot's sheet for attack boost, damage and extra strike, plus Reset all (the card stays; Left play still empties the slot). A slot with a card now shows the card's art behind its numbers, darkened so they stay readable.
 ## 0.4.2

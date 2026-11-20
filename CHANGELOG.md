@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.8
+- Pal trackers: tapping a slot (or the All Pals bar) opens a pop-up right above it, its arrow on the slot, instead of the full sheet; for the top player it faces them. It scrolls inside on short screens, and Left play / Reset all / Done stay in view at the bottom.
+- Set a Pal's base power and strike without finding its card: drag the base power ruler (100 per notch) or tap −500 / +500, and drag the base strike dial (1 per tick, 0 to 99) or tap −1 / +1. Boosts, damage, extra strike and the All Pals bar add on top, just like a card's printed numbers. Picking a card with printed numbers replaces the hand-set base; Reset beside Base power clears it, Reset all keeps it. Each counter's Reset now sits beside its number.
 ## 0.4.7
 - Pal trackers: the All Pals tile is now a wide bar under the middle Pals (2 to 4), its icons and numbers left to right (on phones it spans the whole row). The five Pal slots share the full width and their numbers are bigger, using the empty space inside each slot; life and resources keep their size.
 ## 0.4.6

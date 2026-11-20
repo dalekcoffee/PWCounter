@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.7"; }
+:root { --pwc-v: "0.4.8"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1077,6 +1077,17 @@ svg { display: block; }
 .pal-pm .pal-val { min-width: 1.4em; text-align: center; }
 .pal-foot { display: flex; gap: 10px; margin-top: 14px; }
 .pal-foot .btn { flex: 1; }
+/* 0.4.8: a base power / strike set by hand: -500 | ruler (drag, 100 per notch) | +500, and a strike stepper */
+.pal-blk.base .pal-lbl { color: var(--text); }
+.pal-ruler-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.pal-q { flex: none; min-width: 66px; min-height: 52px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); background: rgba(255, 255, 255, .08); font: 700 15px/1 var(--font-ui); color: var(--text); }
+.pal-q:active { background: rgba(255, 255, 255, .18); }
+.pal-ruler { position: relative; flex: 1; min-width: 0; height: 52px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); touch-action: none; cursor: ew-resize; overflow: hidden;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--text) 45%, transparent) 0 2px, transparent 2px 14px) var(--off, 0px) 60% / 14px 40% repeat-x,
+              repeating-linear-gradient(90deg, color-mix(in srgb, var(--text) 70%, transparent) 0 2px, transparent 2px 70px) calc(var(--off, 0px)) 0 / 70px 100% repeat-x,
+              rgba(255, 255, 255, .04); }
+.pal-ruler i { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--gold); pointer-events: none; }
+.pal-ruler:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 /* 0.4.6: the All Pals layer, first in the row: a dashed gold edge marks it as a layer, not a Pal */
 .stage[data-pals='on'] .pal-row .pal:not(.pal-all) { grid-row: 1; }
 /* 0.4.7: the All Pals layer is a wide bar under the middle slots (2-4, centred on 3): the same icons and numbers, left to right */
@@ -1104,6 +1115,47 @@ svg { display: block; }
 .pal[data-card='yes']:active { background: var(--tile-press), linear-gradient(180deg, rgba(6, 10, 24, .5), rgba(6, 10, 24, .82)), var(--art) center 20% / cover no-repeat, var(--tile); }
 .pal[data-card='yes'] :is(.pal-h, .pal-s) { text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 8px rgba(0, 0, 0, .7); }
 .pal[data-card='yes'] .pal-s[data-zero='yes'] { opacity: .45; }
+
+/* 0.4.8: the Pal editor is a pop-up over the board, right above (or below) the tapped slot, its arrow on the slot (placed by placePal).
+   Short screens: it scrolls inside, and its Left play / Reset all / Done row stays in view at the bottom. */
+.overlay.pal-ov { display: block; padding: 0; background: rgba(3, 6, 18, .5); }
+.overlay.pal-ov[hidden] { display: none; }
+.pal-probe { position: absolute; left: 0; top: 0; width: 2px; height: 2px; margin: -1px 0 0 -1px; pointer-events: none; visibility: hidden; }
+.pal-pop { position: absolute; padding: 10px 12px 0; border-color: color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 18px; overscroll-behavior: contain; }
+.pal-arrow { position: absolute; z-index: 1; width: 18px; height: 18px; transform: rotate(45deg); pointer-events: none; background: rgb(14, 20, 42); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); border-top: 0; border-left: 0; }
+#ov-pal[data-dir='down'] .pal-arrow { background: rgb(24, 33, 64); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); border-right: 0; border-bottom: 0; }
+#ov-pal[data-dir='mid'] .pal-arrow { display: none; }
+.pal-head { display: flex; align-items: center; gap: 8px; }
+.pal-hd { flex: 1; min-width: 0; }
+.pal-pop .pal-hd h2 { font-size: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#ov-pal:not([data-all='yes']) #pal-sub { display: none; }
+.pal-pop .xbtn { width: 36px; height: 36px; }
+.pal-pill { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); background: rgba(255, 255, 255, .07); font: 600 13.5px/1 var(--font-ui); color: var(--text); }
+.pal-pill:active { background: rgba(255, 255, 255, .18); }
+.pal-pop .pal-cardrow { padding: 6px; margin: 6px 0 0; gap: 10px; }
+.pal-pop .pal-thumb { width: 34px; height: 47px; }
+.pal-pop .pal-blk { padding: 6px 0 0; margin-top: 6px; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; }
+.pal-pop .pal-top { gap: 8px; min-height: 30px; }
+.pal-pop .pal-top .pal-reset { margin-left: auto; min-height: 28px; padding: 0 10px; }
+.pal-pop .pal-val { font-size: 28px; }
+.pal-pop .pal-note { margin-top: 0; font-size: 12px; }
+.pal-pop .pal-ruler-row { margin-top: 4px; gap: 6px; }
+.pal-pop .pal-q { min-height: 40px; min-width: 58px; }
+.pal-pop .pal-ruler { height: 40px; }
+.pal-pop .pal-chips { margin-top: 5px; gap: 5px; }
+.pal-pop .pal-chips button { min-height: 38px; }
+.pal-pop .pal-chips button.neg { min-height: 30px; }
+.pal-blk.bstr .pal-lbl, .pal-blk.bstr .pal-val { color: var(--cyan); }
+/* the strike dial: one tick = 1, wider apart than the power ruler's notches */
+.pal-ruler.st { background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--cyan) 70%, transparent) 0 2px, transparent 2px 28px) var(--off, 0px) 50% / 28px 50% repeat-x, rgba(255, 255, 255, .04); }
+/* extra strike: one row, label (total under it) | Reset | − value + */
+.pal-lbl-2 { display: grid; gap: 3px; min-width: 0; }
+.pal-lbl-2 .pal-base { margin: 0; font-size: 12px; }
+.pal-pop .pal-blk.str .pal-pm { gap: 8px; }
+.pal-pop .pal-pm button { width: 42px; height: 42px; min-height: 42px; font-size: 22px; }
+.pal-pop .pal-pm .pal-val { min-width: 1.5em; }
+.pal-pop .pal-foot { position: sticky; bottom: 0; margin: 18px -12px 0; padding: 8px 12px 12px; gap: 8px; background: rgb(14, 20, 42); border-top: 1px solid var(--border); }
+.pal-pop .pal-foot .btn { min-height: 42px; }
 
 /* ---------- card lookup (experimental) ---------- */
 .cards-sheet { width: min(640px, 100%); height: 100%; display: flex; flex-direction: column; }

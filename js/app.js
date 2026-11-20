@@ -852,7 +852,49 @@ function openPal(seat, i) {
   setData($('#ov-pal'), 'seat', String(seat));
   paintPal();
   openOverlay('ov-pal');
+  placePal();
 }
+/** 0.4.8: how the pop-up's own frame (it may be turned with the landscape / tablet / face to face settings) maps to the screen:
+ *  three probes at (0,0), (100,0), (0,100) give the axes, so any turn or scale is undone the same way. */
+function palFrame() {
+  const [o, x, y] = $$('#ov-pal .pal-probe').map((p) => { const r = p.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  const ax = [(x[0] - o[0]) / 100, (x[1] - o[1]) / 100], ay = [(y[0] - o[0]) / 100, (y[1] - o[1]) / 100];
+  const det = ax[0] * ay[1] - ax[1] * ay[0] || 1;
+  /** a screen vector (dx, dy) in the pop-up's frame */
+  const vec = (dx, dy) => [(dx * ay[1] - dy * ay[0]) / det, (ax[0] * dy - ax[1] * dx) / det];
+  return { vec, pt: (cx, cy) => vec(cx - o[0], cy - o[1]) };
+}
+/** Put the pop-up right above the tapped slot (below it when there is more room there), its arrow on the slot. */
+function placePal() {
+  const ov = $('#ov-pal'), pop = $('#pal-pop'), arrow = $('#pal-arrow');
+  if (ov.hidden) return;
+  const slot = $(`.seat[data-seat="${palAt.seat}"] .pal[data-i="${palAt.i}"]`);
+  const W = ov.clientWidth, H = ov.clientHeight, M = 8, GAP = 12;
+  const w = Math.min(560, W - 2 * M);
+  pop.style.width = `${w}px`;
+  let box = null;
+  if (slot) {
+    const r = slot.getBoundingClientRect(), f = palFrame();
+    const pts = [[r.left, r.top], [r.right, r.top], [r.left, r.bottom], [r.right, r.bottom]].map(([cx, cy]) => f.pt(cx, cy));
+    box = { l: Math.min(...pts.map((p) => p[0])), r: Math.max(...pts.map((p) => p[0])), t: Math.min(...pts.map((p) => p[1])), b: Math.max(...pts.map((p) => p[1])) };
+  }
+  const need = Math.min(pop.scrollHeight, H - 2 * M);
+  const above = box ? box.t - GAP - M : 0, below = box ? H - box.b - GAP - M : 0;
+  const dir = !box || Math.max(above, below) < Math.min(need, 300) ? 'mid' : above >= need || above >= below ? 'up' : 'down';
+  const cx = box ? (box.l + box.r) / 2 : W / 2;
+  const left = Math.max(M, Math.min(W - M - w, cx - w / 2));
+  Object.assign(pop.style, { left: `${left}px`, top: '', bottom: '', maxHeight: '' });
+  if (dir === 'up') Object.assign(pop.style, { bottom: `${H - box.t + GAP}px`, maxHeight: `${above}px` });
+  else if (dir === 'down') Object.assign(pop.style, { top: `${box.b + GAP}px`, maxHeight: `${below}px` });
+  else Object.assign(pop.style, { top: `${Math.max(M, (H - need) / 2)}px`, maxHeight: `${H - 2 * M}px` });
+  setData(ov, 'dir', dir);
+  if (dir !== 'mid') {
+    const ax = Math.max(left + 22, Math.min(left + w - 22, cx));
+    arrow.style.left = `${ax - 9}px`;
+    arrow.style.top = `${dir === 'up' ? box.t - GAP - 9 : box.b + GAP - 9}px`;
+  }
+}
+window.addEventListener('resize', () => { if (openId === 'ov-pal') placePal(); });
 function paintPal() {
   const { seat, i } = palAt;
   const who = state.players === 2 && !roomUi.active() ? `${seat === 1 ? 'Player 2' : 'Player 1'} · ` : '';
@@ -876,21 +918,32 @@ function paintPal() {
     setText($('#pal-atk-lbl'), t.power !== null ? 'Attack' : 'Attack boost');
     setText($('#pal-atk'), t.power !== null ? palNum(t.atk) : t.boost ? `+${palNum(t.boost)}` : '0');
     setHidden($('#pal-atk-base'), t.power === null && !all.atk);
-    setText($('#pal-atk-base'), t.power !== null ? `Printed ${palNum(t.power)} · boost +${palNum(p.atk)}${allBit(all.atk)}` : `This Pal +${palNum(p.atk)}${allBit(all.atk)}`);
+    const word = t.src === 'card' ? 'Printed' : 'Base';
+    setText($('#pal-atk-base'), t.power !== null ? `${word} ${palNum(t.power)} · boost +${palNum(p.atk)}${allBit(all.atk)}` : `This Pal +${palNum(p.atk)}${allBit(all.atk)}`);
     setText($('#pal-dmg'), palNum(t.dmg));
     setHidden($('#pal-dmg-base'), !all.dmg);
     setText($('#pal-dmg-base'), `This Pal ${palNum(p.dmg)}${allBit(all.dmg)}`);
-    setText($('#pal-str'), String(t.str));
+    setText($('#pal-str'), p.str ? `+${p.str}` : '0');
     setHidden($('#pal-str-base'), t.strike === null && !all.str);
-    setText($('#pal-str-base'), t.strike !== null ? `Printed ${t.strike} · extra +${p.str}${allBit(all.str, true)}` : `This Pal +${p.str}${allBit(all.str, true)}`);
+    setText($('#pal-str-base'), `${all.str ? `all Pals +${all.str} · ` : ''}total ★ ${t.str}`);
+    // a base set by hand: shown unless the card brings its printed power
+    setText($('#pal-bp'), palNum(p.bp));
+    setText($('#pal-bs'), String(p.bs));
+    setAttr($('#pal-ruler'), 'aria-valuenow', String(p.bp));
+    setAttr($('#pal-ruler'), 'style', `--off: ${-(p.bp / 100) * RULER_NOTCH}px`);
+    setAttr($('#pal-sruler'), 'aria-valuenow', String(p.bs));
+    setAttr($('#pal-sruler'), 'style', `--off: ${-p.bs * STRIKE_NOTCH}px`);
   }
+  const known = (v) => v !== null && v !== undefined;
+  setHidden($('#pal-base'), isAll || (!!p.card && known(p.card.power)));
+  setHidden($('#pal-bstr'), isAll || (!!p.card && known(p.card.strike)));
   // the buttons change (and Reset clears) only this slot's own values, or only the layer
-  for (const b of $$('#ov-pal [data-reset]')) setProp(b, 'disabled', b.dataset.reset === 'all' ? !(p.atk || p.dmg || p.str) : !p[b.dataset.reset]);
+  for (const b of $$('#ov-pal [data-reset]')) setProp(b, 'disabled', b.dataset.reset === 'all' ? !(p.atk || p.dmg || p.str) : b.dataset.reset === 'base' ? !(p.bp || p.bs) : !p[b.dataset.reset]);
   setHidden($('#pal-clear'), isAll);
   const c = isAll ? null : p.card;
-  setHidden($('#pal-cardrow'), isAll || (!state.cardLookup && !c));
+  setHidden($('#pal-cardrow'), !c);
   setText($('#pal-cardname'), c ? c.name : 'No card picked');
-  setText($('#pal-cardhint'), c ? `${c.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
+  setText($('#pal-cardhint'), c ? `${c.code} · tap the picture to read it` : ' ');
   setText($('#pal-pick'), c ? 'Change' : 'Pick card');
   setHidden($('#pal-pick'), isAll || !state.cardLookup);
   setHidden($('#pal-view'), !c);
@@ -911,6 +964,38 @@ $('#ov-pal').addEventListener('click', (e) => {
   commit(next);
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
 });
+// 0.4.8: the base power ruler (one notch, RULER_NOTCH px, = 100); 0.4.8: the base strike dial (one tick, STRIKE_NOTCH px, = 1).
+// Drag sideways (measured in the pop-up's own frame, so a turned pop-up drags the right way); the arrow keys step one too.
+const RULER_NOTCH = 14, STRIKE_NOTCH = 28;
+for (const ruler of [$('#pal-ruler'), $('#pal-sruler')]) {
+  const k = ruler.dataset.k, unit = Number(ruler.dataset.unit), notch = k === 'bs' ? STRIKE_NOTCH : RULER_NOTCH;
+  let drag = null;
+  ruler.addEventListener('pointerdown', (e) => {
+    if (palAt.i === ALL) return;
+    drag = { x: e.clientX, y: e.clientY, from: state.pals[palAt.seat][palAt.i][k], last: 0, f: palFrame() };
+    ruler.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  ruler.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const [dx] = drag.f.vec(e.clientX - drag.x, e.clientY - drag.y);
+    const notches = Math.round(dx / notch);
+    if (notches === drag.last) return;
+    drag.last = notches;
+    const cur = state.pals[palAt.seat][palAt.i][k];
+    const next = palStep(state, palAt.seat, palAt.i, k, drag.from + notches * unit - cur);
+    if (next !== state) { commit(next); try { navigator.vibrate?.(3); } catch { /* not allowed */ } }
+  });
+  const end = () => { drag = null; };
+  ruler.addEventListener('pointerup', end);
+  ruler.addEventListener('pointercancel', end);
+  ruler.addEventListener('keydown', (e) => {
+    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
+    if (!d || palAt.i === ALL) return;
+    e.preventDefault();
+    commit(palStep(state, palAt.seat, palAt.i, k, d * unit));
+  });
+}
 $('#pal-clear').addEventListener('click', () => { commit(palClear(state, palAt.seat, palAt.i)); closeOverlay(); });
 $('#pal-pick').addEventListener('click', () => openCards(palAt.seat, { seat: palAt.seat, i: palAt.i }));
 $('#pal-view').addEventListener('click', () => {

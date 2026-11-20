@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultState, cleanState, endTurn, resetGame, isFreshGame, setSetting } from '../js/state.js';
-import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum } from '../js/pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum, palTotals } from '../js/pals.js';
 
 const on = () => setSetting(defaultState(), 'palTrack', true);
 
@@ -46,7 +46,7 @@ test('end of turn removes damage (boosts and strike stay), only when Pal tracker
 
 test('a card in a slot, clearing a slot, reset and saving', () => {
   let s = palCard(on(), 0, 1, { code: 'zz01-001', name: '  Test   Pal ' });
-  assert.deepEqual(s.pals[0][1].card, { code: 'ZZ01-001', name: 'Test Pal' });
+  assert.deepEqual(s.pals[0][1].card, { code: 'ZZ01-001', name: 'Test Pal', power: null, strike: null });
   assert.equal(palCard(s, 0, 1, { code: 'bad code!', name: 'x' }).pals[0][1].card, null);
   s = palStep(s, 0, 1, 'atk', 300);
   assert.equal(isFreshGame(s), false);
@@ -64,6 +64,19 @@ test('bad saved Pal data falls back to empty slots', () => {
   assert.equal(p[1].length, PAL_SLOTS);
   assert.equal(cleanCard({ code: 'AB01-002', name: '' }).name, 'AB01-002');
   assert.equal(cleanState({ v: 1 }).pals.length, 2); // an older save without pals
+});
+
+test('a card with printed power and strike: the slot shows base + boost', () => {
+  let s = palCard(on(), 1, 0, { code: 'ZZ01-002', name: 'Made-up Fox', power: 1200, strike: 1 });
+  assert.deepEqual(s.pals[1][0].card, { code: 'ZZ01-002', name: 'Made-up Fox', power: 1200, strike: 1 });
+  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, atk: 1200, str: 1 });
+  s = palStep(palStep(s, 1, 0, 'atk', 800), 1, 0, 'str', 1);
+  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, atk: 2000, str: 2 });
+  assert.deepEqual(palTotals({ atk: 500, dmg: 0, str: 0, card: null }), { power: null, strike: null, atk: 500, str: 0 });
+  assert.deepEqual(cleanCard({ code: 'ZZ01-004', name: 'Made-up Camp', power: null, strike: -1 }), { code: 'ZZ01-004', name: 'Made-up Camp', power: null, strike: null });
+  assert.equal(cleanCard({ code: 'ZZ01-004', name: 'x', power: 1e9 }).power, null);
+  const back = cleanState(JSON.parse(JSON.stringify(s)));
+  assert.deepEqual(back.pals[1][0], s.pals[1][0]); // kept through a save
 });
 
 test('numbers with thousands separators', () => {

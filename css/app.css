@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.0"; }
+:root { --pwc-v: "0.4.1"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1014,6 +1014,19 @@ svg { display: block; }
 .stage[data-pals='on'] .seat-in { height: auto; flex: 1 1 0; min-height: 0; }
 .stage[data-pals='on'] .pal-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; flex: 0 0 auto; height: clamp(92px, 24%, 230px); }
 .stage[data-pals='on'][data-players='2'] .pal-row { height: clamp(88px, 28%, 230px); }
+/* 0.4.1: with Pals on, Material / Ingredient centre the icon, word and number together (the number no longer rides
+   high under an empty lower half), and the −/+ stay level with the number */
+.stage[data-pals='on'] :is(.t-mat, .t-ing) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr); }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .core { display: contents; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) :is(.head, .num) { grid-column: 2; position: relative; z-index: 3; pointer-events: none; justify-self: center; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .head { grid-row: 2; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .num { grid-row: 3; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .pm { grid-row: 3; align-self: center; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .pm.minus { grid-column: 1; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .pm.plus { grid-column: 3; }
+.stage[data-pals='on'] :is(.t-mat, .t-ing) .num[data-len='2'] { font-size: min(40cqh, 31cqw); } /* two digits clear the −/+ on narrow phones */
+/* two players with Pals on: life keeps the larger share on short phones instead of shrinking to a strip */
+.stage[data-pals='on'][data-players='2']:not([data-souls='on']) .seat-in { grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr); }
 .pal {
   position: relative; min-width: 0; min-height: 0; padding: 6px 4px; border-radius: var(--radius-sm);
   background: var(--tile); border: 1px solid var(--tile-edge); box-shadow: 0 10px 26px rgba(3, 6, 18, .3);

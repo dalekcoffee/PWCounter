@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.10
+- Pal trackers: in landscape the Pal / All Pals pop-up is wider, in two columns (base power, base strike and extra strike on the left; attack and damage on the right), so it fits a phone on its side without scrolling. Portrait is unchanged.
 ## 0.4.9
 - Tap clicks: every change to life, material, ingredient, souls and the Pal trackers makes a short click (60 ms), so the other player hears each one. Adding clicks higher, taking away clicks lower; holding a button clicks with every step. On by default; turn it off in Settings (Tap clicks). The sound starts after your first tap (browsers allow no sound before that). On iPhone the ring / silent switch may still mute it.
 ## 0.4.8

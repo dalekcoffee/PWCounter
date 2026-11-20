@@ -879,7 +879,10 @@ function placePal() {
   if (ov.hidden) return;
   const slot = $(`.seat[data-seat="${palAt.seat}"] .pal[data-i="${palAt.i}"]`);
   const W = ov.clientWidth, H = ov.clientHeight, M = 8, GAP = 12;
-  const w = Math.min(560, W - 2 * M);
+  // 0.4.10: landscape (wide and short): two columns, base dials | attack and damage, so it fits without scrolling
+  const wide = W >= 700 && W > H;
+  setData(ov, 'wide', wide ? 'yes' : 'no');
+  const w = Math.min(wide ? 900 : 560, W - 2 * M);
   pop.style.width = `${w}px`;
   let box = null;
   if (slot) {
@@ -951,6 +954,7 @@ function paintPal() {
   setHidden($('#pal-clear'), isAll);
   const c = isAll ? null : p.card;
   setHidden($('#pal-cardrow'), !c);
+  setData($('#ov-pal'), 'card', c ? 'yes' : 'no');
   setText($('#pal-cardname'), c ? c.name : 'No card picked');
   setText($('#pal-cardhint'), c ? `${c.code} · tap the picture to read it` : ' ');
   setText($('#pal-pick'), c ? 'Change' : 'Pick card');

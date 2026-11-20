@@ -67,6 +67,21 @@ export const cardImage = (code, w = 1024) => `${CARD_PROXY}/img/${encodeURICompo
 /** The card's page on Palify (for the credit link). */
 export const cardPage = (card) => (card.slug ? `${CARD_SITE}/card/${card.slug}` : `${CARD_SITE}/cards`);
 
+export const RECENT_MAX = 12;
+const RECENT_CODE = /^[A-Z0-9][A-Z0-9-]{2,23}$/;
+/** The recently looked-up cards (printing codes, newest first, no repeats), from anything saved. */
+export function cleanRecent(raw) {
+  const out = [];
+  for (const c of Array.isArray(raw) ? raw : []) {
+    const code = typeof c === 'string' ? c.trim().toUpperCase() : '';
+    if (RECENT_CODE.test(code) && !out.includes(code)) out.push(code);
+    if (out.length >= RECENT_MAX) break;
+  }
+  return out;
+}
+/** Put a card at the front of the recent list (moved up if it was already there). */
+export const pushRecent = (list, code) => cleanRecent([code, ...(list || []).filter((c) => c !== String(code).toUpperCase())]);
+
 /** Is a saved copy of the card list still fresh enough to use without asking again? */
 export const cacheFresh = (saved, now) => !!saved && Array.isArray(saved.cards) && saved.cards.length > 0 && now - saved.at < CARD_TTL_MS;
 

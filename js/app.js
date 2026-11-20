@@ -14,7 +14,7 @@ import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 import { lifeTone, justLost, overWords } from './life.js';
 import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals, palReset } from './pals.js';
-import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine } from './cards.js';
+import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine, pushRecent } from './cards.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
 const KEY = 'pwc.state';
@@ -952,9 +952,11 @@ function runSearch() {
   if (!cardList) setText(status, 'Loading cards…');
   loadCards().then((cards) => {
     if (openId !== 'ov-cards') return;
-    const found = searchCards(cards, q);
+    const empty = !q.trim();
+    // nothing typed: the cards looked up this game (newest first; a new game clears them)
+    const found = empty ? state.recentCards.map((code) => cards.find((c) => c.code === code)).filter(Boolean) : searchCards(cards, q);
     const old = Date.now() - cardAt > 24 * 60 * 60 * 1000;
-    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: the card list could not be refreshed.)' : ''}`
+    setText(status, empty ? `${found.length ? 'Looked up this game' : `${cards.length} cards. Type a name, a code or words from the effect.`}${old ? ' (Saved copy: the card list could not be refreshed.)' : ''}`
       : found.length ? `${found.length}${found.length >= 60 ? '+' : ''} found` : 'No card found');
     list.replaceChildren(...found.map(cardItem));
   }).catch(() => {
@@ -976,7 +978,7 @@ $('#cards-list').addEventListener('click', (e) => {
 function usePick(c) {
   const at = pickFor;
   pickFor = null;
-  commit(palCard(state, at.seat, at.i, { code: c.code, name: c.name, power: c.power, strike: c.strike }));
+  commit({ ...palCard(state, at.seat, at.i, { code: c.code, name: c.name, power: c.power, strike: c.strike }), recentCards: pushRecent(state.recentCards, c.code) });
   openPal(at.seat, at.i);
 }
 
@@ -999,6 +1001,7 @@ function showCard(code, faceSeat, known, fromPal) {
   img.src = cardImage(code);
   paint(known || { code, name: fallback?.name || code });
   setText($('#card-back'), fromPal ? 'Back' : 'Search');
+  if (state.recentCards[0] !== code) commit({ ...state, recentCards: pushRecent(state.recentCards, code) });
   setHidden($('#card-use'), !pickFor);
   openOverlay('ov-card');
   if (!known) loadCards().then((cards) => { const c = cards.find((x) => x.code === code); if (c && openId === 'ov-card' && viewing?.code === code) paint(c); }).catch(() => {});

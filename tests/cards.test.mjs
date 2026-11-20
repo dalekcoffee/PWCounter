@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine, CARD_TTL_MS } from '../js/cards.js';
+import { cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine, CARD_TTL_MS, pushRecent, cleanRecent, RECENT_MAX } from '../js/cards.js';
+import { defaultState, cleanState, resetGame } from '../js/state.js';
 
 // made-up cards (no real card text)
 const API = { count: 4, cards: [
@@ -45,4 +46,19 @@ test('links, image, cache and the result line', () => {
   assert.equal(cacheFresh({ at: 1000, cards: [] }, 1001), false);
   assert.equal(cardLine(a), 'Pal · Cost 1 · Power 300 · Strike 1');
   assert.equal(cardLine(d), 'Structure · Cost 2 · Durability 3');
+});
+
+test('recently looked-up cards: newest first, no repeats, capped, cleared by a new game', () => {
+  let r = pushRecent([], 'zz01-001');
+  r = pushRecent(r, 'ZZ01-002');
+  r = pushRecent(r, 'ZZ01-001');
+  assert.deepEqual(r, ['ZZ01-001', 'ZZ01-002']);
+  for (let i = 0; i < 20; i++) r = pushRecent(r, `ZZ02-${String(i).padStart(3, '0')}`);
+  assert.equal(r.length, RECENT_MAX);
+  assert.equal(r[0], 'ZZ02-019');
+  assert.deepEqual(cleanRecent(['bad code!', 7, 'ZZ01-003', 'zz01-003']), ['ZZ01-003']);
+  assert.deepEqual(defaultState().recentCards, []);
+  const s = cleanState({ ...defaultState(), recentCards: ['ZZ01-004'] });
+  assert.deepEqual(s.recentCards, ['ZZ01-004']);
+  assert.deepEqual(resetGame(s).recentCards, []);
 });

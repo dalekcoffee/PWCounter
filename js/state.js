@@ -1,5 +1,6 @@
 // Pure game state: no DOM, no storage. Every function returns a NEW object.
 // Seat 0 = you (bottom), seat 1 = the opponent (top, shown only with 2 players).
+import { cleanRecent } from './cards.js';
 import { freshPals, cleanPals, clearDamage, palEmpty } from './pals.js';
 //
 // Souls follow the official Comprehensive Rules (v1.01, 2026-11-02), tracked as numbers (13.2):
@@ -35,6 +36,7 @@ export function defaultState() {
     // the game
     seats: [freshSeat(), freshSeat()],
     pals: freshPals(), // Pal trackers (experimental): [seat][slot] = { atk, dmg, str, card }
+    recentCards: [], // card lookup (experimental): printing codes looked up this game, newest first
     night: false,
     nightLock: false, // 0.3.19: night locked on (a double tap); unlocked night turns back to day when the turn ends
     turn: 1,
@@ -108,6 +110,7 @@ export function cleanState(raw) {
     v: 1,
     seats: [cleanSeat(seats[0]), cleanSeat(seats[1])],
     pals: cleanPals(raw.pals),
+    recentCards: cleanRecent(raw.recentCards),
     night: raw.night === true,
     nightLock: raw.night === true && raw.nightLock === true,
     turn: int(raw.turn, 0, 9999, 1),
@@ -255,7 +258,7 @@ export function needsResume(state, now) {
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {
-  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), night: false, nightLock: false, turn: 1, active: 0, first: null, turnAt: 0 };
+  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), recentCards: [], night: false, nightLock: false, turn: 1, active: 0, first: null, turnAt: 0 };
 }
 
 /** Change a setting, cleaned. Changing players or switching souls on starts the soul set-up again. */

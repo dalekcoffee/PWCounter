@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.4.10"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.4.11"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=0.4.10">
+  <link rel="stylesheet" href="css/app.css?v=0.4.11">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/click.js">
@@ -203,18 +203,20 @@
         </div>
         <section class="pal-blk base" id="pal-base" aria-label="Base power">
           <div class="pal-top"><span class="pal-lbl">Base power</span><button type="button" class="pal-reset" data-reset="base" aria-label="Clear the base power and strike">Reset</button><b class="pal-val" id="pal-bp">0</b></div>
-          <div class="pal-ruler-row">
-            <button type="button" class="pal-q" data-k="bp" data-step="-500" aria-label="Base power minus 500">−500</button>
-            <div class="pal-ruler" id="pal-ruler" data-k="bp" data-unit="100" role="slider" tabindex="0" aria-label="Base power, drag: 100 per notch" aria-valuemin="0" aria-valuemax="99900" aria-valuenow="0"><i></i></div>
-            <button type="button" class="pal-q" data-k="bp" data-step="500" aria-label="Base power plus 500">+500</button>
+          <div class="pal-chips pal-bp-row">
+            <button type="button" class="neg" data-k="bp" data-step="-500" aria-label="Base power minus 500">−500</button>
+            <button type="button" class="neg" data-k="bp" data-step="-100" aria-label="Base power minus 100">−100</button>
+            <button type="button" data-k="bp" data-step="100" aria-label="Base power plus 100">+100</button>
+            <button type="button" data-k="bp" data-step="500" aria-label="Base power plus 500">+500</button>
           </div>
         </section>
         <section class="pal-blk bstr" id="pal-bstr" aria-label="Base strike">
-          <div class="pal-top"><span class="pal-lbl"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-str" d="M12 1.5l2.4 6.1 6.3-2.1-3.6 5.6L22.5 13l-6.5 1.2 1.6 6.4-5.6-3.3-5.6 3.3 1.6-6.4L1.5 13l5.4-1.9-3.6-5.6 6.3 2.1Z"/></svg>Base strike</span><b class="pal-val" id="pal-bs">0</b></div>
-          <div class="pal-ruler-row">
-            <button type="button" class="pal-q" data-k="bs" data-step="-1" aria-label="Base strike minus one">−1</button>
-            <div class="pal-ruler st" id="pal-sruler" data-k="bs" data-unit="1" role="slider" tabindex="0" aria-label="Base strike, drag: 1 per tick" aria-valuemin="0" aria-valuemax="99" aria-valuenow="0"><i></i></div>
-            <button type="button" class="pal-q" data-k="bs" data-step="1" aria-label="Base strike plus one">+1</button>
+          <div class="pal-top"><span class="pal-lbl"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path class="pi-str" d="M12 1.5l2.4 6.1 6.3-2.1-3.6 5.6L22.5 13l-6.5 1.2 1.6 6.4-5.6-3.3-5.6 3.3 1.6-6.4L1.5 13l5.4-1.9-3.6-5.6 6.3 2.1Z"/></svg>Base strike</span>
+            <span class="pal-pm">
+              <button type="button" data-k="bs" data-step="-1" aria-label="Base strike minus one">−</button>
+              <b class="pal-val" id="pal-bs">0</b>
+              <button type="button" data-k="bs" data-step="1" aria-label="Base strike plus one">+</button>
+            </span>
           </div>
         </section>
         <section class="pal-blk atk" aria-label="Attack boost">

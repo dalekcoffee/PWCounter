@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.5"; }
+:root { --pwc-v: "0.4.6"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1012,7 +1012,7 @@ svg { display: block; }
 .pal-row { display: none; }
 .stage[data-pals='on'] .seat { display: flex; flex-direction: column; gap: 8px; }
 .stage[data-pals='on'] .seat-in { height: auto; flex: 1 1 0; min-height: 0; }
-.stage[data-pals='on'] .pal-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; flex: 0 0 auto; height: clamp(92px, 24%, 230px); }
+.stage[data-pals='on'] .pal-row { display: grid; grid-template-columns: minmax(0, .82fr) repeat(5, minmax(0, 1fr)); gap: 6px; flex: 0 0 auto; height: clamp(92px, 24%, 230px); }
 .stage[data-pals='on'][data-players='2'] .pal-row { height: clamp(88px, 28%, 230px); }
 /* 0.4.1: with Pals on, Material / Ingredient centre the icon, word and number together (the number no longer rides
    high under an empty lower half), and the −/+ stay level with the number */
@@ -1076,6 +1076,11 @@ svg { display: block; }
 .pal-pm .pal-val { min-width: 1.4em; text-align: center; }
 .pal-foot { display: flex; gap: 10px; margin-top: 14px; }
 .pal-foot .btn { flex: 1; }
+/* 0.4.6: the All Pals layer, first in the row: a dashed gold edge marks it as a layer, not a Pal */
+.pal.pal-all { background: color-mix(in srgb, var(--gold) 9%, var(--tile)); border: 1.5px dashed color-mix(in srgb, var(--gold) 55%, transparent); }
+.pal.pal-all .pal-n { color: var(--gold); letter-spacing: .1em; text-transform: uppercase; }
+.pal.pal-all[data-empty='yes'] { opacity: .6; }
+#ov-pal[data-all='yes'] #pal-title { color: var(--gold); }
 /* 0.4.3: quick resets (a counter, or all three; the card stays) */
 .pal-sub { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
 .pal-sub .pal-base { margin-top: 0; }

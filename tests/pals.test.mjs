@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultState, cleanState, endTurn, resetGame, isFreshGame, setSetting } from '../js/state.js';
-import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum, palTotals, palReset } from '../js/pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum, palTotals, palReset, cleanPalAll, ALL } from '../js/pals.js';
 
 const on = () => setSetting(defaultState(), 'palTrack', true);
 
@@ -69,10 +69,10 @@ test('bad saved Pal data falls back to empty slots', () => {
 test('a card with printed power and strike: the slot shows base + boost', () => {
   let s = palCard(on(), 1, 0, { code: 'ZZ01-002', name: 'Made-up Fox', power: 1200, strike: 1 });
   assert.deepEqual(s.pals[1][0].card, { code: 'ZZ01-002', name: 'Made-up Fox', power: 1200, strike: 1 });
-  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, atk: 1200, str: 1 });
+  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, boost: 0, extra: 0, atk: 1200, dmg: 0, str: 1 });
   s = palStep(palStep(s, 1, 0, 'atk', 800), 1, 0, 'str', 1);
-  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, atk: 2000, str: 2 });
-  assert.deepEqual(palTotals({ atk: 500, dmg: 0, str: 0, card: null }), { power: null, strike: null, atk: 500, str: 0 });
+  assert.deepEqual(palTotals(s.pals[1][0]), { power: 1200, strike: 1, boost: 800, extra: 1, atk: 2000, dmg: 0, str: 2 });
+  assert.deepEqual(palTotals({ atk: 500, dmg: 0, str: 0, card: null }), { power: null, strike: null, boost: 500, extra: 0, atk: 500, dmg: 0, str: 0 });
   assert.deepEqual(cleanCard({ code: 'ZZ01-004', name: 'Made-up Camp', power: null, strike: -1 }), { code: 'ZZ01-004', name: 'Made-up Camp', power: null, strike: null });
   assert.equal(cleanCard({ code: 'ZZ01-004', name: 'x', power: 1e9 }).power, null);
   const back = cleanState(JSON.parse(JSON.stringify(s)));
@@ -89,6 +89,28 @@ test('quick resets: one counter or all three, the card stays', () => {
   assert.equal(palReset(all, 0, 2, 'all'), all); // nothing to reset: the same object
   assert.equal(palReset(s, 0, 2, 'nope'), s);
   assert.equal(palReset(s, 2, 0, 'atk'), s);
+});
+
+test('All Pals layer: added on top of every Pal, its own resets, damage clears at end of turn', () => {
+  let s = palCard(on(), 0, 0, { code: 'ZZ01-002', name: 'Made-up Fox', power: 1200, strike: 1 });
+  s = palStep(s, 0, 0, 'atk', 300);
+  s = palStep(palStep(palStep(s, 0, ALL, 'atk', 500), 0, ALL, 'dmg', 200), 0, ALL, 'str', 1);
+  assert.deepEqual(s.palAll[0], { atk: 500, dmg: 200, str: 0 + 1 });
+  assert.deepEqual(s.palAll[1], { atk: 0, dmg: 0, str: 0 }); // the other player is untouched
+  assert.equal(s.pals[0][0].atk, 300); // the Pal's own boost is separate
+  const t = palTotals(s.pals[0][0], s.palAll[0]);
+  assert.deepEqual(t, { power: 1200, strike: 1, boost: 800, extra: 1, atk: 2000, dmg: 200, str: 2 });
+  assert.deepEqual(palTotals(s.pals[0][3], s.palAll[0]).atk, 500); // a slot without a card: the boosts alone
+  assert.equal(palCard(s, 0, ALL, { code: 'ZZ01-001', name: 'x' }), s); // the layer has no card
+  assert.equal(palClear(s, 0, ALL), s);
+  assert.deepEqual(palReset(s, 0, ALL, 'atk').palAll[0], { atk: 0, dmg: 200, str: 1 });
+  assert.deepEqual(palReset(s, 0, ALL, 'all').palAll[0], { atk: 0, dmg: 0, str: 0 });
+  assert.equal(palReset(s, 0, ALL, 'all').pals[0][0].atk, 300); // resetting the layer keeps each Pal's own values
+  assert.deepEqual(clearDamage(s).palAll[0], { atk: 500, dmg: 0, str: 1 });
+  assert.equal(isFreshGame(s), false);
+  assert.deepEqual(resetGame(s).palAll, [{ atk: 0, dmg: 0, str: 0 }, { atk: 0, dmg: 0, str: 0 }]);
+  assert.deepEqual(cleanState(JSON.parse(JSON.stringify(s))).palAll, s.palAll);
+  assert.deepEqual(cleanPalAll([{ atk: -1, dmg: 'x', str: 1e9 }]), [{ atk: 0, dmg: 0, str: 0 }, { atk: 0, dmg: 0, str: 0 }]);
 });
 
 test('numbers with thousands separators', () => {

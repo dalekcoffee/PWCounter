@@ -7,7 +7,7 @@
   <meta name="description" content="Life, Material and Ingredient counter for the Palworld card game. One or two players, day and night, a calculator, dice and a coin. Works offline.">
   <meta name="theme-color" content="#070b17">
   <meta name="color-scheme" content="dark">
-  <meta name="pwc-version" content="0.4.8"> <!-- sw.js checks this matches its VERSION before caching the app -->
+  <meta name="pwc-version" content="0.4.9"> <!-- sw.js checks this matches its VERSION before caching the app -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="PW Counter">
@@ -18,9 +18,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
-  <link rel="stylesheet" href="css/app.css?v=0.4.8">
+  <link rel="stylesheet" href="css/app.css?v=0.4.9">
   <!-- every module asked for at once: otherwise the browser finds them one import level at a time -->
   <link rel="modulepreload" href="js/state.js">
+  <link rel="modulepreload" href="js/click.js">
   <link rel="modulepreload" href="js/calc.js">
   <link rel="modulepreload" href="js/random.js">
   <link rel="modulepreload" href="js/version.js">
@@ -306,6 +307,10 @@
         <div class="set-row">
           <span class="set-label">Full screen when installed<small>The home-screen app goes full screen on your first tap (Android). iPhone shows the app without browser bars but cannot hide the status bar.</small></span>
           <label class="switch"><input type="checkbox" id="set-autofull"><span></span></label>
+        </div>
+        <div class="set-row">
+          <span class="set-label">Tap clicks<small>A short click on every change, higher for adding and lower for taking away, so the other player hears it. Your phone's volume sets how loud.</small></span>
+          <label class="switch"><input type="checkbox" id="set-clicks"><span></span></label>
         </div>
         <div class="set-row">
           <span class="set-label">Keep screen on<small>While the counter is open</small></span>

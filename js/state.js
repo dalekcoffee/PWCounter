@@ -49,6 +49,7 @@ export function defaultState() {
     landscape: 'off',
     flip: true,
     awake: true,
+    clicks: true, // 0.4.9: a click on every counter change, so the opponent hears it
     autoFull: true, // installed app: go full screen on the first tap
     souls: false,
     soulStyle: SOUL_STYLE_DEFAULT, // one of SOUL_STYLES (styles with cards need one player; two players see numbers)
@@ -123,6 +124,7 @@ export function cleanState(raw) {
     landscape: LANDSCAPE.includes(raw.landscape) ? raw.landscape : 'off',
     flip: raw.flip !== false,
     awake: raw.awake !== false,
+    clicks: raw.clicks !== false,
     autoFull: raw.autoFull !== false,
     souls: raw.souls === true,
     soulStyle: cleanSoulStyle(raw),

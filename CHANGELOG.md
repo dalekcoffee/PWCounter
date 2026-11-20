@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.2
+- Card lookup works on the live site: Palify's API cannot be read straight from a browser (it sends no CORS header), so the card list and the card pictures now come through the ResoPal proxy, which keeps a copy for a day. Pictures are smaller in the list (quicker to load) and full size in the card view; sideways cards come upright.
 ## 0.4.1
 - Pal trackers on: the Material and Ingredient tiles now centre their icon, word and number together (the number no longer rides high above an empty lower half), with − / + level with the number; two-digit counts no longer touch the buttons on narrow phones. Two players on a short phone: life keeps the bigger share of the seat instead of shrinking to a strip.
 ## 0.4.0

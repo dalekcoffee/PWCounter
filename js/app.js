@@ -845,7 +845,7 @@ function paintPal() {
   setText($('#pal-pick'), p.card ? 'Change' : 'Pick card');
   setHidden($('#pal-pick'), !state.cardLookup);
   setHidden($('#pal-view'), !p.card);
-  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code));
+  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code, 256));
 }
 stage.addEventListener('click', (e) => {
   const el = e.target.closest('.pal');
@@ -921,7 +921,7 @@ function cardItem(c) {
   b.dataset.code = c.code;
   const img = document.createElement('img');
   img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
-  img.src = cardImage(c.code);
+  img.src = cardImage(c.code, 256);
   img.addEventListener('error', () => { img.style.visibility = 'hidden'; }, { once: true });
   const txt = document.createElement('span');
   txt.className = 'ci-text';
@@ -935,17 +935,17 @@ function cardItem(c) {
 function runSearch() {
   const status = $('#cards-status'), list = $('#cards-list');
   const q = $('#cards-q').value;
-  if (!cardList) setText(status, 'Loading cards from Palify…');
+  if (!cardList) setText(status, 'Loading cards…');
   loadCards().then((cards) => {
     if (openId !== 'ov-cards') return;
     const found = searchCards(cards, q);
     const old = Date.now() - cardAt > 24 * 60 * 60 * 1000;
-    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: Palify could not be reached.)' : ''}`
+    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: the card list could not be refreshed.)' : ''}`
       : found.length ? `${found.length}${found.length >= 60 ? '+' : ''} found` : 'No card found');
     list.replaceChildren(...found.map(cardItem));
   }).catch(() => {
     if (openId !== 'ov-cards') return;
-    setText(status, 'Could not reach Palify. Check the connection and try again.');
+    setText(status, 'Could not load the cards. Check the connection and try again.');
     list.replaceChildren();
   });
 }

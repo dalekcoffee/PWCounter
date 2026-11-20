@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.6"; }
+:root { --pwc-v: "0.4.7"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1012,7 +1012,7 @@ svg { display: block; }
 .pal-row { display: none; }
 .stage[data-pals='on'] .seat { display: flex; flex-direction: column; gap: 8px; }
 .stage[data-pals='on'] .seat-in { height: auto; flex: 1 1 0; min-height: 0; }
-.stage[data-pals='on'] .pal-row { display: grid; grid-template-columns: minmax(0, .82fr) repeat(5, minmax(0, 1fr)); gap: 6px; flex: 0 0 auto; height: clamp(92px, 24%, 230px); }
+.stage[data-pals='on'] .pal-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) clamp(38px, 28%, 62px); gap: 6px; flex: 0 0 auto; height: clamp(92px, 24%, 230px); }
 .stage[data-pals='on'][data-players='2'] .pal-row { height: clamp(88px, 28%, 230px); }
 /* 0.4.1: with Pals on, Material / Ingredient centre the icon, word and number together (the number no longer rides
    high under an empty lower half), and the −/+ stay level with the number */
@@ -1038,7 +1038,8 @@ svg { display: block; }
 .pal-h { display: flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; font: 700 10px/1.2 var(--font-mono); letter-spacing: .08em; color: var(--text-2); }
 .pal-n { flex: none; }
 .pal-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-ui); letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--text); }
-.pal-s { display: flex; align-items: center; justify-content: center; gap: 3px; max-width: 100%; font: 600 min(17cqh, 19cqw)/1 var(--font-head); color: var(--num); }
+.pal-s { display: flex; align-items: center; justify-content: center; gap: 2px; max-width: 100%; font: 600 min(23cqh, 24cqw)/1 var(--font-head); color: var(--num); } /* 0.4.7: bigger, using the tile's empty space */
+.pal-s .pi { width: .8em; height: .8em; }
 .pal-s b { font-weight: 600; white-space: nowrap; }
 .pal-s[data-zero='yes'] { opacity: .3; }
 .pi { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -1077,6 +1078,17 @@ svg { display: block; }
 .pal-foot { display: flex; gap: 10px; margin-top: 14px; }
 .pal-foot .btn { flex: 1; }
 /* 0.4.6: the All Pals layer, first in the row: a dashed gold edge marks it as a layer, not a Pal */
+.stage[data-pals='on'] .pal-row .pal:not(.pal-all) { grid-row: 1; }
+/* 0.4.7: the All Pals layer is a wide bar under the middle slots (2-4, centred on 3): the same icons and numbers, left to right */
+.stage[data-pals='on'] .pal-row .pal.pal-all { grid-row: 2; grid-column: 2 / 5; display: flex; align-items: center; justify-content: space-evenly; gap: 4px; padding: 0 8px; }
+.pal.pal-all .pal-s { font-size: min(52cqh, 7.5cqw); }
+/* phones: the bar spans the whole row, edge to edge, a little slimmer so the slots keep their height */
+@media (max-width: 600px) {
+  .stage[data-pals='on'] .pal-row { grid-template-rows: minmax(0, 1fr) clamp(32px, 24%, 50px); }
+  .stage[data-pals='on'] .pal-row .pal.pal-all { grid-column: 1 / -1; }
+  .pal.pal-all .pal-s { font-size: min(54cqh, 5.5cqw); }
+}
+.pal.pal-all .pal-h { font-size: min(36cqh, 11px); }
 .pal.pal-all { background: color-mix(in srgb, var(--gold) 9%, var(--tile)); border: 1.5px dashed color-mix(in srgb, var(--gold) 55%, transparent); }
 .pal.pal-all .pal-n { color: var(--gold); letter-spacing: .1em; text-transform: uppercase; }
 .pal.pal-all[data-empty='yes'] { opacity: .6; }

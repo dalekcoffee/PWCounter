@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.9"; }
+:root { --pwc-v: "0.4.10"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1156,6 +1156,22 @@ svg { display: block; }
 .pal-pop .pal-pm .pal-val { min-width: 1.5em; }
 .pal-pop .pal-foot { position: sticky; bottom: 0; margin: 18px -12px 0; padding: 8px 12px 12px; gap: 8px; background: rgb(14, 20, 42); border-top: 1px solid var(--border); }
 .pal-pop .pal-foot .btn { min-height: 42px; }
+
+/* 0.4.10: landscape: two columns (card, base power, base strike, extra strike | attack, damage); empty areas collapse */
+#ov-pal[data-wide='yes'] .pal-pop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 16px; align-content: start;
+  grid-template-areas: 'head head' 'base atk' 'bstr atk' 'bstr dmg' 'str dmg' 'foot foot'; }
+#ov-pal[data-wide='yes'][data-card='yes'] .pal-pop { grid-template-areas: 'head head' 'card atk' 'base atk' 'bstr dmg' 'str dmg' 'foot foot'; }
+#ov-pal[data-wide='yes'] .pal-head { grid-area: head; }
+#ov-pal[data-wide='yes'] .pal-cardrow { grid-area: card; }
+#ov-pal[data-wide='yes'] #pal-base { grid-area: base; }
+#ov-pal[data-wide='yes'] #pal-bstr { grid-area: bstr; }
+#ov-pal[data-wide='yes'] .pal-blk.atk { grid-area: atk; }
+#ov-pal[data-wide='yes'] .pal-blk.dmg { grid-area: dmg; }
+#ov-pal[data-wide='yes'] .pal-blk.str { grid-area: str; align-self: end; }
+#ov-pal[data-wide='yes'] .pal-blk { align-self: start; }
+#ov-pal[data-wide='yes'] .pal-foot { grid-area: foot; margin-top: 8px; padding-top: 6px; padding-bottom: 8px; }
+#ov-pal[data-wide='yes'] .pal-cardrow { align-self: start; margin-top: 6px; }
+#ov-pal[data-wide='yes'] .pal-head { margin-bottom: 0; }
 
 /* ---------- card lookup (experimental) ---------- */
 .cards-sheet { width: min(640px, 100%); height: 100%; display: flex; flex-direction: column; }

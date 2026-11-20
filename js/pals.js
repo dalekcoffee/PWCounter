@@ -5,10 +5,12 @@
 
 export const PAL_SLOTS = 5;
 export const PAL_KEYS = ['atk', 'dmg', 'str'];
-export const PAL_LIMITS = { atk: [0, 99900], dmg: [0, 99900], str: [0, 99] };
+export const PAL_LIMITS = { atk: [0, 99900], dmg: [0, 99900], str: [0, 99], bp: [0, 99900], bs: [0, 99] };
+/** 0.4.8: a base power (bp) and base strike (bs) set by hand, for a Pal without a card (no search needed). */
+export const BASE_KEYS = ['bp', 'bs'];
 export const PAL_STEPS = [100, 200, 500, 1000]; // the quick buttons for attack boost and damage
 
-export const freshPal = () => ({ atk: 0, dmg: 0, str: 0, card: null });
+export const freshPal = () => ({ atk: 0, dmg: 0, str: 0, bp: 0, bs: 0, card: null });
 export const freshPals = () => [0, 1].map(() => Array.from({ length: PAL_SLOTS }, freshPal));
 /** 0.4.6: the "All Pals" layer per player (attack boost, damage, strike added to every Pal; no card). */
 export const freshAll = () => ({ atk: 0, dmg: 0, str: 0 });
@@ -33,11 +35,14 @@ export function cleanCard(raw) {
  * With a card's printed power / strike: printed + own + all; without: own + all boost alone (power / strike null).
  */
 export function palTotals(p, all = freshAll()) {
-  const power = p.card && p.card.power !== null && p.card.power !== undefined ? p.card.power : null;
-  const strike = p.card && p.card.strike !== null && p.card.strike !== undefined ? p.card.strike : null;
+  const known = (v) => v !== null && v !== undefined;
+  const fromCard = !!p.card && known(p.card.power);
+  // the card's printed values win; else a base set by hand (0.4.8), when one is set
+  const power = fromCard ? p.card.power : p.bp ? p.bp : null;
+  const strike = p.card && known(p.card.strike) ? p.card.strike : p.bp || p.bs ? p.bs || 0 : null;
   const boost = p.atk + all.atk, extra = p.str + all.str;
   return {
-    power, strike, boost, extra,
+    power, strike, boost, extra, src: fromCard ? 'card' : power !== null || strike !== null ? 'base' : null,
     atk: power === null ? boost : power + boost,
     dmg: p.dmg + all.dmg,
     str: strike === null ? extra : strike + extra,
@@ -47,7 +52,7 @@ export function palTotals(p, all = freshAll()) {
 function cleanPal(raw) {
   const p = freshPal();
   if (!raw || typeof raw !== 'object') return p;
-  for (const k of PAL_KEYS) p[k] = int(raw[k], PAL_LIMITS[k]);
+  for (const k of [...PAL_KEYS, ...BASE_KEYS]) p[k] = int(raw[k], PAL_LIMITS[k]);
   p.card = cleanCard(raw.card);
   return p;
 }
@@ -83,6 +88,7 @@ const withPal = (state, seat, i, patch) => (i === ALL
 /** Change attack boost, damage or strike of one slot (or the All Pals layer, i = 'all') by delta, clamped (never below 0). */
 export function palStep(state, seat, i, key, delta) {
   if (!okSlot(seat, i) || !PAL_LIMITS[key] || !Number.isFinite(delta)) return state;
+  if (i === ALL && !PAL_KEYS.includes(key)) return state; // the All Pals layer has no base
   const cur = palAt(state, seat, i)[key];
   const [lo, hi] = PAL_LIMITS[key];
   const next = Math.min(hi, Math.max(lo, cur + delta));
@@ -92,13 +98,15 @@ export function palStep(state, seat, i, key, delta) {
 /** Which card sits in this slot (null clears it). */
 export function palCard(state, seat, i, card) {
   if (!okCardSlot(seat, i)) return state;
-  return withPal(state, seat, i, { card: card === null ? null : cleanCard(card) });
+  const c = card === null ? null : cleanCard(card);
+  // a card with printed numbers replaces a base set by hand
+  return withPal(state, seat, i, c && c.power !== null ? { card: c, bp: 0, bs: 0 } : { card: c });
 }
 
-/** Quick reset: one counter back to 0 ('atk' boost, 'dmg', 'str' extra), or 'all' three; the card stays. */
+/** Quick reset: one counter back to 0 ('atk' boost, 'dmg', 'str' extra), or 'all' three (the card and base stay); 'base' clears a hand-set base. */
 export function palReset(state, seat, i, key) {
   if (!okSlot(seat, i)) return state;
-  const keys = key === 'all' ? PAL_KEYS : PAL_KEYS.includes(key) ? [key] : [];
+  const keys = key === 'all' ? PAL_KEYS : key === 'base' && i !== ALL ? BASE_KEYS : PAL_KEYS.includes(key) ? [key] : [];
   const p = palAt(state, seat, i);
   if (!keys.some((k) => p[k])) return state;
   return withPal(state, seat, i, Object.fromEntries(keys.map((k) => [k, 0])));
@@ -121,7 +129,7 @@ export function clearDamage(state) {
   };
 }
 
-export const palEmpty = (p) => !p.atk && !p.dmg && !p.str && !p.card;
+export const palEmpty = (p) => !p.atk && !p.dmg && !p.str && !p.bp && !p.bs && !p.card;
 
 /** 1800 -> "1,800", for the tiles. */
 export const palNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');

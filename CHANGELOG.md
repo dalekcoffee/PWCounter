@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.9
+- Tap clicks: every change to life, material, ingredient, souls and the Pal trackers makes a short click (60 ms), so the other player hears each one. Adding clicks higher, taking away clicks lower; holding a button clicks with every step. On by default; turn it off in Settings (Tap clicks). The sound starts after your first tap (browsers allow no sound before that). On iPhone the ring / silent switch may still mute it.
 ## 0.4.8
 - Pal trackers: tapping a slot (or the All Pals bar) opens a pop-up right above it, its arrow on the slot, instead of the full sheet; for the top player it faces them. It scrolls inside on short screens, and Left play / Reset all / Done stay in view at the bottom.
 - Set a Pal's base power and strike without finding its card: drag the base power ruler (100 per notch) or tap −500 / +500, and drag the base strike dial (1 per tick, 0 to 99) or tap −1 / +1. Boosts, damage, extra strike and the All Pals bar add on top, just like a card's printed numbers. Picking a card with printed numbers replaces the hand-set base; Reset beside Base power clears it, Reset all keeps it. Each counter's Reset now sits beside its number.

@@ -1,4 +1,5 @@
 // PW Counter: the page. Rules live in state.js / calc.js / random.js (pure, tested).
+import { click, unlockClicks, setClicks } from './click.js';
 import { APP_VERSION } from './version.js';
 import {
   defaultState, cleanState, step, endTurn, tapNight, NIGHT_DOUBLE_MS, resetGame, setSetting, COUNTERS,
@@ -154,6 +155,7 @@ function bump(seat, key, d, tileEl) {
   const next = key === 'soul' ? restSoul(state, seat, d) : step(state, seat, key, d);
   if (next === state) return;
   commit(next);
+  click(d);
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
   showDelta(tileEl, d);
 }
@@ -318,6 +320,7 @@ stage.addEventListener('click', (e) => {
   const before = state.seats[seat].up;
   if (add) commit(addSoul(state, seat, Number(add.dataset.add)));
   else commit(toggleSoul(state, seat, Number(card.dataset.i)));
+  click(state.seats[seat].up - before);
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
   showDelta(e.target.closest('.t-soul'), state.seats[seat].up - before);
 });
@@ -767,6 +770,7 @@ function paintSettings() {
   }
   $('#set-flip').checked = state.flip;
   $('#set-awake').checked = state.awake;
+  $('#set-clicks').checked = state.clicks;
   $('#set-autofull').checked = state.autoFull;
   $('#set-souls').checked = state.souls;
   $('#set-icons').checked = state.iconsOnly;
@@ -793,6 +797,11 @@ for (const seg of $$('.seg')) {
 $('#set-flip').addEventListener('change', (e) => commit(setSetting(state, 'flip', e.target.checked)));
 $('#set-autofull').addEventListener('change', (e) => commit(setSetting(state, 'autoFull', e.target.checked)));
 $('#set-awake').addEventListener('change', (e) => commit(setSetting(state, 'awake', e.target.checked)));
+$('#set-clicks').addEventListener('change', (e) => { commit(setSetting(state, 'clicks', e.target.checked)); setClicks(state.clicks); unlockClicks(); click(1); });
+// 0.4.9: sound is only allowed after a tap: make / wake it on every tap (iPhone unlocks on the release, Android on the press)
+setClicks(state.clicks);
+for (const ev of ['pointerdown', 'pointerup', 'keydown']) document.addEventListener(ev, unlockClicks, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) unlockClicks(); });
 $('#set-icons').addEventListener('change', (e) => commit(setSetting(state, 'iconsOnly', e.target.checked)));
 $('#set-rooms').addEventListener('change', (e) => { commit(setSetting(state, 'rooms', e.target.checked)); if (!e.target.checked) roomUi.forget(); });
 $('#set-pals').addEventListener('change', (e) => commit(setSetting(state, 'palTrack', e.target.checked)));
@@ -956,12 +965,13 @@ stage.addEventListener('click', (e) => {
 });
 $('#ov-pal').addEventListener('click', (e) => {
   const r = e.target.closest('[data-reset]');
-  if (r) { const next = palReset(state, palAt.seat, palAt.i, r.dataset.reset); if (next !== state) commit(next); return; }
+  if (r) { const next = palReset(state, palAt.seat, palAt.i, r.dataset.reset); if (next !== state) { commit(next); click(-1); } return; }
   const b = e.target.closest('[data-step]');
   if (!b) return;
   const next = palStep(state, palAt.seat, palAt.i, b.dataset.k, Number(b.dataset.step));
   if (next === state) return;
   commit(next);
+  click(Number(b.dataset.step));
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
 });
 // 0.4.8: the base power ruler (one notch, RULER_NOTCH px, = 100); 0.4.8: the base strike dial (one tick, STRIKE_NOTCH px, = 1).
@@ -984,7 +994,7 @@ for (const ruler of [$('#pal-ruler'), $('#pal-sruler')]) {
     drag.last = notches;
     const cur = state.pals[palAt.seat][palAt.i][k];
     const next = palStep(state, palAt.seat, palAt.i, k, drag.from + notches * unit - cur);
-    if (next !== state) { commit(next); try { navigator.vibrate?.(3); } catch { /* not allowed */ } }
+    if (next !== state) { const was = state.pals[palAt.seat][palAt.i][k]; commit(next); click(state.pals[palAt.seat][palAt.i][k] - was); try { navigator.vibrate?.(3); } catch { /* not allowed */ } }
   });
   const end = () => { drag = null; };
   ruler.addEventListener('pointerup', end);
@@ -993,10 +1003,11 @@ for (const ruler of [$('#pal-ruler'), $('#pal-sruler')]) {
     const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
     if (!d || palAt.i === ALL) return;
     e.preventDefault();
-    commit(palStep(state, palAt.seat, palAt.i, k, d * unit));
+    const next = palStep(state, palAt.seat, palAt.i, k, d * unit);
+    if (next !== state) { commit(next); click(d); }
   });
 }
-$('#pal-clear').addEventListener('click', () => { commit(palClear(state, palAt.seat, palAt.i)); closeOverlay(); });
+$('#pal-clear').addEventListener('click', () => { commit(palClear(state, palAt.seat, palAt.i)); click(-1); closeOverlay(); });
 $('#pal-pick').addEventListener('click', () => openCards(palAt.seat, { seat: palAt.seat, i: palAt.i }));
 $('#pal-view').addEventListener('click', () => {
   const c = state.pals[palAt.seat][palAt.i].card;

@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.5
+- Card lookup: before you type, the search shows the cards looked up this game (opened or picked for a Pal), newest first, up to 12. A new game clears the list.
 ## 0.4.4
 - The +x / −x change badge on life and resources now shows at the top of the tile, bigger, so your hand does not cover it and the other player can read it too (the top player's badge sits at their own top).
 ## 0.4.3

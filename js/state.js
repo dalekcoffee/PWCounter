@@ -1,7 +1,7 @@
 // Pure game state: no DOM, no storage. Every function returns a NEW object.
 // Seat 0 = you (bottom), seat 1 = the opponent (top, shown only with 2 players).
 import { cleanRecent } from './cards.js';
-import { freshPals, cleanPals, clearDamage, palEmpty } from './pals.js';
+import { freshPals, cleanPals, clearDamage, palEmpty, freshPalAll, cleanPalAll } from './pals.js';
 //
 // Souls follow the official Comprehensive Rules (v1.01, 2026-11-02), tracked as numbers (13.2):
 //   6.1.2.1  at most 10 souls each
@@ -36,6 +36,7 @@ export function defaultState() {
     // the game
     seats: [freshSeat(), freshSeat()],
     pals: freshPals(), // Pal trackers (experimental): [seat][slot] = { atk, dmg, str, card }
+    palAll: freshPalAll(), // 0.4.6: per player, an All Pals layer { atk, dmg, str } added to every Pal
     recentCards: [], // card lookup (experimental): printing codes looked up this game, newest first
     night: false,
     nightLock: false, // 0.3.19: night locked on (a double tap); unlocked night turns back to day when the turn ends
@@ -110,6 +111,7 @@ export function cleanState(raw) {
     v: 1,
     seats: [cleanSeat(seats[0]), cleanSeat(seats[1])],
     pals: cleanPals(raw.pals),
+    palAll: cleanPalAll(raw.palAll),
     recentCards: cleanRecent(raw.recentCards),
     night: raw.night === true,
     nightLock: raw.night === true && raw.nightLock === true,
@@ -248,7 +250,7 @@ export const RESUME_AFTER_MS = 48 * 60 * 60 * 1000;
 /** Is the game still at its starting values? (nothing to resume) */
 export function isFreshGame(state) {
   const fresh = (s) => s.life === START_LIFE && s.mat === 0 && s.ing === 0 && s.soul === 0 && s.up === 0;
-  return state.seats.every(fresh) && state.pals.every((row) => row.every(palEmpty)) && !state.night && state.turn <= 1 && state.first === null;
+  return state.seats.every(fresh) && state.pals.every((row) => row.every(palEmpty)) && state.palAll.every((a) => !a.atk && !a.dmg && !a.str) && !state.night && state.turn <= 1 && state.first === null;
 }
 
 /** Opening the app: ask "continue or new game?" when the one saved game was last played over 48 hours ago. */
@@ -258,7 +260,7 @@ export function needsResume(state, now) {
 
 /** A new game: every counter back to its start, day, turn 1, who goes first asked again. Settings are kept. */
 export function resetGame(state) {
-  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), recentCards: [], night: false, nightLock: false, turn: 1, active: 0, first: null, turnAt: 0 };
+  return { ...state, seats: [freshSeat(), freshSeat()], pals: freshPals(), palAll: freshPalAll(), recentCards: [], night: false, nightLock: false, turn: 1, active: 0, first: null, turnAt: 0 };
 }
 
 /** Change a setting, cleaned. Changing players or switching souls on starts the soul set-up again. */

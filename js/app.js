@@ -13,7 +13,7 @@ import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 import { lifeTone, justLost, overWords } from './life.js';
-import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals, palReset } from './pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals, palReset, palAt as palOf, ALL } from './pals.js';
 import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine, pushRecent } from './cards.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
@@ -120,7 +120,14 @@ function palRow() {
   row.className = 'pal-row';
   row.setAttribute('role', 'group');
   row.setAttribute('aria-label', 'Pals in play, left to right');
-  row.innerHTML = Array.from({ length: PAL_SLOTS }, (_, i) => `
+  // 0.4.6: the All Pals layer first (added to every Pal of this player), then the five slots
+  row.innerHTML = `
+    <button type="button" class="pal pal-all" data-i="all">
+      <span class="pal-h"><span class="pal-n">All</span></span>
+      <span class="pal-s atk">${PAL_ICON.atk}<b></b></span>
+      <span class="pal-s dmg">${PAL_ICON.dmg}<b></b></span>
+      <span class="pal-s str">${PAL_ICON.str}<b></b></span>
+    </button>` + Array.from({ length: PAL_SLOTS }, (_, i) => `
     <button type="button" class="pal" data-i="${i}">
       <span class="pal-h"><span class="pal-n">${i + 1}</span><span class="pal-name"></span></span>
       <span class="pal-s atk">${PAL_ICON.atk}<b></b></span>
@@ -808,22 +815,32 @@ $('#btn-reset-yes').addEventListener('click', () => {
 
 // ---------- Pal trackers (experimental) ----------
 function paintPalRow(seatEl, seat) {
-  $$('.pal', seatEl).forEach((el, i) => {
+  const all = state.palAll[seat];
+  const allEl = $('.pal-all', seatEl);
+  for (const k of ['atk', 'dmg', 'str']) {
+    const b = $(`.pal-s.${k} b`, allEl);
+    setText(b, all[k] && k !== 'dmg' ? `+${palNum(all[k])}` : palNum(all[k]));
+    setData(b.parentNode, 'zero', all[k] ? 'no' : 'yes');
+  }
+  setData(allEl, 'empty', all.atk || all.dmg || all.str ? 'no' : 'yes');
+  setAttr(allEl, 'aria-label', `All Pals: attack boost ${all.atk}, damage ${all.dmg}, strike ${all.str}, added to every Pal. Tap to change.`);
+  $$('.pal:not(.pal-all)', seatEl).forEach((el, i) => {
     const p = state.pals[seat][i];
     setText($('.pal-name', el), p.card ? p.card.name : '');
     setData(el, 'card', p.card ? 'yes' : 'no');
-    const t = palTotals(p);
+    const t = palTotals(p, all);
+    const shown = { atk: t.boost, dmg: t.dmg, str: t.extra };
     for (const k of ['atk', 'dmg', 'str']) {
       const b = $(`.pal-s.${k} b`, el);
       const based = (k === 'atk' && t.power !== null) || (k === 'str' && t.strike !== null);
-      // with the card's printed value: the total (lit when boosted); without: the boost alone, "+" for attack
-      setText(b, based ? palNum(t[k]) : k === 'atk' && p.atk ? `+${palNum(p.atk)}` : palNum(p[k]));
-      setData(b.parentNode, 'zero', based || p[k] ? 'no' : 'yes');
-      setData(b.parentNode, 'up', based && p[k] ? 'yes' : 'no');
+      // with the card's printed value: the total (lit when boosted); without: the boosts alone, "+" for attack
+      setText(b, based ? palNum(t[k]) : k === 'atk' && shown.atk ? `+${palNum(shown.atk)}` : palNum(shown[k]));
+      setData(b.parentNode, 'zero', based || shown[k] ? 'no' : 'yes');
+      setData(b.parentNode, 'up', based && shown[k] ? 'yes' : 'no');
     }
     setData(el, 'empty', p.atk || p.dmg || p.str || p.card ? 'no' : 'yes');
     setAttr(el, 'style', p.card ? `--art: url("${cardImage(p.card.code, 256)}")` : ''); // the card's art behind the numbers
-    setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: ${t.power !== null ? `attack ${t.atk} (boost ${p.atk})` : `attack boost ${p.atk}`}, damage ${p.dmg}, strike ${t.str}. Tap to change.`);
+    setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: ${t.power !== null ? `attack ${t.atk} (boost ${t.boost})` : `attack boost ${t.boost}`}, damage ${t.dmg}, strike ${t.str}. Tap to change.`);
   });
 }
 
@@ -838,31 +855,51 @@ function openPal(seat, i) {
 }
 function paintPal() {
   const { seat, i } = palAt;
-  const p = state.pals[seat][i];
-  setText($('#pal-title'), p.card ? p.card.name : `Pal ${i + 1}`);
-  setText($('#pal-sub'), `${state.players === 2 && !roomUi.active() ? `${seat === 1 ? 'Player 2' : 'Player 1'} · ` : ''}Slot ${i + 1} of ${PAL_SLOTS}, left to right`);
-  const t = palTotals(p);
-  setText($('#pal-atk-lbl'), t.power !== null ? 'Attack' : 'Attack boost');
-  setText($('#pal-atk'), t.power !== null ? palNum(t.atk) : p.atk ? `+${palNum(p.atk)}` : '0');
-  setHidden($('#pal-atk-base'), t.power === null);
-  setText($('#pal-atk-base'), t.power !== null ? `Printed ${palNum(t.power)} · boost +${palNum(p.atk)}` : '');
-  setText($('#pal-dmg'), palNum(p.dmg));
-  setText($('#pal-str'), String(t.str));
-  setHidden($('#pal-str-base'), t.strike === null);
-  setText($('#pal-str-base'), t.strike !== null ? `Printed ${t.strike} · extra +${p.str}` : '');
+  const who = state.players === 2 && !roomUi.active() ? `${seat === 1 ? 'Player 2' : 'Player 1'} · ` : '';
+  const all = state.palAll[seat];
+  const isAll = i === ALL;
+  const p = palOf(state, seat, i);
+  setData($('#ov-pal'), 'all', isAll ? 'yes' : 'no');
+  if (isAll) {
+    setText($('#pal-title'), 'All Pals');
+    setText($('#pal-sub'), `${who}Added to every Pal, on top of each one's own`);
+    setText($('#pal-atk-lbl'), 'Attack boost');
+    setText($('#pal-atk'), p.atk ? `+${palNum(p.atk)}` : '0');
+    setText($('#pal-dmg'), palNum(p.dmg));
+    setText($('#pal-str'), p.str ? `+${p.str}` : '0');
+    for (const id of ['#pal-atk-base', '#pal-dmg-base', '#pal-str-base']) setHidden($(id), true);
+  } else {
+    setText($('#pal-title'), p.card ? p.card.name : `Pal ${i + 1}`);
+    setText($('#pal-sub'), `${who}Slot ${i + 1} of ${PAL_SLOTS}, left to right`);
+    const t = palTotals(p, all);
+    const allBit = (n, extra = false) => (n ? ` · all Pals +${extra ? n : palNum(n)}` : '');
+    setText($('#pal-atk-lbl'), t.power !== null ? 'Attack' : 'Attack boost');
+    setText($('#pal-atk'), t.power !== null ? palNum(t.atk) : t.boost ? `+${palNum(t.boost)}` : '0');
+    setHidden($('#pal-atk-base'), t.power === null && !all.atk);
+    setText($('#pal-atk-base'), t.power !== null ? `Printed ${palNum(t.power)} · boost +${palNum(p.atk)}${allBit(all.atk)}` : `This Pal +${palNum(p.atk)}${allBit(all.atk)}`);
+    setText($('#pal-dmg'), palNum(t.dmg));
+    setHidden($('#pal-dmg-base'), !all.dmg);
+    setText($('#pal-dmg-base'), `This Pal ${palNum(p.dmg)}${allBit(all.dmg)}`);
+    setText($('#pal-str'), String(t.str));
+    setHidden($('#pal-str-base'), t.strike === null && !all.str);
+    setText($('#pal-str-base'), t.strike !== null ? `Printed ${t.strike} · extra +${p.str}${allBit(all.str, true)}` : `This Pal +${p.str}${allBit(all.str, true)}`);
+  }
+  // the buttons change (and Reset clears) only this slot's own values, or only the layer
   for (const b of $$('#ov-pal [data-reset]')) setProp(b, 'disabled', b.dataset.reset === 'all' ? !(p.atk || p.dmg || p.str) : !p[b.dataset.reset]);
-  setHidden($('#pal-cardrow'), !state.cardLookup && !p.card);
-  setText($('#pal-cardname'), p.card ? p.card.name : 'No card picked');
-  setText($('#pal-cardhint'), p.card ? `${p.card.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
-  setText($('#pal-pick'), p.card ? 'Change' : 'Pick card');
-  setHidden($('#pal-pick'), !state.cardLookup);
-  setHidden($('#pal-view'), !p.card);
-  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code, 256));
+  setHidden($('#pal-clear'), isAll);
+  const c = isAll ? null : p.card;
+  setHidden($('#pal-cardrow'), isAll || (!state.cardLookup && !c));
+  setText($('#pal-cardname'), c ? c.name : 'No card picked');
+  setText($('#pal-cardhint'), c ? `${c.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
+  setText($('#pal-pick'), c ? 'Change' : 'Pick card');
+  setHidden($('#pal-pick'), isAll || !state.cardLookup);
+  setHidden($('#pal-view'), !c);
+  if (c) setAttr($('#pal-img'), 'src', cardImage(c.code, 256));
 }
 stage.addEventListener('click', (e) => {
   const el = e.target.closest('.pal');
   if (!el || !el.closest('.seat')) return;
-  openPal(Number(el.closest('.seat').dataset.seat), Number(el.dataset.i));
+  openPal(Number(el.closest('.seat').dataset.seat), el.dataset.i === ALL ? ALL : Number(el.dataset.i));
 });
 $('#ov-pal').addEventListener('click', (e) => {
   const r = e.target.closest('[data-reset]');

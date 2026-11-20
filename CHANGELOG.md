@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.6
+- Pal trackers: an All Pals tile at the start of each player's row (dashed gold edge) for effects that hit every Pal at once. Its attack boost, damage and strike are added on top of each Pal's own numbers, which stay separate; each Pal's sheet shows the split ("boost +300 · all Pals +500"). It has its own Reset buttons, its damage clears at End Turn like a Pal's, and a new game clears it.
 ## 0.4.5
 - Card lookup: before you type, the search shows the cards looked up this game (opened or picked for a Pal), newest first, up to 12. A new game clears the list.
 ## 0.4.4

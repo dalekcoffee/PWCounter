@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.1
+- Pal trackers on: the Material and Ingredient tiles now centre their icon, word and number together (the number no longer rides high above an empty lower half), with − / + level with the number; two-digit counts no longer touch the buttons on narrow phones. Two players on a short phone: life keeps the bigger share of the seat instead of shrinking to a strip.
 ## 0.4.0
 - Pal trackers (experimental, Settings → Experimental): five Pal slots under each player's counters, left to right in the same order as the Pals on the table. Each slot shows its attack boost, damage and extra strike in their own colours (zeros fade). Tap a slot for quick buttons (+100 / +200 / +500 / +1000 and the same down, strike − / +), "Left play" empties it. End Turn removes all damage; boosts and strike stay. Works with one and two players; a top player's slot opens facing them.
 - Card lookup (experimental): a search button in the bar finds any card by name, code or words from its effect, and shows it big with its text underneath (tap the picture to fill the screen). With Pal trackers on, each slot can be given its card, so everyone knows which Pal is which. Card data comes live from Palify's free public API (palify.org), saved on the device for a day; nothing about cards is stored in the app itself.

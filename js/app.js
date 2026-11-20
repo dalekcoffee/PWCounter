@@ -941,10 +941,6 @@ function paintPal() {
     // a base set by hand: shown unless the card brings its printed power
     setText($('#pal-bp'), palNum(p.bp));
     setText($('#pal-bs'), String(p.bs));
-    setAttr($('#pal-ruler'), 'aria-valuenow', String(p.bp));
-    setAttr($('#pal-ruler'), 'style', `--off: ${-(p.bp / 100) * RULER_NOTCH}px`);
-    setAttr($('#pal-sruler'), 'aria-valuenow', String(p.bs));
-    setAttr($('#pal-sruler'), 'style', `--off: ${-p.bs * STRIKE_NOTCH}px`);
   }
   const known = (v) => v !== null && v !== undefined;
   setHidden($('#pal-base'), isAll || (!!p.card && known(p.card.power)));
@@ -978,39 +974,6 @@ $('#ov-pal').addEventListener('click', (e) => {
   click(Number(b.dataset.step));
   try { navigator.vibrate?.(6); } catch { /* not allowed */ }
 });
-// 0.4.8: the base power ruler (one notch, RULER_NOTCH px, = 100); 0.4.8: the base strike dial (one tick, STRIKE_NOTCH px, = 1).
-// Drag sideways (measured in the pop-up's own frame, so a turned pop-up drags the right way); the arrow keys step one too.
-const RULER_NOTCH = 14, STRIKE_NOTCH = 28;
-for (const ruler of [$('#pal-ruler'), $('#pal-sruler')]) {
-  const k = ruler.dataset.k, unit = Number(ruler.dataset.unit), notch = k === 'bs' ? STRIKE_NOTCH : RULER_NOTCH;
-  let drag = null;
-  ruler.addEventListener('pointerdown', (e) => {
-    if (palAt.i === ALL) return;
-    drag = { x: e.clientX, y: e.clientY, from: state.pals[palAt.seat][palAt.i][k], last: 0, f: palFrame() };
-    ruler.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  ruler.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    const [dx] = drag.f.vec(e.clientX - drag.x, e.clientY - drag.y);
-    const notches = Math.round(dx / notch);
-    if (notches === drag.last) return;
-    drag.last = notches;
-    const cur = state.pals[palAt.seat][palAt.i][k];
-    const next = palStep(state, palAt.seat, palAt.i, k, drag.from + notches * unit - cur);
-    if (next !== state) { const was = state.pals[palAt.seat][palAt.i][k]; commit(next); click(state.pals[palAt.seat][palAt.i][k] - was); try { navigator.vibrate?.(3); } catch { /* not allowed */ } }
-  });
-  const end = () => { drag = null; };
-  ruler.addEventListener('pointerup', end);
-  ruler.addEventListener('pointercancel', end);
-  ruler.addEventListener('keydown', (e) => {
-    const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
-    if (!d || palAt.i === ALL) return;
-    e.preventDefault();
-    const next = palStep(state, palAt.seat, palAt.i, k, d * unit);
-    if (next !== state) { commit(next); click(d); }
-  });
-}
 $('#pal-clear').addEventListener('click', () => { commit(palClear(state, palAt.seat, palAt.i)); click(-1); closeOverlay(); });
 $('#pal-pick').addEventListener('click', () => openCards(palAt.seat, { seat: palAt.seat, i: palAt.i }));
 $('#pal-view').addEventListener('click', () => {

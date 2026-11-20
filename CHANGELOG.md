@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.11
+- Pal trackers: the base power and base strike dials are gone (too fiddly). Base power now has −500 / −100 / +100 / +500 buttons, and base strike is a − / + stepper beside its number. Every button still clicks.
 ## 0.4.10
 - Pal trackers: in landscape the Pal / All Pals pop-up is wider, in two columns (base power, base strike and extra strike on the left; attack and damage on the right), so it fits a phone on its side without scrolling. Portrait is unchanged.
 ## 0.4.9

@@ -13,7 +13,7 @@ import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 import { lifeTone, justLost, overWords } from './life.js';
-import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals } from './pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals, palReset } from './pals.js';
 import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine } from './cards.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
@@ -822,6 +822,7 @@ function paintPalRow(seatEl, seat) {
       setData(b.parentNode, 'up', based && p[k] ? 'yes' : 'no');
     }
     setData(el, 'empty', p.atk || p.dmg || p.str || p.card ? 'no' : 'yes');
+    setAttr(el, 'style', p.card ? `--art: url("${cardImage(p.card.code, 256)}")` : ''); // the card's art behind the numbers
     setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: ${t.power !== null ? `attack ${t.atk} (boost ${p.atk})` : `attack boost ${p.atk}`}, damage ${p.dmg}, strike ${t.str}. Tap to change.`);
   });
 }
@@ -849,6 +850,7 @@ function paintPal() {
   setText($('#pal-str'), String(t.str));
   setHidden($('#pal-str-base'), t.strike === null);
   setText($('#pal-str-base'), t.strike !== null ? `Printed ${t.strike} · extra +${p.str}` : '');
+  for (const b of $$('#ov-pal [data-reset]')) setProp(b, 'disabled', b.dataset.reset === 'all' ? !(p.atk || p.dmg || p.str) : !p[b.dataset.reset]);
   setHidden($('#pal-cardrow'), !state.cardLookup && !p.card);
   setText($('#pal-cardname'), p.card ? p.card.name : 'No card picked');
   setText($('#pal-cardhint'), p.card ? `${p.card.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
@@ -863,6 +865,8 @@ stage.addEventListener('click', (e) => {
   openPal(Number(el.closest('.seat').dataset.seat), Number(el.dataset.i));
 });
 $('#ov-pal').addEventListener('click', (e) => {
+  const r = e.target.closest('[data-reset]');
+  if (r) { const next = palReset(state, palAt.seat, palAt.i, r.dataset.reset); if (next !== state) commit(next); return; }
   const b = e.target.closest('[data-step]');
   if (!b) return;
   const next = palStep(state, palAt.seat, palAt.i, b.dataset.k, Number(b.dataset.step));

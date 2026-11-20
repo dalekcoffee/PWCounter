@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultState, cleanState, endTurn, resetGame, isFreshGame, setSetting } from '../js/state.js';
-import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum, palTotals } from '../js/pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, clearDamage, cleanPals, cleanCard, palNum, palTotals, palReset } from '../js/pals.js';
 
 const on = () => setSetting(defaultState(), 'palTrack', true);
 
@@ -77,6 +77,18 @@ test('a card with printed power and strike: the slot shows base + boost', () => 
   assert.equal(cleanCard({ code: 'ZZ01-004', name: 'x', power: 1e9 }).power, null);
   const back = cleanState(JSON.parse(JSON.stringify(s)));
   assert.deepEqual(back.pals[1][0], s.pals[1][0]); // kept through a save
+});
+
+test('quick resets: one counter or all three, the card stays', () => {
+  let s = palCard(on(), 0, 2, { code: 'ZZ01-003', name: 'Made-up Fluff', power: 2000, strike: 2 });
+  s = palStep(palStep(palStep(s, 0, 2, 'atk', 1500), 0, 2, 'dmg', 700), 0, 2, 'str', 1);
+  const a = palReset(s, 0, 2, 'atk');
+  assert.deepEqual([a.pals[0][2].atk, a.pals[0][2].dmg, a.pals[0][2].str], [0, 700, 1]);
+  const all = palReset(s, 0, 2, 'all');
+  assert.deepEqual(all.pals[0][2], { atk: 0, dmg: 0, str: 0, card: s.pals[0][2].card });
+  assert.equal(palReset(all, 0, 2, 'all'), all); // nothing to reset: the same object
+  assert.equal(palReset(s, 0, 2, 'nope'), s);
+  assert.equal(palReset(s, 2, 0, 'atk'), s);
 });
 
 test('numbers with thousands separators', () => {

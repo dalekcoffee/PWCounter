@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.2"; }
+:root { --pwc-v: "0.4.3"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1076,6 +1076,17 @@ svg { display: block; }
 .pal-pm .pal-val { min-width: 1.4em; text-align: center; }
 .pal-foot { display: flex; gap: 10px; margin-top: 14px; }
 .pal-foot .btn { flex: 1; }
+/* 0.4.3: quick resets (a counter, or all three; the card stays) */
+.pal-sub { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.pal-sub .pal-base { margin-top: 0; }
+.pal-reset { margin-left: auto; flex: none; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text) 22%, transparent); background: rgba(255, 255, 255, .06); font: 700 12px/1 var(--font-ui); color: var(--text-2); }
+.pal-reset:active { background: rgba(255, 255, 255, .18); }
+.pal-reset:disabled, .pal-foot .btn:disabled { opacity: .35; }
+/* 0.4.3: a slot with a card shows its art behind the numbers, darkened so they stay readable */
+.pal[data-card='yes'] { background: linear-gradient(180deg, rgba(6, 10, 24, .5), rgba(6, 10, 24, .82)), var(--art) center 20% / cover no-repeat, var(--tile); }
+.pal[data-card='yes']:active { background: var(--tile-press), linear-gradient(180deg, rgba(6, 10, 24, .5), rgba(6, 10, 24, .82)), var(--art) center 20% / cover no-repeat, var(--tile); }
+.pal[data-card='yes'] :is(.pal-h, .pal-s) { text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 8px rgba(0, 0, 0, .7); }
+.pal[data-card='yes'] .pal-s[data-zero='yes'] { opacity: .45; }
 
 /* ---------- card lookup (experimental) ---------- */
 .cards-sheet { width: min(640px, 100%); height: 100%; display: flex; flex-direction: column; }

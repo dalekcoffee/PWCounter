@@ -73,6 +73,15 @@ export function palCard(state, seat, i, card) {
   return withPal(state, seat, i, { card: card === null ? null : cleanCard(card) });
 }
 
+/** Quick reset: one counter back to 0 ('atk' boost, 'dmg', 'str' extra), or 'all' three; the card stays. */
+export function palReset(state, seat, i, key) {
+  if (!okSlot(seat, i)) return state;
+  const keys = key === 'all' ? PAL_KEYS : PAL_KEYS.includes(key) ? [key] : [];
+  const p = state.pals[seat][i];
+  if (!keys.some((k) => p[k])) return state;
+  return withPal(state, seat, i, Object.fromEntries(keys.map((k) => [k, 0])));
+}
+
 /** The Pal left play: its slot is empty again (numbers and card). */
 export function palClear(state, seat, i) {
   if (!okSlot(seat, i)) return state;

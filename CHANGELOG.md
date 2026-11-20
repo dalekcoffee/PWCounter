@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.3
+- Pal trackers: quick Reset buttons in a slot's sheet for attack boost, damage and extra strike, plus Reset all (the card stays; Left play still empties the slot). A slot with a card now shows the card's art behind its numbers, darkened so they stay readable.
 ## 0.4.2
 - Card lookup works on the live site: Palify's API cannot be read straight from a browser (it sends no CORS header), so the card list and the card pictures now come through the ResoPal proxy, which keeps a copy for a day. Pictures are smaller in the list (quicker to load) and full size in the card view; sideways cards come upright.
 - Pal trackers + card lookup: a picked card brings its printed power and strike, so the slot shows the real numbers (printed power + boost, printed strike + extra; an arrow marks a boosted value) and the edit sheet shows the split ("Printed 1,200 · boost +800"). Slots without a card count the boost alone, as before.

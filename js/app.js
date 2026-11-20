@@ -13,7 +13,7 @@ import { initRoom } from './room-ui.js';
 import { setText, setHidden, setProp, setData, setAttr } from './dom-write.js';
 import { codeFromHash, watchFromHash } from './room-proto.js';
 import { lifeTone, justLost, overWords } from './life.js';
-import { PAL_SLOTS, palStep, palCard, palClear, palNum } from './pals.js';
+import { PAL_SLOTS, palStep, palCard, palClear, palNum, palTotals } from './pals.js';
 import { CARD_API, cardsFromApi, cleanApiCard, searchCards, cardImage, cardPage, cacheFresh, cardLine } from './cards.js';
 
 document.documentElement.dataset.js = APP_VERSION; // index.html checks page, stylesheet and scripts are one version
@@ -812,13 +812,17 @@ function paintPalRow(seatEl, seat) {
     const p = state.pals[seat][i];
     setText($('.pal-name', el), p.card ? p.card.name : '');
     setData(el, 'card', p.card ? 'yes' : 'no');
+    const t = palTotals(p);
     for (const k of ['atk', 'dmg', 'str']) {
       const b = $(`.pal-s.${k} b`, el);
-      setText(b, k === 'atk' && p.atk ? `+${palNum(p.atk)}` : palNum(p[k]));
-      setData(b.parentNode, 'zero', p[k] ? 'no' : 'yes');
+      const based = (k === 'atk' && t.power !== null) || (k === 'str' && t.strike !== null);
+      // with the card's printed value: the total (lit when boosted); without: the boost alone, "+" for attack
+      setText(b, based ? palNum(t[k]) : k === 'atk' && p.atk ? `+${palNum(p.atk)}` : palNum(p[k]));
+      setData(b.parentNode, 'zero', based || p[k] ? 'no' : 'yes');
+      setData(b.parentNode, 'up', based && p[k] ? 'yes' : 'no');
     }
     setData(el, 'empty', p.atk || p.dmg || p.str || p.card ? 'no' : 'yes');
-    setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: attack boost ${p.atk}, damage ${p.dmg}, strike ${p.str}. Tap to change.`);
+    setAttr(el, 'aria-label', `Pal ${i + 1}${p.card ? `, ${p.card.name}` : ''}: ${t.power !== null ? `attack ${t.atk} (boost ${p.atk})` : `attack boost ${p.atk}`}, damage ${p.dmg}, strike ${t.str}. Tap to change.`);
   });
 }
 
@@ -836,16 +840,22 @@ function paintPal() {
   const p = state.pals[seat][i];
   setText($('#pal-title'), p.card ? p.card.name : `Pal ${i + 1}`);
   setText($('#pal-sub'), `${state.players === 2 && !roomUi.active() ? `${seat === 1 ? 'Player 2' : 'Player 1'} · ` : ''}Slot ${i + 1} of ${PAL_SLOTS}, left to right`);
-  setText($('#pal-atk'), p.atk ? `+${palNum(p.atk)}` : '0');
+  const t = palTotals(p);
+  setText($('#pal-atk-lbl'), t.power !== null ? 'Attack' : 'Attack boost');
+  setText($('#pal-atk'), t.power !== null ? palNum(t.atk) : p.atk ? `+${palNum(p.atk)}` : '0');
+  setHidden($('#pal-atk-base'), t.power === null);
+  setText($('#pal-atk-base'), t.power !== null ? `Printed ${palNum(t.power)} · boost +${palNum(p.atk)}` : '');
   setText($('#pal-dmg'), palNum(p.dmg));
-  setText($('#pal-str'), String(p.str));
+  setText($('#pal-str'), String(t.str));
+  setHidden($('#pal-str-base'), t.strike === null);
+  setText($('#pal-str-base'), t.strike !== null ? `Printed ${t.strike} · extra +${p.str}` : '');
   setHidden($('#pal-cardrow'), !state.cardLookup && !p.card);
   setText($('#pal-cardname'), p.card ? p.card.name : 'No card picked');
   setText($('#pal-cardhint'), p.card ? `${p.card.code} · tap the picture to read it` : 'Pick the card so everyone knows which Pal this is.');
   setText($('#pal-pick'), p.card ? 'Change' : 'Pick card');
   setHidden($('#pal-pick'), !state.cardLookup);
   setHidden($('#pal-view'), !p.card);
-  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code));
+  if (p.card) setAttr($('#pal-img'), 'src', cardImage(p.card.code, 256));
 }
 stage.addEventListener('click', (e) => {
   const el = e.target.closest('.pal');
@@ -921,7 +931,7 @@ function cardItem(c) {
   b.dataset.code = c.code;
   const img = document.createElement('img');
   img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
-  img.src = cardImage(c.code);
+  img.src = cardImage(c.code, 256);
   img.addEventListener('error', () => { img.style.visibility = 'hidden'; }, { once: true });
   const txt = document.createElement('span');
   txt.className = 'ci-text';
@@ -935,17 +945,17 @@ function cardItem(c) {
 function runSearch() {
   const status = $('#cards-status'), list = $('#cards-list');
   const q = $('#cards-q').value;
-  if (!cardList) setText(status, 'Loading cards from Palify…');
+  if (!cardList) setText(status, 'Loading cards…');
   loadCards().then((cards) => {
     if (openId !== 'ov-cards') return;
     const found = searchCards(cards, q);
     const old = Date.now() - cardAt > 24 * 60 * 60 * 1000;
-    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: Palify could not be reached.)' : ''}`
+    setText(status, !q.trim() ? `${cards.length} cards. Type a name, a code or words from the effect.${old ? ' (Saved copy: the card list could not be refreshed.)' : ''}`
       : found.length ? `${found.length}${found.length >= 60 ? '+' : ''} found` : 'No card found');
     list.replaceChildren(...found.map(cardItem));
   }).catch(() => {
     if (openId !== 'ov-cards') return;
-    setText(status, 'Could not reach Palify. Check the connection and try again.');
+    setText(status, 'Could not load the cards. Check the connection and try again.');
     list.replaceChildren();
   });
 }
@@ -962,7 +972,7 @@ $('#cards-list').addEventListener('click', (e) => {
 function usePick(c) {
   const at = pickFor;
   pickFor = null;
-  commit(palCard(state, at.seat, at.i, { code: c.code, name: c.name }));
+  commit(palCard(state, at.seat, at.i, { code: c.code, name: c.name, power: c.power, strike: c.strike }));
   openPal(at.seat, at.i);
 }
 

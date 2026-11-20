@@ -1,6 +1,6 @@
 /* PW Counter: PalVault's palette (dark), with a day sky and a night sky on the board. */
 /* the version of this file: index.html checks it matches the page (a stale stylesheet once showed every button at once) */
-:root { --pwc-v: "0.4.1"; }
+:root { --pwc-v: "0.4.2"; }
 :root {
   --bg: #070b17;
   --text: #e8ecfa; --text-2: #9aa6c8; --text-3: #69769c;
@@ -1048,6 +1048,9 @@ svg { display: block; }
 .pal-s.str, .pal-blk.str .pal-lbl { color: var(--cyan); }
 .pal-s.atk b { color: color-mix(in srgb, var(--gold) 55%, var(--num)); }
 .pal-s.dmg b { color: #ffc9cf; }
+.pal-s[data-up='yes'] b::after { content: '\2191'; font-size: .7em; margin-left: 1px; } /* a printed value with a boost on top */
+.pal-base { display: block; margin-top: 4px; font: 600 12.5px/1.3 var(--font-ui); color: var(--text-2); }
+.pal-base[hidden] { display: none; }
 /* a slot is turned with its player: the pop-ups face the player whose Pal it is */
 .stage[data-flip='on'] :is(#ov-pal, #ov-cards, #ov-card)[data-seat='1'] { transform: rotate(180deg); }
 

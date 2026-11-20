@@ -1,5 +1,6 @@
 // Pal trackers (experimental): per player, five Pal slots in table order (left to right), each with an attack boost,
-// damage and extra strike, and optionally the card it is (from card lookup). Pure: every function returns a NEW state.
+// damage and extra strike, and optionally the card it is (from card lookup; 0.4.2: with its printed power and strike, so
+// the slot shows base + boost). Pure: every function returns a NEW state.
 // Damage is removed at the end of every turn; boosts and strike stay until changed.
 
 export const PAL_SLOTS = 5;
@@ -13,13 +14,25 @@ export const freshPals = () => [0, 1].map(() => Array.from({ length: PAL_SLOTS }
 const int = (n, [lo, hi]) => (Number.isInteger(n) && n >= lo && n <= hi ? n : 0);
 const CODE = /^[A-Z0-9][A-Z0-9-]{2,23}$/;
 
-/** A card picked for a slot: its printing code and name only (the text is looked up again when shown). */
+/** A card picked for a slot: printing code, name and its printed power / strike (null when unknown); the text is looked up again when shown. */
 export function cleanCard(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const code = typeof raw.code === 'string' ? raw.code.trim().toUpperCase() : '';
   if (!CODE.test(code)) return null;
   const name = typeof raw.name === 'string' ? [...raw.name.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim()].slice(0, 60).join('') : '';
-  return { code, name: name || code };
+  const base = (v, [lo, hi]) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
+  return { code, name: name || code, power: base(raw.power, PAL_LIMITS.atk), strike: base(raw.strike, PAL_LIMITS.str) };
+}
+
+/** What the slot's counters show: with a card's printed power / strike, base + boost; without, the boost alone (base null). */
+export function palTotals(p) {
+  const power = p.card && p.card.power !== null && p.card.power !== undefined ? p.card.power : null;
+  const strike = p.card && p.card.strike !== null && p.card.strike !== undefined ? p.card.strike : null;
+  return {
+    power, strike,
+    atk: power === null ? p.atk : power + p.atk,
+    str: strike === null ? p.str : strike + p.str,
+  };
 }
 
 function cleanPal(raw) {

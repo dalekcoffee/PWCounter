@@ -1,8 +1,11 @@
-// Card lookup (experimental): card data comes live from Palify's free public API (https://palify.org/developers),
-// asked once and kept on this device for a day, as Palify asks. Nothing about cards is stored in this repo.
+// Card lookup (experimental): card data comes from Palify's free public API (https://palify.org/developers), asked
+// once and kept on this device for a day, as Palify asks. Nothing about cards is stored in this repo.
+// 0.4.2: Palify sends no CORS header, so a browser cannot read it directly: the list and the art come through the
+// owner's resopal-proxy Worker (/api/cards, edge-cached a day; /img/<CODE>?w=, CORS-enabled, landscape cards turned).
 // Pure helpers here (tested); the fetch and the sheets are in app.js.
 
-export const CARD_API = 'https://palify.org/api/cards';
+export const CARD_PROXY = 'https://resopal-proxy.dalek.workers.dev';
+export const CARD_API = `${CARD_PROXY}/api/cards`;
 export const CARD_SITE = 'https://palify.org';
 export const CARD_TTL_MS = 24 * 60 * 60 * 1000;
 export const CARD_RESULTS = 60;
@@ -59,8 +62,8 @@ export function searchCards(cards, query, limit = CARD_RESULTS) {
   return scored.slice(0, limit).map((x) => x[1]);
 }
 
-/** The card's art on Palify, by printing code. */
-export const cardImage = (code) => `${CARD_SITE}/cards/${encodeURIComponent(code)}.webp`;
+/** The card's art (Palify's, through the proxy), by printing code; w = 256 for list thumbnails, 1024 to read it. */
+export const cardImage = (code, w = 1024) => `${CARD_PROXY}/img/${encodeURIComponent(code)}?w=${w === 256 || w === 512 ? w : 1024}`;
 /** The card's page on Palify (for the credit link). */
 export const cardPage = (card) => (card.slug ? `${CARD_SITE}/card/${card.slug}` : `${CARD_SITE}/cards`);
 

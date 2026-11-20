@@ -35,7 +35,9 @@ test('search: every word must match; names first, then code, then effect', () =>
 
 test('links, image, cache and the result line', () => {
   const [a, , , d] = cardsFromApi(API);
-  assert.equal(cardImage('ZZ01-001'), 'https://palify.org/cards/ZZ01-001.webp');
+  assert.equal(cardImage('ZZ01-001'), 'https://resopal-proxy.dalek.workers.dev/img/ZZ01-001?w=1024');
+  assert.equal(cardImage('ZZ01-001', 256), 'https://resopal-proxy.dalek.workers.dev/img/ZZ01-001?w=256');
+  assert.equal(cardImage('ZZ01-001', 77), 'https://resopal-proxy.dalek.workers.dev/img/ZZ01-001?w=1024');
   assert.equal(cardPage(a), 'https://palify.org/card/zz01-001-fluffball');
   assert.equal(cardPage(d), 'https://palify.org/cards');
   assert.equal(cacheFresh({ at: 1000, cards: [a] }, 1000 + CARD_TTL_MS - 1), true);

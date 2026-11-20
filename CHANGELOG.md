@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.7
+- Pal trackers: the All Pals tile is now a wide bar under the middle Pals (2 to 4), its icons and numbers left to right (on phones it spans the whole row). The five Pal slots share the full width and their numbers are bigger, using the empty space inside each slot; life and resources keep their size.
 ## 0.4.6
 - Pal trackers: an All Pals tile at the start of each player's row (dashed gold edge) for effects that hit every Pal at once. Its attack boost, damage and strike are added on top of each Pal's own numbers, which stay separate; each Pal's sheet shows the split ("boost +300 · all Pals +500"). It has its own Reset buttons, its damage clears at End Turn like a Pal's, and a new game clears it.
 ## 0.4.5
